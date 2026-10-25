@@ -1,0 +1,769 @@
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Portal Tugas | Mahasiswa TI</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts: Inter -->
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <!-- Font Awesome for Icons -->
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            fontFamily: {
+              sans: ["Inter", "sans-serif"],
+            },
+            colors: {
+              primary: "#ec4899", // pink-500
+              secondary: "#9d174d", // pink-800
+            },
+          },
+        },
+      };
+    </script>
+    <style>
+      /* Custom scrollbar for better aesthetics */
+      ::-webkit-scrollbar {
+        width: 8px;
+      }
+      ::-webkit-scrollbar-track {
+        background: #fdf2f8;
+      }
+      ::-webkit-scrollbar-thumb {
+        background: #fbcfe8;
+        border-radius: 4px;
+      }
+      ::-webkit-scrollbar-thumb:hover {
+        background: #f472b6;
+      }
+
+      /* Background Animations */
+      @keyframes blob {
+        0% {
+          transform: translate(0px, 0px) scale(1);
+        }
+        33% {
+          transform: translate(30px, -50px) scale(1.1);
+        }
+        66% {
+          transform: translate(-20px, 20px) scale(0.9);
+        }
+        100% {
+          transform: translate(0px, 0px) scale(1);
+        }
+      }
+      .animate-blob {
+        animation: blob 15s infinite;
+      }
+      .animation-delay-2000 {
+        animation-delay: 2s;
+      }
+      .animation-delay-4000 {
+        animation-delay: 4s;
+      }
+
+      /* Page Transition Animation */
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+          transform: translateY(10px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+      .page-transition {
+        animation: fadeIn 0.4s ease-out forwards;
+      }
+
+      /* Floating Love Animation (Dikembalikan) */
+      @keyframes floatLove {
+        0%,
+        100% {
+          transform: translateY(0) scale(1);
+          opacity: 0.7;
+        }
+        50% {
+          transform: translateY(-15px) scale(1.1);
+          opacity: 1;
+        }
+      }
+      .animate-float-love {
+        animation: floatLove 3s ease-in-out infinite;
+      }
+
+      /* Flower Sway Animation (Baru untuk bunga tangkai) */
+      @keyframes sway {
+        0%,
+        100% {
+          transform: rotate(-5deg);
+        }
+        50% {
+          transform: rotate(5deg);
+        }
+      }
+      .animate-sway {
+        animation: sway 6s ease-in-out infinite;
+        transform-origin: bottom center;
+      }
+      .animate-sway-delayed {
+        animation: sway 7s ease-in-out infinite 2s;
+        transform-origin: bottom center;
+      }
+
+      .delay-1 {
+        animation-delay: 0s;
+      }
+      .delay-2 {
+        animation-delay: 0.5s;
+      }
+      .delay-3 {
+        animation-delay: 1s;
+      }
+      .delay-4 {
+        animation-delay: 1.5s;
+      }
+      .delay-5 {
+        animation-delay: 2s;
+      }
+    </style>
+  </head>
+  <body
+    class="bg-pink-100 text-gray-800 font-sans antialiased flex flex-col min-h-screen relative overflow-x-hidden"
+  >
+    <!-- Stemmed Flower Symbols (Bunga dengan Tangkai) -->
+    <svg style="display: none" aria-hidden="true">
+      <symbol id="flower-tall" viewBox="0 0 100 250">
+        <!-- Tangkai -->
+        <path
+          d="M50 250 Q30 150 50 50"
+          stroke="#4ade80"
+          stroke-width="6"
+          fill="none"
+          stroke-linecap="round"
+        />
+        <!-- Daun -->
+        <path d="M47 180 Q80 150 95 120 Q60 120 45 160" fill="#4ade80" />
+        <path d="M52 130 Q20 100 5 70 Q40 70 55 110" fill="#4ade80" />
+        <!-- Kelopak Bunga -->
+        <path
+          d="M50 60 C10 60 0 -10 50 20 C100 -10 90 60 50 60 Z"
+          fill="currentColor"
+        />
+        <path
+          d="M50 20 Q30 0 50 10 Q70 0 50 20 Z"
+          fill="rgba(255,255,255,0.4)"
+        />
+      </symbol>
+      <symbol id="flower-short" viewBox="0 0 100 200">
+        <!-- Tangkai -->
+        <path
+          d="M50 200 Q70 120 50 40"
+          stroke="#4ade80"
+          stroke-width="6"
+          fill="none"
+          stroke-linecap="round"
+        />
+        <!-- Daun -->
+        <path d="M53 140 Q20 120 5 90 Q40 90 55 120" fill="#4ade80" />
+        <!-- Kelopak Bunga -->
+        <path
+          d="M50 50 C10 50 0 -20 50 10 C100 -20 90 50 50 50 Z"
+          fill="currentColor"
+        />
+        <path
+          d="M50 10 Q30 -10 50 0 Q70 -10 50 10 Z"
+          fill="rgba(255,255,255,0.4)"
+        />
+      </symbol>
+    </svg>
+
+    <!-- Animated Background Elements -->
+    <div
+      class="fixed inset-0 w-full h-full z-[-1] pointer-events-none overflow-hidden"
+    >
+      <div
+        class="absolute top-[-10%] left-[-10%] w-96 h-96 bg-pink-500/60 rounded-full mix-blend-multiply filter blur-3xl opacity-80 animate-blob"
+      ></div>
+      <div
+        class="absolute top-[20%] right-[-5%] w-72 h-72 bg-rose-500/60 rounded-full mix-blend-multiply filter blur-3xl opacity-80 animate-blob animation-delay-2000"
+      ></div>
+      <div
+        class="absolute -bottom-32 left-[20%] w-80 h-80 bg-fuchsia-500/60 rounded-full mix-blend-multiply filter blur-3xl opacity-80 animate-blob animation-delay-4000"
+      ></div>
+    </div>
+
+    <!-- Navigation Bar -->
+    <nav
+      class="bg-pink-50/80 backdrop-blur-md shadow-sm sticky top-0 z-50 border-b border-pink-200"
+    >
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex justify-between h-16 items-center">
+          <div class="flex-shrink-0 flex items-center gap-2">
+            <div
+              class="w-10 h-10 bg-primary text-white rounded-xl flex items-center justify-center font-bold text-xl shadow-lg shadow-pink-200"
+            >
+              TI
+            </div>
+            <span class="font-bold text-xl text-secondary hidden sm:block"
+              >Portal Akademik</span
+            >
+          </div>
+          <!-- Desktop Menu -->
+          <div class="hidden md:flex space-x-8">
+            <a
+              href="#beranda"
+              class="nav-link text-primary font-bold px-3 py-2 rounded-md text-sm transition border-b-2 border-primary"
+              >Beranda</a
+            >
+            <a
+              href="#tugas"
+              class="nav-link text-gray-600 hover:text-primary font-medium px-3 py-2 rounded-md text-sm transition border-b-2 border-transparent hover:border-pink-300"
+              >Daftar Tugas</a
+            >
+            <a
+              href="#matakuliah"
+              class="nav-link text-gray-600 hover:text-primary font-medium px-3 py-2 rounded-md text-sm transition border-b-2 border-transparent hover:border-pink-300"
+              >Mata Kuliah</a
+            >
+          </div>
+          <!-- Mobile Menu Button -->
+          <div class="md:hidden flex items-center">
+            <button
+              id="mobile-menu-btn"
+              class="text-gray-600 hover:text-primary focus:outline-none"
+            >
+              <i class="fas fa-bars text-2xl"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+      <!-- Mobile Menu Panel (Hidden by default) -->
+      <div
+        id="mobile-menu"
+        class="hidden md:hidden bg-white/90 backdrop-blur-md border-t border-pink-100 absolute w-full z-[60] shadow-lg"
+      >
+        <div class="px-4 pt-2 pb-4 space-y-2 sm:px-3">
+          <a
+            href="#beranda"
+            class="nav-link block bg-pink-50 text-primary px-3 py-2 rounded-md text-base font-bold border-l-4 border-primary"
+            >Beranda</a
+          >
+          <a
+            href="#tugas"
+            class="nav-link block text-gray-600 hover:bg-pink-50 hover:text-primary px-3 py-2 rounded-md text-base font-medium border-l-4 border-transparent"
+            >Daftar Tugas</a
+          >
+          <a
+            href="#matakuliah"
+            class="nav-link block text-gray-600 hover:bg-pink-50 hover:text-primary px-3 py-2 rounded-md text-base font-medium border-l-4 border-transparent"
+            >Mata Kuliah</a
+          >
+        </div>
+      </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="flex-grow flex flex-col">
+      <!-- Hero Section -->
+      <section
+        id="beranda"
+        class="page-section w-full pt-16 pb-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto relative page-transition"
+      >
+        <div
+          class="lg:flex lg:items-center lg:justify-between gap-12 relative z-10"
+        >
+          <div class="lg:w-1/2">
+            <span
+              class="inline-block py-1 px-3 rounded-full bg-pink-100 text-primary text-sm font-semibold mb-4"
+              >Mahasiswa TI Angkatan 2024</span
+            >
+            <h1
+              class="text-4xl sm:text-5xl font-extrabold text-gray-900 tracking-tight mb-4"
+            >
+              Halo, Saya
+              <span
+                class="text-transparent bg-clip-text bg-gradient-to-r from-primary to-rose-400"
+                >Fatihatul ikrimah</span
+              >
+            </h1>
+            <p class="text-lg text-gray-600 mb-8 leading-relaxed">
+              Selamat datang di portal akademik pribadi saya. Website ini
+              dirancang khusus untuk mendokumentasikan perjalanan belajar,
+              mengumpulkan tugas harian, dan merangkum materi perkuliahan,
+              khususnya pada mata kuliah
+              <strong>Analisis & Desain Perangkat Lunak (ADPL)</strong>.
+            </p>
+            <div class="flex flex-wrap gap-4">
+              <a
+                href="#tugas"
+                class="bg-primary hover:bg-pink-600 text-white font-semibold py-3 px-6 rounded-lg shadow-lg shadow-pink-200 transition duration-300 ease-in-out transform hover:-translate-y-1 flex items-center gap-2"
+              >
+                Lihat Tugas <i class="fas fa-arrow-right"></i>
+              </a>
+              <a
+                href="https://github.com"
+                target="_blank"
+                class="bg-white border-2 border-gray-200 text-gray-700 hover:border-gray-300 hover:bg-gray-50 font-semibold py-3 px-6 rounded-lg transition duration-300 flex items-center gap-2"
+              >
+                <i class="fab fa-github text-xl"></i> GitHub
+              </a>
+            </div>
+          </div>
+          <div class="lg:w-1/2 mt-12 lg:mt-0 flex justify-center">
+            <!-- Placeholder Illustration -->
+            <div class="relative w-72 h-72 sm:w-96 sm:h-96">
+              <div
+                class="absolute inset-0 bg-gradient-to-br from-pink-300 to-rose-300 rounded-full blur-2xl opacity-60 animate-pulse"
+              ></div>
+              <img
+                src="personal_photo.jpg"
+                alt="Profile"
+                class="relative rounded-3xl shadow-2xl shadow-pink-300 object-cover w-full h-full border-4 border-white transform rotate-2 hover:rotate-0 transition duration-500"
+              />
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Tasks / Assignments Section -->
+      <section
+        id="tugas"
+        class="page-section hidden w-full py-16 bg-white/40 backdrop-blur-md border-t border-white/50 relative z-10 page-transition min-h-[70vh]"
+      >
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+          <div class="text-center mb-12">
+            <h2 class="text-3xl font-bold text-gray-900 mb-4">
+              Daftar Tugas & Laporan
+            </h2>
+            <p class="text-gray-600 max-w-2xl mx-auto">
+              Kumpulan repositori penyelesaian tugas dari dosen. Terkini dan
+              terarsip dengan rapi.
+            </p>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            <!-- Task Card 1 (Completed) -->
+            <div
+              class="bg-white/80 backdrop-blur-md rounded-2xl p-6 border border-pink-100 hover:shadow-xl hover:shadow-pink-100 transition duration-300 group"
+            >
+              <div class="flex justify-between items-start mb-4">
+                <div
+                  class="w-12 h-12 bg-green-100 text-green-600 rounded-lg flex items-center justify-center text-xl group-hover:scale-110 transition"
+                >
+                  <i class="fas fa-check-circle"></i>
+                </div>
+                <span
+                  class="bg-green-100 text-green-700 text-xs font-bold px-2 py-1 rounded"
+                  >Selesai</span
+                >
+              </div>
+              <h3 class="text-xl font-bold text-gray-900 mb-2">
+                Tugas 1: Setup Akun Riset
+              </h3>
+              <p class="text-gray-600 text-sm mb-4 line-clamp-3">
+                Pembuatan dan konfigurasi akun Google Scholar, instalasi
+                Mendeley Desktop & Zotero untuk manajemen referensi karya
+                ilmiah.
+              </p>
+              <div class="flex items-center text-sm text-gray-500 mb-4">
+                <i class="far fa-calendar-alt mr-2"></i> 20 Okt 2026
+              </div>
+              <button
+                class="w-full bg-white border border-pink-200 text-gray-700 font-medium py-2 rounded-lg hover:bg-pink-50 transition"
+                onclick="
+                  showModal(
+                    'Detail Tugas 1',
+                    'Bukti pendaftaran Google Scholar dan Mendeley telah disimpan dalam format PDF dan siap diperiksa.',
+                  )
+                "
+              >
+                Lihat Detail
+              </button>
+            </div>
+
+            <!-- Task Card 2 (Completed) -->
+            <div
+              class="bg-white/80 backdrop-blur-md rounded-2xl p-6 border border-pink-100 hover:shadow-xl hover:shadow-pink-100 transition duration-300 group"
+            >
+              <div class="flex justify-between items-start mb-4">
+                <div
+                  class="w-12 h-12 bg-green-100 text-green-600 rounded-lg flex items-center justify-center text-xl group-hover:scale-110 transition"
+                >
+                  <i class="fas fa-check-circle"></i>
+                </div>
+                <span
+                  class="bg-green-100 text-green-700 text-xs font-bold px-2 py-1 rounded"
+                  >Selesai</span
+                >
+              </div>
+              <h3 class="text-xl font-bold text-gray-900 mb-2">
+                Tugas 2: Publish or Perish
+              </h3>
+              <p class="text-gray-600 text-sm mb-4 line-clamp-3">
+                Instalasi <i>software</i> Publish or Perish dan uji coba
+                ekstraksi metadata jurnal berdasarkan <i>keyword</i> Cyber
+                Security.
+              </p>
+              <div class="flex items-center text-sm text-gray-500 mb-4">
+                <i class="far fa-calendar-alt mr-2"></i> 22 Okt 2026
+              </div>
+              <button
+                class="w-full bg-white border border-pink-200 text-gray-700 font-medium py-2 rounded-lg hover:bg-pink-50 transition"
+                onclick="
+                  showModal(
+                    'Detail Tugas 2',
+                    'Screenshot ekstraksi data jurnal dari Publish or Perish berhasil dilakukan sebanyak 50+ artikel.',
+                  )
+                "
+              >
+                Lihat Detail
+              </button>
+            </div>
+
+            <!-- Task Card 3 (In Progress) -->
+            <div
+              class="bg-white rounded-2xl p-6 border-2 border-primary shadow-lg relative overflow-hidden group"
+            >
+              <div
+                class="absolute top-0 right-0 w-20 h-20 bg-pink-50 rounded-bl-full -z-10"
+              ></div>
+              <div class="flex justify-between items-start mb-4">
+                <div
+                  class="w-12 h-12 bg-pink-100 text-primary rounded-lg flex items-center justify-center text-xl group-hover:rotate-12 transition"
+                >
+                  <i class="fas fa-laptop-code"></i>
+                </div>
+                <span
+                  class="bg-pink-100 text-primary text-xs font-bold px-2 py-1 rounded animate-pulse"
+                  >Sedang Berjalan</span
+                >
+              </div>
+              <h3 class="text-xl font-bold text-gray-900 mb-2">
+                Tugas 3: Persiapan Website
+              </h3>
+              <p class="text-gray-600 text-sm mb-4">
+                Mendevelop Portal Akademik (Website 1) dan merancang Use Case &
+                konsep awal untuk Project System (Website 2) bertema Cyber
+                Security.
+              </p>
+              <div class="flex items-center text-sm text-gray-500 mb-4">
+                <i class="far fa-calendar-alt mr-2"></i> Tenggat: 27 Okt 2026
+              </div>
+              <button
+                class="w-full bg-primary text-white font-medium py-2 rounded-lg hover:bg-pink-600 transition shadow-md shadow-pink-200"
+                onclick="
+                  showModal(
+                    'Progres Website',
+                    'Website 1 telah berhasil di-deploy. Konsep Website 2 (Incident Response System) sedang dalam tahap pembuatan diagram UML.',
+                  )
+                "
+              >
+                Update Progres
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Courses Information Section -->
+      <section
+        id="matakuliah"
+        class="page-section hidden w-full py-16 relative z-10 page-transition min-h-[70vh]"
+      >
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 mb-10">
+          <div class="text-center mb-12">
+            <h2 class="text-3xl font-bold text-gray-900 mb-4">
+              Informasi Mata Kuliah
+            </h2>
+            <p class="text-gray-600 max-w-2xl mx-auto">
+              Detail mata kuliah yang saat ini sedang difokuskan untuk
+              pengembangan proyek perangkat lunak.
+            </p>
+          </div>
+          <div
+            class="bg-secondary/90 backdrop-blur-sm rounded-3xl p-8 sm:p-12 shadow-2xl shadow-pink-400/30 relative overflow-hidden text-white flex flex-col md:flex-row items-center justify-between"
+          >
+            <div class="md:w-2/3">
+              <div class="flex items-center gap-4 mb-4">
+                <div
+                  class="w-12 h-12 bg-pink-400/30 rounded-xl flex items-center justify-center text-2xl"
+                >
+                  <i class="fas fa-book-open"></i>
+                </div>
+                <h2 class="text-2xl sm:text-3xl font-bold">
+                  Analisis & Desain Perangkat Lunak
+                </h2>
+              </div>
+              <p class="text-pink-100 text-lg mb-6 max-w-xl">
+                Mata kuliah ini berfokus pada metodologi pengembangan perangkat
+                lunak, perancangan sistem informasi, UML (Unified Modeling
+                Language), dan pembuatan prototipe aplikasi.
+              </p>
+              <ul class="space-y-2 mb-6">
+                <li class="flex items-center gap-2">
+                  <i class="fas fa-chevron-right text-pink-300 text-sm"></i>
+                  Dosen Pengampu: Dian Novianti,MT.
+                </li>
+                <li class="flex items-center gap-2">
+                  <i class="fas fa-chevron-right text-pink-300 text-sm"></i>
+                  Tema Project: Cyber Security System
+                </li>
+              </ul>
+            </div>
+            <div
+              class="md:w-1/3 mt-8 md:mt-0 flex justify-center relative z-10"
+            >
+              <div
+                class="bg-white p-6 rounded-2xl text-center shadow-xl w-full max-w-xs"
+              >
+                <span class="block text-gray-500 text-sm font-semibold mb-1"
+                  >Status Proyek</span
+                >
+                <span class="block text-3xl font-black text-secondary mb-2"
+                  >35%</span
+                >
+                <div class="w-full bg-gray-200 rounded-full h-2.5 mb-4">
+                  <div
+                    class="bg-primary h-2.5 rounded-full"
+                    style="width: 35%"
+                  ></div>
+                </div>
+                <span class="text-xs text-gray-500"
+                  >Tahap Analisis Kebutuhan</span
+                >
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Global Decorations (Constant position across all pages) -->
+      <div
+        class="w-full flex justify-center items-end mt-auto pt-16 pb-4 relative z-0 pointer-events-none"
+      >
+        <!-- Stemmed Flowers (Left & Right) -->
+        <div
+          class="absolute bottom-0 left-0 md:left-8 z-0 opacity-80 animate-sway"
+        >
+          <svg class="w-20 h-56 md:w-28 md:h-72 text-pink-400 drop-shadow-md">
+            <use href="#flower-tall"></use>
+          </svg>
+        </div>
+
+        <!-- Love Decorations -->
+        <div class="flex justify-center items-end gap-6 relative z-10 mb-2">
+          <i
+            class="fas fa-heart text-2xl text-pink-300 animate-float-love delay-1"
+          ></i>
+          <i
+            class="fas fa-heart text-4xl text-pink-400 animate-float-love delay-2"
+          ></i>
+          <i
+            class="fas fa-heart text-3xl text-pink-500 animate-float-love delay-3"
+          ></i>
+          <i
+            class="fas fa-heart text-4xl text-pink-400 animate-float-love delay-4"
+          ></i>
+          <i
+            class="fas fa-heart text-2xl text-pink-300 animate-float-love delay-5"
+          ></i>
+        </div>
+
+        <!-- Stemmed Flowers Right -->
+        <div
+          class="absolute bottom-0 right-0 md:right-8 z-0 opacity-80 animate-sway-delayed"
+        >
+          <svg class="w-16 h-44 md:w-24 md:h-56 text-rose-400 drop-shadow-md">
+            <use href="#flower-short"></use>
+          </svg>
+        </div>
+      </div>
+    </main>
+
+    <!-- Footer -->
+    <footer
+      class="bg-pink-50/60 backdrop-blur-md border-t border-pink-200 py-8 relative z-10"
+    >
+      <div
+        class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row justify-between items-center gap-4"
+      >
+        <div class="text-gray-500 text-sm">
+          &copy; 2026
+          <span class="font-semibold text-gray-700">Fatihatul ikrimah</span>. Tugas Mata
+          Kuliah ADPL.
+        </div>
+        <div class="flex space-x-6">
+          <a href="#" class="text-gray-400 hover:text-primary transition"
+            ><i class="fab fa-github text-xl"></i
+          ></a>
+          <a href="#" class="text-gray-400 hover:text-primary transition"
+            ><i class="fab fa-linkedin text-xl"></i
+          ></a>
+          <a href="#" class="text-gray-400 hover:text-primary transition"
+            ><i class="fas fa-envelope text-xl"></i
+          ></a>
+        </div>
+      </div>
+    </footer>
+
+    <!-- Custom Modal for Alerts (Replacing standard alert()) -->
+    <div
+      id="customModal"
+      class="fixed inset-0 bg-black/50 z-[100] hidden items-center justify-center opacity-0 transition-opacity duration-300 backdrop-blur-sm"
+    >
+      <div
+        class="bg-white rounded-2xl shadow-2xl p-6 md:p-8 max-w-md w-full mx-4 transform scale-95 transition-transform duration-300"
+        id="modalContent"
+      >
+        <div class="flex justify-between items-start mb-4">
+          <h3 id="modalTitle" class="text-xl font-bold text-gray-900">Judul</h3>
+          <button
+            onclick="closeModal()"
+            class="text-gray-400 hover:text-red-500 transition"
+          >
+            <i class="fas fa-times text-xl"></i>
+          </button>
+        </div>
+        <p id="modalBody" class="text-gray-600 mb-6 leading-relaxed">
+          Isi pesan...
+        </p>
+        <div class="flex justify-end">
+          <button
+            onclick="closeModal()"
+            class="bg-primary hover:bg-pink-600 text-white font-medium py-2 px-6 rounded-lg transition shadow-md"
+          >
+            Tutup
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Interactive Scripts -->
+    <script>
+      // Mobile Menu Toggle
+      const btn = document.getElementById("mobile-menu-btn");
+      const menu = document.getElementById("mobile-menu");
+
+      btn.addEventListener("click", () => {
+        menu.classList.toggle("hidden");
+      });
+
+      // Single Page Application (SPA) Routing Logic
+      function showPage(pageId) {
+        // 1. Hide all pages
+        document.querySelectorAll(".page-section").forEach((section) => {
+          section.classList.add("hidden");
+          section.classList.remove("page-transition");
+        });
+
+        // 2. Show target page (default to beranda if not found)
+        const targetSection =
+          document.getElementById(pageId) || document.getElementById("beranda");
+        targetSection.classList.remove("hidden");
+
+        // Trigger reflow to restart CSS animation smoothly
+        void targetSection.offsetWidth;
+        targetSection.classList.add("page-transition");
+
+        // 3. Update Desktop Navigation styling (Active state)
+        document
+          .querySelectorAll(".hidden.md\\:flex .nav-link")
+          .forEach((link) => {
+            if (link.getAttribute("href") === `#${targetSection.id}`) {
+              link.className =
+                "nav-link text-primary font-bold px-3 py-2 rounded-md text-sm transition border-b-2 border-primary";
+            } else {
+              link.className =
+                "nav-link text-gray-600 hover:text-primary font-medium px-3 py-2 rounded-md text-sm transition border-b-2 border-transparent hover:border-pink-300";
+            }
+          });
+
+        // 4. Update Mobile Navigation styling (Active state)
+        document.querySelectorAll("#mobile-menu .nav-link").forEach((link) => {
+          if (link.getAttribute("href") === `#${targetSection.id}`) {
+            link.className =
+              "nav-link block bg-pink-50 text-primary px-3 py-2 rounded-md text-base font-bold border-l-4 border-primary";
+          } else {
+            link.className =
+              "nav-link block text-gray-600 hover:bg-pink-50 hover:text-primary px-3 py-2 rounded-md text-base font-medium border-l-4 border-transparent";
+          }
+        });
+
+        // 5. Close mobile menu if it's open
+        menu.classList.add("hidden");
+
+        // 6. Scroll up gently
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      }
+
+      // Listen for URL hash changes (when user clicks links or uses back/forward button)
+      window.addEventListener("hashchange", () => {
+        const hash = window.location.hash.substring(1) || "beranda";
+        showPage(hash);
+      });
+
+      // Handle initial page load
+      window.addEventListener("load", () => {
+        const hash = window.location.hash.substring(1) || "beranda";
+        showPage(hash);
+      });
+
+      // Modal Logic (Replacing alert)
+      const modal = document.getElementById("customModal");
+      const modalContent = document.getElementById("modalContent");
+      const modalTitle = document.getElementById("modalTitle");
+      const modalBody = document.getElementById("modalBody");
+
+      function showModal(title, message) {
+        modalTitle.textContent = title;
+        modalBody.textContent = message;
+
+        // Show modal
+        modal.classList.remove("hidden");
+        modal.classList.add("flex");
+
+        // Trigger animation
+        setTimeout(() => {
+          modal.classList.remove("opacity-0");
+          modal.classList.add("opacity-100");
+          modalContent.classList.remove("scale-95");
+          modalContent.classList.add("scale-100");
+        }, 10);
+      }
+
+      function closeModal() {
+        // Reverse animation
+        modal.classList.remove("opacity-100");
+        modal.classList.add("opacity-0");
+        modalContent.classList.remove("scale-100");
+        modalContent.classList.add("scale-95");
+
+        // Hide modal after animation completes
+        setTimeout(() => {
+          modal.classList.add("hidden");
+          modal.classList.remove("flex");
+        }, 300);
+      }
+
+      // Close modal on outside click
+      modal.addEventListener("click", (e) => {
+        if (e.target === modal) {
+          closeModal();
+        }
+      });
+    </script>
+  </body>
+</html>
