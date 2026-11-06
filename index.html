@@ -1,0 +1,554 @@
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Portal Tugas | Mahasiswa TI</title>
+    <link
+      rel="icon"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%23ec4899'/%3E%3Ctext x='50' y='66' font-size='52' font-family='Arial' font-weight='bold' text-anchor='middle' fill='white'%3ETI%3C/text%3E%3C/svg%3E"
+    />
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts: Inter -->
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <!-- Font Awesome for Icons -->
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+
+    <script src="js/tailwind-config.js"></script>
+    <script>
+      try {
+        if (sessionStorage.getItem("portalAkademik.session"))
+          document.documentElement.classList.add("authed");
+      } catch (e) {}
+    </script>
+    <link rel="stylesheet" href="css/style.css" />
+  </head>
+  <body
+    class="bg-pink-100 text-gray-800 font-sans antialiased flex flex-col min-h-screen relative overflow-x-hidden"
+  >
+    <!-- Layar Login / Daftar -->
+    <div
+      id="authScreen"
+      class="fixed inset-0 z-[200] bg-pink-100 overflow-y-auto flex items-center justify-center p-4"
+    >
+      <div class="absolute inset-0 overflow-hidden pointer-events-none">
+        <div
+          class="absolute top-[-10%] left-[-10%] w-96 h-96 bg-pink-500/60 rounded-full mix-blend-multiply filter blur-3xl opacity-80 animate-blob"
+        ></div>
+        <div
+          class="absolute top-[30%] right-[-5%] w-72 h-72 bg-rose-500/60 rounded-full mix-blend-multiply filter blur-3xl opacity-80 animate-blob animation-delay-2000"
+        ></div>
+        <div
+          class="absolute -bottom-32 left-[20%] w-80 h-80 bg-fuchsia-500/60 rounded-full mix-blend-multiply filter blur-3xl opacity-80 animate-blob animation-delay-4000"
+        ></div>
+      </div>
+      <div
+        class="relative w-full max-w-md bg-white/85 backdrop-blur-md rounded-3xl shadow-2xl shadow-pink-200 border border-pink-100 p-8"
+      >
+        <div class="text-center mb-6">
+          <div
+            class="w-14 h-14 mx-auto bg-primary text-white rounded-2xl flex items-center justify-center font-bold text-2xl shadow-lg shadow-pink-200 mb-3"
+          >
+            TI
+          </div>
+          <h1 id="authTitle" class="text-2xl font-extrabold text-secondary">
+            Masuk
+          </h1>
+          <p id="authSub" class="text-sm text-gray-600 mt-1"></p>
+        </div>
+        <form id="authForm" class="space-y-4" novalidate></form>
+        <div id="authLinks" class="text-center text-sm mt-5"></div>
+      </div>
+    </div>
+
+    <!-- Stemmed Flower Symbols (Bunga dengan Tangkai) -->
+    <svg style="display: none" aria-hidden="true">
+      <symbol id="flower-tall" viewBox="0 0 100 250">
+        <!-- Tangkai -->
+        <path
+          d="M50 250 Q30 150 50 50"
+          stroke="#4ade80"
+          stroke-width="6"
+          fill="none"
+          stroke-linecap="round"
+        />
+        <!-- Daun -->
+        <path d="M47 180 Q80 150 95 120 Q60 120 45 160" fill="#4ade80" />
+        <path d="M52 130 Q20 100 5 70 Q40 70 55 110" fill="#4ade80" />
+        <!-- Kelopak Bunga -->
+        <path
+          d="M50 60 C10 60 0 -10 50 20 C100 -10 90 60 50 60 Z"
+          fill="currentColor"
+        />
+        <path
+          d="M50 20 Q30 0 50 10 Q70 0 50 20 Z"
+          fill="rgba(255,255,255,0.4)"
+        />
+      </symbol>
+      <symbol id="flower-short" viewBox="0 0 100 200">
+        <!-- Tangkai -->
+        <path
+          d="M50 200 Q70 120 50 40"
+          stroke="#4ade80"
+          stroke-width="6"
+          fill="none"
+          stroke-linecap="round"
+        />
+        <!-- Daun -->
+        <path d="M53 140 Q20 120 5 90 Q40 90 55 120" fill="#4ade80" />
+        <!-- Kelopak Bunga -->
+        <path
+          d="M50 50 C10 50 0 -20 50 10 C100 -20 90 50 50 50 Z"
+          fill="currentColor"
+        />
+        <path
+          d="M50 10 Q30 -10 50 0 Q70 -10 50 10 Z"
+          fill="rgba(255,255,255,0.4)"
+        />
+      </symbol>
+    </svg>
+
+    <!-- Animated Background Elements -->
+    <div
+      class="fixed inset-0 w-full h-full z-[-1] pointer-events-none overflow-hidden"
+    >
+      <div
+        class="absolute top-[-10%] left-[-10%] w-96 h-96 bg-pink-500/60 rounded-full mix-blend-multiply filter blur-3xl opacity-80 animate-blob"
+      ></div>
+      <div
+        class="absolute top-[20%] right-[-5%] w-72 h-72 bg-rose-500/60 rounded-full mix-blend-multiply filter blur-3xl opacity-80 animate-blob animation-delay-2000"
+      ></div>
+      <div
+        class="absolute -bottom-32 left-[20%] w-80 h-80 bg-fuchsia-500/60 rounded-full mix-blend-multiply filter blur-3xl opacity-80 animate-blob animation-delay-4000"
+      ></div>
+    </div>
+
+    <!-- Navigation Bar -->
+    <nav
+      class="bg-pink-50/80 backdrop-blur-md shadow-sm sticky top-0 z-50 border-b border-pink-200"
+    >
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex justify-between h-16 items-center">
+          <div class="flex-shrink-0 flex items-center gap-2">
+            <div
+              class="w-10 h-10 bg-primary text-white rounded-xl flex items-center justify-center font-bold text-xl shadow-lg shadow-pink-200"
+            >
+              TI
+            </div>
+            <span class="font-bold text-xl text-secondary hidden sm:block"
+              >Portal Akademik</span
+            >
+          </div>
+          <!-- Desktop Menu -->
+          <div class="hidden md:flex space-x-8">
+            <a
+              href="#beranda"
+              class="nav-link text-primary font-bold px-3 py-2 rounded-md text-sm transition border-b-2 border-primary"
+              >Beranda</a
+            >
+            <a
+              href="#tugas"
+              class="nav-link text-gray-600 hover:text-primary font-medium px-3 py-2 rounded-md text-sm transition border-b-2 border-transparent hover:border-pink-300"
+              >Daftar Tugas</a
+            >
+            <a
+              href="#matakuliah"
+              class="nav-link text-gray-600 hover:text-primary font-medium px-3 py-2 rounded-md text-sm transition border-b-2 border-transparent hover:border-pink-300"
+              >Mata Kuliah</a
+            >
+            <a
+              href="#materi"
+              class="nav-link text-gray-600 hover:text-primary font-medium px-3 py-2 rounded-md text-sm transition border-b-2 border-transparent hover:border-pink-300"
+              >Materi</a
+            >
+          </div>
+          <!-- Akun & Keluar (terpisah dari menu) -->
+          <div class="hidden md:flex items-center gap-3">
+            <span
+              class="hidden lg:inline-flex items-center gap-2 text-sm text-gray-700 bg-white/70 border border-pink-200 rounded-full px-3 py-1.5"
+            >
+              <i class="far fa-user-circle text-primary"></i>
+              <span id="navUser"></span>
+            </span>
+            <button
+              onclick="logout()"
+              title="Keluar"
+              class="inline-flex items-center gap-2 text-sm font-semibold text-primary bg-white border border-pink-300 hover:bg-primary hover:text-white rounded-full px-4 py-1.5 shadow-sm transition"
+            >
+              <i class="fas fa-sign-out-alt"></i>
+              <span>Keluar</span>
+            </button>
+          </div>
+          <!-- Mobile Menu Button -->
+          <div class="md:hidden flex items-center">
+            <button
+              id="mobile-menu-btn"
+              class="text-gray-600 hover:text-primary focus:outline-none"
+            >
+              <i class="fas fa-bars text-2xl"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+      <!-- Mobile Menu Panel (Hidden by default) -->
+      <div
+        id="mobile-menu"
+        class="hidden md:hidden bg-white/90 backdrop-blur-md border-t border-pink-100 absolute w-full z-[60] shadow-lg"
+      >
+        <div class="px-4 pt-2 pb-4 space-y-2 sm:px-3">
+          <a
+            href="#beranda"
+            class="nav-link block bg-pink-50 text-primary px-3 py-2 rounded-md text-base font-bold border-l-4 border-primary"
+            >Beranda</a
+          >
+          <a
+            href="#tugas"
+            class="nav-link block text-gray-600 hover:bg-pink-50 hover:text-primary px-3 py-2 rounded-md text-base font-medium border-l-4 border-transparent"
+            >Daftar Tugas</a
+          >
+          <a
+            href="#matakuliah"
+            class="nav-link block text-gray-600 hover:bg-pink-50 hover:text-primary px-3 py-2 rounded-md text-base font-medium border-l-4 border-transparent"
+            >Mata Kuliah</a
+          >
+          <a
+            href="#materi"
+            class="nav-link block text-gray-600 hover:bg-pink-50 hover:text-primary px-3 py-2 rounded-md text-base font-medium border-l-4 border-transparent"
+            >Materi</a
+          >
+          <button
+            onclick="logout()"
+            class="w-full text-left block text-gray-600 hover:bg-pink-50 hover:text-primary px-3 py-2 rounded-md text-base font-medium border-l-4 border-transparent"
+          >
+            <i class="fas fa-sign-out-alt mr-1"></i> Keluar (<span
+              id="navUserM"
+            ></span
+            >)
+          </button>
+        </div>
+      </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="flex-grow flex flex-col">
+      <!-- Hero Section -->
+      <section
+        id="beranda"
+        class="page-section w-full pt-16 pb-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto relative page-transition"
+      >
+        <div
+          class="lg:flex lg:items-center lg:justify-between gap-12 relative z-10"
+        >
+          <div class="lg:w-1/2">
+            <span
+              class="inline-block py-1 px-3 rounded-full bg-pink-100 text-primary text-sm font-semibold mb-4"
+              >Mahasiswa TI Angkatan 2024</span
+            >
+            <h1
+              class="text-4xl sm:text-5xl font-extrabold text-gray-900 tracking-tight mb-4"
+            >
+              Halo, Saya
+              <span
+                class="text-transparent bg-clip-text bg-gradient-to-r from-primary to-rose-400"
+                >Fatihatul Ikrimah</span
+              >
+            </h1>
+            <p class="text-lg text-gray-600 mb-8 leading-relaxed">
+              Selamat datang di portal akademik pribadi saya. Website ini
+              dirancang khusus untuk mendokumentasikan perjalanan belajar,
+              mengumpulkan tugas harian, dan merangkum materi perkuliahan,
+              khususnya pada mata kuliah
+              <strong>Analisis &amp; Desain Perangkat Lunak (ADPL)</strong>.
+            </p>
+            <div class="flex flex-wrap gap-4">
+              <a
+                href="#tugas"
+                class="bg-primary hover:bg-pink-600 text-white font-semibold py-3 px-6 rounded-lg shadow-lg shadow-pink-200 transition duration-300 ease-in-out transform hover:-translate-y-1 flex items-center gap-2"
+              >
+                Lihat Tugas <i class="fas fa-arrow-right"></i>
+              </a>
+              <a
+                href="https://github.com/fatihatulikrimah41-lgtm/Portal-akademik_Fatihatul-ikrimah"
+                target="_blank"
+                rel="noopener noreferrer"
+                class="bg-white border-2 border-gray-200 text-gray-700 hover:border-gray-300 hover:bg-gray-50 font-semibold py-3 px-6 rounded-lg transition duration-300 flex items-center gap-2"
+              >
+                <i class="fab fa-github text-xl"></i> GitHub
+              </a>
+            </div>
+          </div>
+          <div class="lg:w-1/2 mt-12 lg:mt-0 flex justify-center">
+            <div class="relative w-72 h-72 sm:w-96 sm:h-96">
+              <div
+                class="absolute inset-0 bg-gradient-to-br from-pink-300 to-rose-300 rounded-full blur-2xl opacity-60 animate-pulse"
+              ></div>
+              <img
+                src="assets/personal_photo.jpg"
+                alt="Profile"
+                class="relative rounded-3xl shadow-2xl shadow-pink-300 object-cover w-full h-full border-4 border-white transform rotate-2 hover:rotate-0 transition duration-500"
+              />
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Tasks / Assignments Section -->
+      <section
+        id="tugas"
+        class="page-section hidden w-full py-16 bg-white/40 backdrop-blur-md border-t border-white/50 relative z-10 page-transition min-h-[70vh]"
+      >
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+          <div class="text-center mb-8">
+            <h2 class="text-3xl font-bold text-gray-900">
+              Daftar Tugas &amp; Laporan
+            </h2>
+          </div>
+          <div id="dueBanner" class="space-y-3 mb-6"></div>
+          <div
+            class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-8"
+          >
+            <p id="taskSummary" class="text-sm text-gray-600"></p>
+            <button
+              onclick="openTaskForm()"
+              class="bg-primary hover:bg-pink-600 text-white font-semibold py-2.5 px-5 rounded-lg shadow-lg shadow-pink-200 transition flex items-center justify-center gap-2"
+            >
+              <i class="fas fa-plus"></i> Tambah Tugas
+            </button>
+          </div>
+          <div
+            id="taskList"
+            class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"
+          ></div>
+        </div>
+      </section>
+
+      <!-- Courses Information Section -->
+      <section
+        id="matakuliah"
+        class="page-section hidden w-full py-16 relative z-10 page-transition min-h-[70vh]"
+      >
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 mb-10">
+          <div class="text-center mb-8">
+            <h2 class="text-3xl font-bold text-gray-900">
+              Informasi Mata Kuliah
+            </h2>
+          </div>
+          <div class="flex justify-end mb-8">
+            <button
+              onclick="openCourseForm()"
+              class="bg-primary hover:bg-pink-600 text-white font-semibold py-2.5 px-5 rounded-lg shadow-lg shadow-pink-200 transition flex items-center justify-center gap-2"
+            >
+              <i class="fas fa-plus"></i> Tambah Mata Kuliah
+            </button>
+          </div>
+          <div id="courseList" class="space-y-8"></div>
+        </div>
+      </section>
+
+      <!-- Materi Section -->
+      <section
+        id="materi"
+        class="page-section hidden w-full py-16 bg-white/40 backdrop-blur-md border-t border-white/50 relative z-10 page-transition min-h-[70vh]"
+      >
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+          <div class="text-center mb-8">
+            <h2 class="text-3xl font-bold text-gray-900">Materi Perkuliahan</h2>
+          </div>
+          <div
+            class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-8"
+          >
+            <div class="flex items-center gap-3">
+              <select
+                id="materiFilter"
+                onchange="renderMateri()"
+                class="field sm:w-64"
+                aria-label="Filter mata kuliah"
+              ></select>
+              <p
+                id="materiSummary"
+                class="text-sm text-gray-600 whitespace-nowrap"
+              ></p>
+            </div>
+            <button
+              onclick="openMateriForm()"
+              class="bg-primary hover:bg-pink-600 text-white font-semibold py-2.5 px-5 rounded-lg shadow-lg shadow-pink-200 transition flex items-center justify-center gap-2"
+            >
+              <i class="fas fa-plus"></i> Tambah Materi
+            </button>
+          </div>
+          <div
+            id="materiList"
+            class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"
+          ></div>
+        </div>
+      </section>
+
+      <!-- Global Decorations (Constant position across all pages) -->
+      <div
+        class="w-full flex justify-center items-end mt-auto pt-16 pb-4 relative z-0 pointer-events-none"
+      >
+        <!-- Stemmed Flowers (Left & Right) -->
+        <div
+          class="absolute bottom-0 left-0 md:left-8 z-0 opacity-80 animate-sway"
+        >
+          <svg class="w-20 h-56 md:w-28 md:h-72 text-pink-400 drop-shadow-md">
+            <use href="#flower-tall"></use>
+          </svg>
+        </div>
+
+        <!-- Love Decorations -->
+        <div class="flex justify-center items-end gap-6 relative z-10 mb-2">
+          <i
+            class="fas fa-heart text-2xl text-pink-300 animate-float-love delay-1"
+          ></i>
+          <i
+            class="fas fa-heart text-4xl text-pink-400 animate-float-love delay-2"
+          ></i>
+          <i
+            class="fas fa-heart text-3xl text-pink-500 animate-float-love delay-3"
+          ></i>
+          <i
+            class="fas fa-heart text-4xl text-pink-400 animate-float-love delay-4"
+          ></i>
+          <i
+            class="fas fa-heart text-2xl text-pink-300 animate-float-love delay-5"
+          ></i>
+        </div>
+
+        <!-- Stemmed Flowers Right -->
+        <div
+          class="absolute bottom-0 right-0 md:right-8 z-0 opacity-80 animate-sway-delayed"
+        >
+          <svg class="w-16 h-44 md:w-24 md:h-56 text-rose-400 drop-shadow-md">
+            <use href="#flower-short"></use>
+          </svg>
+        </div>
+      </div>
+    </main>
+
+    <!-- Footer -->
+    <footer
+      class="bg-pink-50/60 backdrop-blur-md border-t border-pink-200 py-8 relative z-10"
+    >
+      <div
+        class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row justify-between items-center gap-4"
+      >
+        <div class="text-gray-500 text-sm">
+          &copy; 2026
+          <span class="font-semibold text-gray-700">Fatihatul Ikrimah</span>.
+          Portal Akademik.
+        </div>
+        <div class="flex space-x-6">
+          <a
+            href="https://github.com/fatihatulikrimah41-lgtm/Portal-akademik_Fatihatul-ikrimah"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="text-gray-400 hover:text-primary transition"
+            ><i class="fab fa-github text-xl"></i
+          ></a>
+          <a href="#" class="text-gray-400 hover:text-primary transition"
+            ><i class="fab fa-linkedin text-xl"></i
+          ></a>
+          <a href="#" class="text-gray-400 hover:text-primary transition"
+            ><i class="fas fa-envelope text-xl"></i
+          ></a>
+        </div>
+      </div>
+    </footer>
+
+    <!-- Custom Modal for Alerts (Replacing standard alert()) -->
+    <div
+      id="customModal"
+      class="fixed inset-0 bg-black/50 z-[100] hidden items-center justify-center opacity-0 transition-opacity duration-300 backdrop-blur-sm"
+    >
+      <div
+        class="bg-white rounded-2xl shadow-2xl p-6 md:p-8 max-w-md w-full mx-4 transform scale-95 transition-transform duration-300"
+        id="modalContent"
+      >
+        <div class="flex justify-between items-start mb-4">
+          <h3 id="modalTitle" class="text-xl font-bold text-gray-900">Judul</h3>
+          <button
+            onclick="closeModal()"
+            class="text-gray-400 hover:text-red-500 transition"
+          >
+            <i class="fas fa-times text-xl"></i>
+          </button>
+        </div>
+        <p id="modalBody" class="text-gray-600 mb-6 leading-relaxed">
+          Isi pesan...
+        </p>
+        <div class="flex justify-end">
+          <button
+            onclick="closeModal()"
+            class="bg-primary hover:bg-pink-600 text-white font-medium py-2 px-6 rounded-lg transition shadow-md"
+          >
+            Tutup
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Toast Notifikasi Tenggat -->
+    <div
+      id="dueToast"
+      class="fixed top-20 right-4 z-[90] max-w-sm w-[calc(100%-2rem)] hidden opacity-0 translate-y-[-8px] transition duration-300"
+    ></div>
+
+    <!-- Form Modal (Tambah / Edit) -->
+    <div
+      id="formModal"
+      class="fixed inset-0 bg-black/50 z-[110] hidden items-center justify-center opacity-0 transition-opacity duration-300 backdrop-blur-sm p-4"
+    >
+      <div
+        id="formBox"
+        class="bg-white rounded-2xl shadow-2xl p-6 md:p-8 max-w-lg w-full transform scale-95 transition-transform duration-300 max-h-[90vh] overflow-y-auto"
+      ></div>
+    </div>
+
+    <!-- Confirm Modal (Hapus) -->
+    <div
+      id="confirmModal"
+      class="fixed inset-0 bg-black/50 z-[120] hidden items-center justify-center opacity-0 transition-opacity duration-300 backdrop-blur-sm p-4"
+    >
+      <div
+        class="bg-white rounded-2xl shadow-2xl p-6 md:p-8 max-w-md w-full transform scale-95 transition-transform duration-300"
+      >
+        <div class="flex items-center gap-3 mb-3">
+          <div
+            class="w-10 h-10 bg-red-100 text-red-500 rounded-lg flex items-center justify-center"
+          >
+            <i class="fas fa-trash"></i>
+          </div>
+          <h3 id="confirmTitle" class="text-xl font-bold text-gray-900">
+            Hapus?
+          </h3>
+        </div>
+        <p id="confirmBody" class="text-gray-600 mb-6 leading-relaxed"></p>
+        <div class="flex justify-end gap-3">
+          <button
+            onclick="closeOv(confirmModal)"
+            class="bg-white border border-gray-200 text-gray-700 font-medium py-2 px-5 rounded-lg hover:bg-gray-50 transition"
+          >
+            Batal
+          </button>
+          <button
+            id="confirmOk"
+            class="bg-red-500 hover:bg-red-600 text-white font-medium py-2 px-5 rounded-lg transition shadow-md"
+          >
+            Hapus
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <script src="js/navigation.js"></script>
+    <script src="js/app.js"></script>
+  </body>
+</html>
