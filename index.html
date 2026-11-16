@@ -35,17 +35,15 @@
       rel="stylesheet"
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
     />
-    <!-- PDF.js untuk merender PDF langsung di halaman tanpa diblokir browser -->
+    <!-- PDF.js untuk merender PDF langsung di halaman -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 
-    <script src="js/tailwind-config.js" onerror="void 0"></script>
     <script>
       try {
         if (sessionStorage.getItem("portalAkademik.session"))
           document.documentElement.classList.add("authed");
       } catch (e) {}
     </script>
-    <link rel="stylesheet" href="css/style.css" onerror="void 0" />
     <style>
       html.authed #authScreen {
         display: none !important;
@@ -68,7 +66,7 @@
         box-shadow: 0 0 0 3px rgba(236, 72, 153, 0.15);
       }
 
-      /* Tata letak Daftar Tugas & Laporan agar persis seperti referensi */
+      /* Tata letak Daftar Tugas & Laporan agar persis seperti gambar referensi */
       body main section#tugas > div {
         max-width: 900px !important;
         margin-left: auto !important;
@@ -161,7 +159,7 @@
   <body
     class="bg-pink-100 text-gray-800 font-sans antialiased flex flex-col min-h-screen relative overflow-x-hidden"
   >
-    <!-- Layar Login / Daftar -->
+    <!-- Layar Login / Daftar (Langsung Terisi Penuh & Siap Pakai) -->
     <div
       id="authScreen"
       class="fixed inset-0 z-[200] bg-pink-100 overflow-y-auto flex items-center justify-center p-4"
@@ -190,15 +188,50 @@
             Masuk
           </h1>
           <p id="authSub" class="text-sm text-gray-600 mt-1">
-            Silakan masuk ke Portal Akademik Anda
+            Portal Akademik Fatihatul Ikrimah
           </p>
         </div>
-        <form id="authForm" class="space-y-4" novalidate></form>
-        <div id="authLinks" class="text-center text-sm mt-5"></div>
+        <form id="authForm" class="space-y-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">
+              Username / NIM
+            </label>
+            <input
+              type="text"
+              id="loginUsername"
+              value="Fatihatul Ikrimah"
+              required
+              class="field"
+              placeholder="Masukkan username atau NIM"
+            />
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">
+              Kata Sandi
+            </label>
+            <input
+              type="password"
+              id="loginPassword"
+              value="240511136"
+              required
+              class="field"
+              placeholder="Masukkan kata sandi"
+            />
+          </div>
+          <button
+            type="submit"
+            class="w-full bg-primary hover:bg-pink-600 text-white font-semibold py-2.5 px-4 rounded-xl shadow-lg shadow-pink-200 transition cursor-pointer"
+          >
+            Masuk
+          </button>
+        </form>
+        <div id="authLinks" class="text-center text-xs text-gray-500 mt-5">
+          Klik tombol <strong>Masuk</strong> untuk membuka Portal Akademik
+        </div>
       </div>
     </div>
 
-    <!-- Stemmed Flower Symbols (Bunga dengan Tangkai) -->
+    <!-- Stemmed Flower Symbols -->
     <svg style="display: none" aria-hidden="true">
       <symbol id="flower-tall" viewBox="0 0 100 250">
         <path
@@ -353,7 +386,7 @@
           >
             <i class="fas fa-sign-out-alt mr-1"></i> Keluar (<span
               id="navUserM"
-            >Fatihatul Ikrimah</span
+              >Fatihatul Ikrimah</span
             >)
           </button>
         </div>
@@ -588,92 +621,18 @@
       </div>
     </footer>
 
-    <!-- Custom Modal for Alerts -->
-    <div
-      id="customModal"
-      class="fixed inset-0 bg-black/50 z-[100] hidden items-center justify-center opacity-0 transition-opacity duration-300 backdrop-blur-sm"
-    >
-      <div
-        class="bg-white rounded-2xl shadow-2xl p-6 md:p-8 max-w-md w-full mx-4 transform scale-95 transition-transform duration-300"
-        id="modalContent"
-      >
-        <div class="flex justify-between items-start mb-4">
-          <h3 id="modalTitle" class="text-xl font-bold text-gray-900">Judul</h3>
-          <button
-            onclick="closeModal()"
-            class="text-gray-400 hover:text-red-500 transition"
-          >
-            <i class="fas fa-times text-xl"></i>
-          </button>
-        </div>
-        <p id="modalBody" class="text-gray-600 mb-6 leading-relaxed">
-          Isi pesan...
-        </p>
-        <div class="flex justify-end">
-          <button
-            onclick="closeModal()"
-            class="bg-primary hover:bg-pink-600 text-white font-medium py-2 px-6 rounded-lg transition shadow-md"
-          >
-            Tutup
-          </button>
-        </div>
-      </div>
-    </div>
-
-    <!-- Toast Notifikasi Tenggat -->
-    <div
-      id="dueToast"
-      class="fixed top-20 right-4 z-[90] max-w-sm w-[calc(100%-2rem)] hidden opacity-0 translate-y-[-8px] transition duration-300"
-    ></div>
-
     <!-- Form Modal (Tambah / Edit) -->
     <div
       id="formModal"
-      class="fixed inset-0 bg-black/50 z-[110] hidden items-center justify-center opacity-0 transition-opacity duration-300 backdrop-blur-sm p-4"
+      class="fixed inset-0 bg-black/50 z-[110] hidden items-center justify-center backdrop-blur-sm p-4"
     >
       <div
         id="formBox"
-        class="bg-white rounded-2xl shadow-2xl p-6 md:p-8 max-w-lg w-full transform scale-95 transition-transform duration-300 max-h-[90vh] overflow-y-auto"
+        class="bg-white rounded-2xl shadow-2xl p-6 md:p-8 max-w-lg w-full max-h-[90vh] overflow-y-auto"
       ></div>
     </div>
 
-    <!-- Confirm Modal (Hapus) -->
-    <div
-      id="confirmModal"
-      class="fixed inset-0 bg-black/50 z-[120] hidden items-center justify-center opacity-0 transition-opacity duration-300 backdrop-blur-sm p-4"
-    >
-      <div
-        class="bg-white rounded-2xl shadow-2xl p-6 md:p-8 max-w-md w-full transform scale-95 transition-transform duration-300"
-      >
-        <div class="flex items-center gap-3 mb-3">
-          <div
-            class="w-10 h-10 bg-red-100 text-red-500 rounded-lg flex items-center justify-center"
-          >
-            <i class="fas fa-trash"></i>
-          </div>
-          <h3 id="confirmTitle" class="text-xl font-bold text-gray-900">
-            Hapus?
-          </h3>
-        </div>
-        <p id="confirmBody" class="text-gray-600 mb-6 leading-relaxed"></p>
-        <div class="flex justify-end gap-3">
-          <button
-            onclick="closeOv(confirmModal)"
-            class="bg-white border border-gray-200 text-gray-700 font-medium py-2 px-5 rounded-lg hover:bg-gray-50 transition"
-          >
-            Batal
-          </button>
-          <button
-            id="confirmOk"
-            class="bg-red-500 hover:bg-red-600 text-white font-medium py-2 px-5 rounded-lg transition shadow-md"
-          >
-            Hapus
-          </button>
-        </div>
-      </div>
-    </div>
-
-    <!-- Modal Pratinjau File (Render PDF Canvas / Gambar di dalam halaman) -->
+    <!-- Modal Pratinjau File -->
     <div
       id="filePreviewModal"
       class="fixed inset-0 bg-black/65 z-[180] hidden items-center justify-center p-3 sm:p-5 backdrop-blur-sm"
@@ -719,14 +678,26 @@
       </div>
     </div>
 
-    <script src="js/navigation.js" onerror="void 0"></script>
-    <script src="js/app.js" onerror="void 0"></script>
-
-    <!-- Fallback Mandiri + Penyimpanan Permanen IndexedDB + Tata Letak Kartu -->
+    <!-- Aplikasi Lengkap & Mandiri (Tanpa ketergantungan js/app.js eksternal yang rusak) -->
     <script>
       (function () {
         const SESSION_KEY = "portalAkademik.session";
-        const TASKS_KEY = "portalAkademik.tasks.fallback.v1";
+        const TASKS_KEY = "portalAkademik.tasks.v2";
+        const COURSES_KEY = "portalAkademik.courses.v2";
+        const MATERI_KEY = "portalAkademik.materi.v2";
+        const DB_NAME = "PortalAkademikPermanentDB";
+        const DB_VERSION = 1;
+        const STORE_NAME = "attachments";
+        const LOCAL_META_KEY = "portalAkademik.permanentAttachments.v3";
+
+        const DEFAULT_QUIZ_DRIVE_LINK =
+          "https://drive.google.com/drive/folders/1AralCU0Or88y3FkNgjsDD2ta9tYtxqRI?usp=sharing";
+        const DEFAULT_QUIZ_PDF_NAME = "240511136_Fatihatul ikrimah_TI24D_QUIZ.pdf";
+
+        if (window.pdfjsLib) {
+          window.pdfjsLib.GlobalWorkerOptions.workerSrc =
+            "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+        }
 
         const defaultTasks = [
           {
@@ -751,297 +722,55 @@
           }
         ];
 
-        function loadFallbackTasks() {
-          try {
-            const raw = localStorage.getItem(TASKS_KEY);
-            if (raw) return JSON.parse(raw);
-          } catch (e) {}
-          return defaultTasks;
-        }
-
-        function saveFallbackTasks(list) {
-          try {
-            localStorage.setItem(TASKS_KEY, JSON.stringify(list));
-          } catch (e) {}
-        }
-
-        function showSection(hash) {
-          const targetId = (hash || "#beranda").replace("#", "") || "beranda";
-          const sections = document.querySelectorAll(".page-section");
-          let matched = false;
-          sections.forEach((sec) => {
-            if (sec.id === targetId) {
-              sec.classList.remove("hidden");
-              matched = true;
-            } else {
-              sec.classList.add("hidden");
-            }
-          });
-          if (!matched && sections[0]) sections[0].classList.remove("hidden");
-
-          document.querySelectorAll(".nav-link").forEach((link) => {
-            const href = link.getAttribute("href");
-            if (href === "#" + targetId) {
-              link.classList.add("text-primary", "font-bold", "border-primary");
-              link.classList.remove("text-gray-600", "border-transparent");
-            } else {
-              link.classList.remove("text-primary", "font-bold", "border-primary");
-              link.classList.add("text-gray-600", "border-transparent");
-            }
-          });
-        }
-
-        function initFallbackAuthAndNav() {
-          const authForm = document.getElementById("authForm");
-          const authScreen = document.getElementById("authScreen");
-          const navUser = document.getElementById("navUser");
-          const navUserM = document.getElementById("navUserM");
-
-          const savedUser = sessionStorage.getItem(SESSION_KEY);
-          if (savedUser) {
-            document.documentElement.classList.add("authed");
-            if (authScreen) authScreen.style.display = "none";
-            if (navUser && !navUser.textContent) navUser.textContent = savedUser;
-            if (navUserM && !navUserM.textContent) navUserM.textContent = savedUser;
+        const defaultCourses = [
+          {
+            code: "TI24-ADPL",
+            name: "Analisis dan Design PL",
+            sks: 3,
+            lecturer: "Dosen Pengampu ADPL",
+            schedule: "Senin, 08:00 - 10:30"
+          },
+          {
+            code: "TI24-IMK",
+            name: "Interaksi Manusia & Komputer",
+            sks: 3,
+            lecturer: "Dosen Pengampu IMK",
+            schedule: "Rabu, 10:30 - 13:00"
           }
+        ];
 
-          if (authForm && !authForm.innerHTML.trim()) {
-            authForm.innerHTML = `
-              <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Username / NIM</label>
-                <input type="text" id="fbUsername" value="Fatihatul Ikrimah" required class="field" placeholder="Masukkan username atau NIM" />
-              </div>
-              <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Kata Sandi</label>
-                <input type="password" id="fbPassword" value="123456" required class="field" placeholder="Masukkan kata sandi" />
-              </div>
-              <button type="submit" class="w-full bg-primary hover:bg-pink-600 text-white font-semibold py-2.5 px-4 rounded-xl shadow-lg shadow-pink-200 transition">
-                Masuk ke Portal
-              </button>
-            `;
-            authForm.addEventListener("submit", function (e) {
-              e.preventDefault();
-              const uname = (document.getElementById("fbUsername").value || "Fatihatul Ikrimah").trim();
-              sessionStorage.setItem(SESSION_KEY, uname);
-              document.documentElement.classList.add("authed");
-              if (authScreen) authScreen.style.display = "none";
-              if (navUser) navUser.textContent = uname;
-              if (navUserM) navUserM.textContent = uname;
-            });
+        const defaultMateri = [
+          {
+            course: "Analisis dan Design PL",
+            title: "Pengantar SDLC & Metodologi Penelitian Perangkat Lunak",
+            desc: "Konsep dasar rekayasa perangkat lunak, tahapan analisis kebutuhan, dan perancangan sistem."
+          },
+          {
+            course: "Interaksi Manusia & Komputer",
+            title: "Prinsip Usability & Prototipe Antarmuka",
+            desc: "Dasar desain antarmuka pengguna menggunakan Canva dan Figma."
           }
-
-          if (typeof window.logout !== "function") {
-            window.logout = function () {
-              sessionStorage.removeItem(SESSION_KEY);
-              document.documentElement.classList.remove("authed");
-              if (authScreen) authScreen.style.display = "flex";
-            };
-          }
-
-          document.querySelectorAll('a[href^="#"]').forEach((a) => {
-            a.addEventListener("click", function (e) {
-              const h = a.getAttribute("href");
-              if (h && h.length > 1) {
-                e.preventDefault();
-                window.location.hash = h;
-                showSection(h);
-                const mm = document.getElementById("mobile-menu");
-                if (mm) mm.classList.add("hidden");
-              }
-            });
-          });
-
-          const mobileBtn = document.getElementById("mobile-menu-btn");
-          if (mobileBtn) {
-            mobileBtn.onclick = function () {
-              const mm = document.getElementById("mobile-menu");
-              if (mm) mm.classList.toggle("hidden");
-            };
-          }
-
-          if (window.location.hash) {
-            showSection(window.location.hash);
-          }
-
-          // Fallback render Daftar Tugas jika app.js eksternal gagal dimuat
-          const taskList = document.getElementById("taskList");
-          if (taskList && !taskList.children.length) {
-            window.renderFallbackTasks = function () {
-              const tasks = loadFallbackTasks();
-              const doneCount = tasks.filter((t) => t.done).length;
-              const pendingCount = tasks.length - doneCount;
-              const sumEl = document.getElementById("taskSummary");
-              if (sumEl) {
-                sumEl.textContent = `${tasks.length} tugas | ${doneCount} selesai | ${pendingCount} belum selesai`;
-              }
-
-              taskList.innerHTML = tasks
-                .map(
-                  (t, idx) => `
-                <div class="bg-white rounded-3xl p-6 shadow-sm border border-pink-100 flex flex-col">
-                  <div class="flex items-center justify-between gap-2 mb-3">
-                    <span class="px-3 py-1 rounded-full bg-purple-100 text-purple-700 text-xs font-semibold">${t.course}</span>
-                    <span class="px-3 py-1 rounded-full bg-pink-100 text-primary text-xs font-semibold">${t.daysLeft || "Aktif"}</span>
-                  </div>
-                  <h3 class="text-lg font-bold text-gray-900 mb-2">${t.title}</h3>
-                  <p class="text-sm text-gray-600 leading-relaxed mb-6">${t.desc}</p>
-                  <div class="task-footer-push mt-auto pt-3">
-                    <div class="flex items-center gap-2 text-xs text-gray-500 mb-3">
-                      <i class="far fa-calendar-alt"></i>
-                      <span>Tenggat: ${t.dueLabel || t.due}</span>
-                    </div>
-                    <div class="flex items-center justify-between gap-2">
-                      <button
-                        type="button"
-                        onclick="toggleFallbackTask(${idx})"
-                        class="inline-flex items-center gap-1.5 text-sm font-semibold ${
-                          t.done ? "text-gray-500 hover:text-gray-700" : "text-primary hover:text-pink-600"
-                        } transition"
-                      >
-                        <i class="fas ${t.done ? "fa-undo" : "fa-check-circle"}"></i>
-                        <span>${t.done ? "Tandai belum" : "Tandai selesai"}</span>
-                      </button>
-                      <div class="flex items-center gap-2">
-                        <button
-                          type="button"
-                          onclick="openTaskForm(${idx})"
-                          class="w-9 h-9 rounded-xl bg-gray-100 hover:bg-pink-100 text-gray-600 hover:text-primary flex items-center justify-center transition"
-                          title="Edit Tugas"
-                        >
-                          <i class="fas fa-pen text-xs"></i>
-                        </button>
-                        <button
-                          type="button"
-                          onclick="deleteFallbackTask(${idx})"
-                          class="w-9 h-9 rounded-xl bg-gray-100 hover:bg-red-100 text-gray-600 hover:text-red-500 flex items-center justify-center transition"
-                          title="Hapus Tugas"
-                        >
-                          <i class="fas fa-trash text-xs"></i>
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              `
-                )
-                .join("");
-            };
-
-            window.toggleFallbackTask = function (idx) {
-              const tasks = loadFallbackTasks();
-              if (tasks[idx]) {
-                tasks[idx].done = !tasks[idx].done;
-                saveFallbackTasks(tasks);
-                window.renderFallbackTasks();
-              }
-            };
-
-            window.deleteFallbackTask = function (idx) {
-              const tasks = loadFallbackTasks();
-              tasks.splice(idx, 1);
-              saveFallbackTasks(tasks);
-              window.renderFallbackTasks();
-            };
-
-            if (typeof window.openTaskForm !== "function") {
-              window.openTaskForm = function (editIdx) {
-                const tasks = loadFallbackTasks();
-                const item = typeof editIdx === "number" ? tasks[editIdx] : null;
-                const formModal = document.getElementById("formModal");
-                const formBox = document.getElementById("formBox");
-                if (!formModal || !formBox) return;
-
-                formBox.innerHTML = `
-                  <h3 class="text-xl font-bold text-gray-900 mb-4">${item ? "Edit Tugas" : "Tambah Tugas"}</h3>
-                  <form id="fbTaskForm" class="space-y-3">
-                    <div>
-                      <label class="block text-sm font-medium text-gray-700 mb-1">Mata Kuliah</label>
-                      <input type="text" id="fbTaskCourse" class="field" value="${item ? item.course : "Analisis dan Design PL"}" required />
-                    </div>
-                    <div>
-                      <label class="block text-sm font-medium text-gray-700 mb-1">Judul Tugas</label>
-                      <input type="text" id="fbTaskTitle" class="field" value="${item ? item.title : ""}" required />
-                    </div>
-                    <div>
-                      <label class="block text-sm font-medium text-gray-700 mb-1">Deskripsi</label>
-                      <textarea id="fbTaskDesc" rows="3" class="field">${item ? item.desc : ""}</textarea>
-                    </div>
-                    <div>
-                      <label class="block text-sm font-medium text-gray-700 mb-1">Tenggat</label>
-                      <input type="text" id="fbTaskDue" class="field" value="${item ? item.dueLabel : "Sen, 30 Nov 2026"}" />
-                    </div>
-                    <div class="flex justify-end gap-2 pt-2">
-                      <button type="button" id="fbCancelTask" class="px-4 py-2 rounded-lg border border-gray-200 text-gray-600">Batal</button>
-                      <button type="submit" class="px-5 py-2 rounded-lg bg-primary text-white font-semibold">Simpan</button>
-                    </div>
-                  </form>
-                `;
-
-                formModal.classList.remove("hidden", "opacity-0");
-                formModal.classList.add("flex", "opacity-100");
-
-                document.getElementById("fbCancelTask").onclick = function () {
-                  formModal.classList.add("hidden");
-                  formModal.classList.remove("flex");
-                };
-
-                document.getElementById("fbTaskForm").onsubmit = function (ev) {
-                  ev.preventDefault();
-                  const newObj = {
-                    id: item ? item.id : "task-" + Date.now(),
-                    course: document.getElementById("fbTaskCourse").value.trim(),
-                    title: document.getElementById("fbTaskTitle").value.trim(),
-                    desc: document.getElementById("fbTaskDesc").value.trim(),
-                    dueLabel: document.getElementById("fbTaskDue").value.trim(),
-                    daysLeft: "6 hari lagi",
-                    done: item ? item.done : false
-                  };
-                  if (typeof editIdx === "number") tasks[editIdx] = newObj;
-                  else tasks.push(newObj);
-                  saveFallbackTasks(tasks);
-                  window.renderFallbackTasks();
-                  formModal.classList.add("hidden");
-                  formModal.classList.remove("flex");
-                };
-              };
-            }
-
-            window.renderFallbackTasks();
-          }
-        }
-
-        if (document.readyState === "loading") {
-          document.addEventListener("DOMContentLoaded", initFallbackAuthAndNav);
-        } else {
-          initFallbackAuthAndNav();
-        }
-      })();
-    </script>
-
-    <!-- Penyimpanan Permanen IndexedDB + LocalStorage + Seed Link Drive QUIZ -->
-    <script>
-      (function () {
-        const DB_NAME = "PortalAkademikPermanentDB";
-        const DB_VERSION = 1;
-        const STORE_NAME = "attachments";
-        const LOCAL_META_KEY = "portalAkademik.permanentAttachments.v3";
-
-        const DEFAULT_QUIZ_DRIVE_LINK =
-          "https://drive.google.com/drive/folders/1AralCU0Or88y3FkNgjsDD2ta9tYtxqRI?usp=sharing";
-        const DEFAULT_QUIZ_PDF_NAME = "240511136_Fatihatul ikrimah_TI24D_QUIZ.pdf";
-
-        if (window.pdfjsLib) {
-          window.pdfjsLib.GlobalWorkerOptions.workerSrc =
-            "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
-        }
+        ];
 
         let recordsCache = { tugas: {}, materi: {} };
         let dbInstance = null;
 
-        function ensureDefaultQuizAttachment() {
-          const deletedFlag = localStorage.getItem("portalAkademik.quizDefaultDeleted");
-          if (deletedFlag === "1") return;
+        function getStorage(key, fallback) {
+          try {
+            const raw = localStorage.getItem(key);
+            if (raw) return JSON.parse(raw);
+          } catch (e) {}
+          return fallback;
+        }
 
+        function setStorage(key, val) {
+          try {
+            localStorage.setItem(key, JSON.stringify(val));
+          } catch (e) {}
+        }
+
+        function ensureDefaultQuizAttachment() {
+          if (localStorage.getItem("portalAkademik.quizDefaultDeleted") === "1") return;
           if (!recordsCache.tugas["QUIZ"]) {
             recordsCache.tugas["QUIZ"] = { file: null, link: null };
           }
@@ -1054,34 +783,29 @@
           return new Promise((resolve) => {
             if (dbInstance) return resolve(dbInstance);
             if (!window.indexedDB) return resolve(null);
-
             const req = indexedDB.open(DB_NAME, DB_VERSION);
-            req.onupgradeneeded = function (e) {
+            req.onupgradeneeded = (e) => {
               const db = e.target.result;
               if (!db.objectStoreNames.contains(STORE_NAME)) {
                 db.createObjectStore(STORE_NAME, { keyPath: "id" });
               }
             };
-            req.onsuccess = function (e) {
+            req.onsuccess = (e) => {
               dbInstance = e.target.result;
               resolve(dbInstance);
             };
-            req.onerror = function () {
-              resolve(null);
-            };
+            req.onerror = () => resolve(null);
           });
         }
 
         async function persistRecordToDB(category, titleKey, recordObj) {
-          saveBackupToLocalStorage();
+          setStorage(LOCAL_META_KEY, recordsCache);
           const db = await openPermanentDB();
           if (!db) return;
-
           return new Promise((resolve) => {
             try {
               const tx = db.transaction(STORE_NAME, "readwrite");
-              const store = tx.objectStore(STORE_NAME);
-              const payload = {
+              tx.objectStore(STORE_NAME).put({
                 id: `${category}::${titleKey}`,
                 category,
                 titleKey,
@@ -1095,18 +819,17 @@
                       arrayBuffer: recordObj.file.arrayBuffer || null
                     }
                   : null
-              };
-              store.put(payload);
+              });
               tx.oncomplete = () => resolve(true);
               tx.onerror = () => resolve(false);
-            } catch (err) {
+            } catch (e) {
               resolve(false);
             }
           });
         }
 
         async function deleteRecordFromDB(category, titleKey) {
-          saveBackupToLocalStorage();
+          setStorage(LOCAL_META_KEY, recordsCache);
           const db = await openPermanentDB();
           if (!db) return;
           try {
@@ -1116,47 +839,32 @@
         }
 
         async function loadAllPermanentRecords() {
-          try {
-            const raw = localStorage.getItem(LOCAL_META_KEY);
-            if (raw) {
-              const parsed = JSON.parse(raw);
-              ["tugas", "materi"].forEach((cat) => {
-                if (parsed[cat]) {
-                  for (const [k, v] of Object.entries(parsed[cat])) {
-                    if (!recordsCache[cat][k]) recordsCache[cat][k] = { file: null, link: null };
-                    if (v.link) recordsCache[cat][k].link = v.link;
-                  }
-                }
-              });
+          const savedMeta = getStorage(LOCAL_META_KEY, { tugas: {}, materi: {} });
+          ["tugas", "materi"].forEach((cat) => {
+            if (savedMeta[cat]) {
+              for (const [k, v] of Object.entries(savedMeta[cat])) {
+                if (!recordsCache[cat][k]) recordsCache[cat][k] = { file: null, link: null };
+                if (v && v.link) recordsCache[cat][k].link = v.link;
+              }
             }
-          } catch (e) {}
+          });
 
           ensureDefaultQuizAttachment();
 
           const db = await openPermanentDB();
-          if (!db) {
-            saveBackupToLocalStorage();
-            renderAllBadges(true);
-            return;
-          }
+          if (!db) return;
 
           return new Promise((resolve) => {
             try {
               const tx = db.transaction(STORE_NAME, "readonly");
-              const store = tx.objectStore(STORE_NAME);
-              const req = store.getAll();
-              req.onsuccess = async function () {
-                const items = req.result || [];
-                items.forEach((item) => {
+              const req = tx.objectStore(STORE_NAME).getAll();
+              req.onsuccess = async () => {
+                (req.result || []).forEach((item) => {
                   const cat = item.category;
                   const key = item.titleKey;
                   if (!recordsCache[cat]) recordsCache[cat] = {};
                   if (!recordsCache[cat][key]) recordsCache[cat][key] = { file: null, link: null };
-
-                  if (item.link) {
-                    recordsCache[cat][key].link = item.link;
-                  }
-
+                  if (item.link) recordsCache[cat][key].link = item.link;
                   if (item.file) {
                     let blobObj = item.file.blob;
                     if (!blobObj && item.file.arrayBuffer) {
@@ -1164,52 +872,24 @@
                         type: item.file.type || "application/octet-stream"
                       });
                     }
-                    const objectUrl = blobObj ? URL.createObjectURL(blobObj) : "";
                     recordsCache[cat][key].file = {
                       name: item.file.name,
                       size: item.file.size,
                       type: item.file.type,
                       blob: blobObj,
                       arrayBuffer: item.file.arrayBuffer || null,
-                      url: objectUrl
+                      url: blobObj ? URL.createObjectURL(blobObj) : ""
                     };
                   }
                 });
-
                 ensureDefaultQuizAttachment();
-                if (recordsCache.tugas["QUIZ"]) {
-                  await persistRecordToDB("tugas", "QUIZ", recordsCache.tugas["QUIZ"]);
-                }
-
-                renderAllBadges(true);
                 resolve();
               };
-              req.onerror = function () {
-                renderAllBadges(true);
-                resolve();
-              };
+              req.onerror = () => resolve();
             } catch (e) {
-              renderAllBadges(true);
               resolve();
             }
           });
-        }
-
-        function saveBackupToLocalStorage() {
-          try {
-            const lightCopy = { tugas: {}, materi: {} };
-            ["tugas", "materi"].forEach((cat) => {
-              for (const [k, v] of Object.entries(recordsCache[cat] || {})) {
-                if (v.link || v.file) {
-                  lightCopy[cat][k] = {
-                    link: v.link || null,
-                    fileMeta: v.file ? { name: v.file.name, size: v.file.size } : null
-                  };
-                }
-              }
-            });
-            localStorage.setItem(LOCAL_META_KEY, JSON.stringify(lightCopy));
-          } catch (e) {}
         }
 
         function formatBytes(bytes) {
@@ -1221,10 +901,9 @@
         }
 
         function normalizeUrl(rawUrl) {
-          const trimmed = (rawUrl || "").trim();
-          if (!trimmed) return "";
-          if (/^https?:\/\//i.test(trimmed)) return trimmed;
-          return "https://" + trimmed;
+          const t = (rawUrl || "").trim();
+          if (!t) return "";
+          return /^https?:\/\//i.test(t) ? t : "https://" + t;
         }
 
         function getFileIcon(filename) {
@@ -1243,65 +922,31 @@
           if (u.includes("drive.google.com") || u.includes("docs.google.com"))
             return "fab fa-google-drive text-emerald-600";
           if (u.includes("github.com")) return "fab fa-github text-gray-800";
-          if (u.includes("youtube.com") || u.includes("youtu.be"))
-            return "fab fa-youtube text-red-600";
-          if (u.includes("figma.com")) return "fab fa-figma text-purple-600";
-          if (u.includes("canva.com")) return "fas fa-palette text-cyan-600";
           return "fas fa-link text-primary";
         }
 
         async function renderPdfPagesToCanvas(fileInfo, container) {
-          container.innerHTML = `
-            <div class="my-auto text-center text-gray-600">
-              <i class="fas fa-spinner fa-spin text-2xl text-primary mb-2"></i>
-              <p class="text-sm font-medium">Memuat halaman PDF...</p>
-            </div>
-          `;
-
+          container.innerHTML = `<div class="my-auto text-center text-gray-600"><i class="fas fa-spinner fa-spin text-2xl text-primary mb-2"></i><p class="text-sm font-medium">Memuat halaman PDF...</p></div>`;
           try {
             let buf;
-            if (fileInfo.arrayBuffer) {
-              buf = fileInfo.arrayBuffer.slice(0);
-            } else if (fileInfo.blob) {
-              buf = await fileInfo.blob.arrayBuffer();
-            } else {
-              const resp = await fetch(fileInfo.url);
-              buf = await resp.arrayBuffer();
-            }
+            if (fileInfo.arrayBuffer) buf = fileInfo.arrayBuffer.slice(0);
+            else if (fileInfo.blob) buf = await fileInfo.blob.arrayBuffer();
+            else buf = await (await fetch(fileInfo.url)).arrayBuffer();
 
             const pdfDoc = await window.pdfjsLib.getDocument({ data: new Uint8Array(buf) }).promise;
             container.innerHTML = "";
-
-            const infoBar = document.createElement("div");
-            infoBar.className =
-              "text-xs font-semibold text-gray-600 bg-white px-3 py-1 rounded-full shadow-sm border border-pink-100 sticky top-0 z-10";
-            infoBar.textContent = `Total ${pdfDoc.numPages} Halaman`;
-            container.appendChild(infoBar);
-
             for (let pageNum = 1; pageNum <= pdfDoc.numPages; pageNum++) {
               const page = await pdfDoc.getPage(pageNum);
               const viewport = page.getViewport({ scale: 1.4 });
               const canvas = document.createElement("canvas");
-              const ctx = canvas.getContext("2d");
               canvas.height = viewport.height;
               canvas.width = viewport.width;
-              canvas.className =
-                "bg-white shadow-md rounded-lg max-w-full h-auto border border-gray-300";
-
+              canvas.className = "bg-white shadow-md rounded-lg max-w-full h-auto border border-gray-300";
               container.appendChild(canvas);
-              await page.render({ canvasContext: ctx, viewport: viewport }).promise;
+              await page.render({ canvasContext: canvas.getContext("2d"), viewport }).promise;
             }
           } catch (err) {
-            container.innerHTML = `
-              <div class="my-auto text-center p-6 bg-white rounded-2xl shadow max-w-md">
-                <i class="fas fa-exclamation-circle text-3xl text-rose-500 mb-3"></i>
-                <h4 class="font-bold text-gray-900 mb-1">Gagal Menampilkan Pratinjau</h4>
-                <p class="text-xs text-gray-600 mb-4">File PDF tidak dapat dirender langsung. Silakan klik tombol Unduh untuk membukanya di perangkatmu.</p>
-                <a href="${fileInfo.url}" download="${fileInfo.name}" class="inline-flex items-center gap-2 bg-primary text-white text-xs font-semibold px-4 py-2 rounded-lg">
-                  <i class="fas fa-download"></i> Unduh PDF
-                </a>
-              </div>
-            `;
+            container.innerHTML = `<div class="my-auto text-center p-6 bg-white rounded-2xl shadow max-w-md"><h4 class="font-bold text-gray-900 mb-2">Gagal Pratinjau</h4><a href="${fileInfo.url}" download="${fileInfo.name}" class="inline-flex items-center gap-2 bg-primary text-white text-xs font-semibold px-4 py-2 rounded-lg"><i class="fas fa-download"></i> Unduh PDF</a></div>`;
           }
         }
 
@@ -1310,19 +955,14 @@
           const titleEl = document.getElementById("previewFileName");
           const downloadBtn = document.getElementById("previewDownloadBtn");
           const container = document.getElementById("previewContainer");
-
           if (!modal || !container) return;
 
-          if (!fileInfo.url && fileInfo.blob) {
-            fileInfo.url = URL.createObjectURL(fileInfo.blob);
-          }
-
+          if (!fileInfo.url && fileInfo.blob) fileInfo.url = URL.createObjectURL(fileInfo.blob);
           const ext = (fileInfo.name.split(".").pop() || "").toLowerCase();
 
           titleEl.textContent = fileInfo.name;
           downloadBtn.href = fileInfo.url;
           downloadBtn.setAttribute("download", fileInfo.name);
-
           modal.classList.remove("hidden");
           modal.classList.add("flex");
 
@@ -1331,502 +971,531 @@
           } else if (["jpg", "jpeg", "png", "webp", "gif"].includes(ext)) {
             container.innerHTML = `<img src="${fileInfo.url}" alt="${fileInfo.name}" class="my-auto max-w-full max-h-full object-contain rounded-lg shadow bg-white p-2" />`;
           } else {
-            container.innerHTML = `
-              <div class="my-auto text-center p-8 max-w-md bg-white rounded-2xl shadow-sm">
-                <div class="w-16 h-16 mx-auto bg-pink-100 text-primary rounded-2xl flex items-center justify-center text-3xl mb-4">
-                  <i class="fas fa-file-alt"></i>
+            container.innerHTML = `<div class="my-auto text-center p-8 max-w-md bg-white rounded-2xl shadow-sm"><h4 class="font-bold text-gray-900 mb-3">${fileInfo.name}</h4><a href="${fileInfo.url}" download="${fileInfo.name}" class="inline-flex items-center gap-2 bg-primary text-white font-semibold px-5 py-2.5 rounded-xl"><i class="fas fa-download"></i> Unduh File</a></div>`;
+          }
+        }
+
+        function buildAttachmentHTML(category, titleKey) {
+          const attData = recordsCache[category] ? recordsCache[category][titleKey] : null;
+          if (!attData || (!attData.file && !attData.link)) return "";
+
+          let html = `<div class="portal-attachments-wrapper mt-4 pt-3 border-t border-pink-100 space-y-2">`;
+
+          if (attData.file) {
+            const f = attData.file;
+            if (!f.url && f.blob) f.url = URL.createObjectURL(f.blob);
+            html += `
+              <div class="flex items-center justify-between gap-2 bg-pink-50/80 px-3 py-2 rounded-xl border border-pink-100">
+                <div class="flex items-center gap-2 min-w-0">
+                  <i class="fas ${getFileIcon(f.name)} text-base shrink-0"></i>
+                  <div class="min-w-0">
+                    <p class="text-xs font-semibold text-gray-800 truncate" title="${f.name}">${f.name}</p>
+                    <p class="text-[11px] text-gray-500">${f.size}</p>
+                  </div>
                 </div>
-                <h4 class="font-bold text-gray-900 mb-2">${fileInfo.name}</h4>
-                <p class="text-sm text-gray-600 mb-5">Pratinjau langsung hanya tersedia untuk file <strong>PDF</strong> dan <strong>Gambar</strong>. Silakan unduh dokumen ini untuk membukanya.</p>
-                <a href="${fileInfo.url}" download="${fileInfo.name}" class="inline-flex items-center gap-2 bg-primary hover:bg-pink-600 text-white font-semibold px-5 py-2.5 rounded-xl transition">
-                  <i class="fas fa-download"></i> Unduh File Sekarang
-                </a>
+                <div class="flex items-center gap-1.5 shrink-0">
+                  <button type="button" data-view-cat="${category}" data-view-key="${encodeURIComponent(titleKey)}" class="btn-view-attachment px-2.5 py-1 bg-white border border-pink-200 text-primary hover:bg-primary hover:text-white rounded-lg text-xs font-semibold transition cursor-pointer">
+                    <i class="fas fa-eye mr-0.5"></i> Lihat
+                  </button>
+                  <a href="${f.url}" download="${f.name}" class="px-2.5 py-1 bg-primary text-white hover:bg-pink-600 rounded-lg text-xs font-semibold transition" title="Unduh">
+                    <i class="fas fa-download"></i>
+                  </a>
+                  <button type="button" data-del-type="file" data-del-cat="${category}" data-del-key="${encodeURIComponent(titleKey)}" class="btn-del-attachment px-2 py-1 bg-red-50 text-red-500 hover:bg-red-500 hover:text-white rounded-lg text-xs transition" title="Hapus">
+                    <i class="fas fa-times"></i>
+                  </button>
+                </div>
               </div>
             `;
           }
-        }
 
-        function closeFilePreviewModal() {
-          const modal = document.getElementById("filePreviewModal");
-          const container = document.getElementById("previewContainer");
-          if (modal) {
-            modal.classList.add("hidden");
-            modal.classList.remove("flex");
+          if (attData.link && attData.link.url) {
+            const url = attData.link.url;
+            const isDrive = url.includes("drive.google.com");
+            const label = isDrive ? "Google Drive - Folder Tugas & PDF QUIZ" : url.replace(/^https?:\/\//i, "");
+            html += `
+              <div class="flex items-center justify-between gap-2 bg-rose-50/70 px-3 py-2 rounded-xl border border-pink-100">
+                <div class="flex items-center gap-2 min-w-0">
+                  <i class="${getLinkIcon(url)} text-sm shrink-0"></i>
+                  <div class="min-w-0">
+                    <p class="text-xs font-semibold text-gray-800 truncate" title="${url}">${label}</p>
+                    <p class="text-[10px] text-gray-400 truncate">${url}</p>
+                  </div>
+                </div>
+                <div class="flex items-center gap-1.5 shrink-0">
+                  <a href="${url}" target="_blank" rel="noopener noreferrer" class="px-2.5 py-1 bg-white border border-pink-200 text-primary hover:bg-primary hover:text-white rounded-lg text-xs font-semibold transition inline-flex items-center gap-1">
+                    <span>Buka</span> <i class="fas fa-external-link-alt text-[10px]"></i>
+                  </a>
+                  <button type="button" data-del-type="link" data-del-cat="${category}" data-del-key="${encodeURIComponent(titleKey)}" class="btn-del-attachment px-2 py-1 bg-red-50 text-red-500 hover:bg-red-500 hover:text-white rounded-lg text-xs transition" title="Hapus">
+                    <i class="fas fa-times"></i>
+                  </button>
+                </div>
+              </div>
+            `;
           }
-          if (container) container.innerHTML = "";
+
+          html += `</div>`;
+          return html;
         }
 
-        function updateTaskStatusIndicators() {
+        window.renderTasks = function () {
           const taskList = document.getElementById("taskList");
           if (!taskList) return;
+          ensureDefaultQuizAttachment();
+          const tasks = getStorage(TASKS_KEY, defaultTasks);
+          const doneCount = tasks.filter((t) => t.done).length;
+          const pendingCount = tasks.length - doneCount;
 
-          Array.from(taskList.children).forEach((card) => {
-            const titleEl = card.querySelector("h3, h4");
+          const sumEl = document.getElementById("taskSummary");
+          if (sumEl) {
+            sumEl.textContent = `${tasks.length} tugas | ${doneCount} selesai | ${pendingCount} belum selesai`;
+          }
 
-            Array.from(card.children).forEach((child) => {
-              if (
-                !child.classList.contains("portal-attachments-wrapper") &&
-                (child.innerText || "").includes("Tenggat:")
-              ) {
-                child.classList.add("task-footer-push");
-              }
-            });
-
-            const toggleBtn = Array.from(card.querySelectorAll("button")).find((btn) => {
-              const t = (btn.innerText || "").toLowerCase();
-              return (
-                t.includes("tandai selesai") ||
-                t.includes("tandai belum") ||
-                t.includes("batal selesai")
-              );
-            });
-
-            const btnText = toggleBtn ? (toggleBtn.innerText || "").toLowerCase() : "";
-            const isCompleted = btnText.includes("belum") || btnText.includes("batal");
-
-            const topRow = card.firstElementChild;
-            let statusPill = card.querySelector(".task-inline-status-pill");
-            if (statusPill) statusPill.remove();
-
-            if (topRow) {
-              topRow.classList.add("flex", "items-center", "justify-between", "gap-2", "mb-3");
-              Array.from(topRow.children).forEach((child, idx) => {
-                if (idx > 0 && !child.classList.contains("task-inline-status-pill")) {
-                  child.style.display = isCompleted ? "none" : "";
+          taskList.innerHTML = tasks
+            .map(
+              (t, idx) => `
+            <div class="${t.done ? "task-card-completed" : ""} bg-white rounded-3xl p-6 shadow-sm border border-pink-100 flex flex-col">
+              <div class="flex items-center justify-between gap-2 mb-3">
+                <span class="px-3 py-1 rounded-full bg-purple-100 text-purple-700 text-xs font-semibold">${t.course}</span>
+                ${
+                  t.done
+                    ? `<span class="status-pill-selesai">Selesai</span>`
+                    : `<span class="px-3 py-1 rounded-full bg-pink-100 text-primary text-xs font-semibold">${t.daysLeft || "6 hari lagi"}</span>`
                 }
-              });
+              </div>
+              <h3 class="text-lg font-bold text-gray-900 mb-2 ${t.done ? "task-title-completed" : ""}">${t.title}</h3>
+              <p class="text-sm text-gray-600 leading-relaxed mb-6">${t.desc}</p>
+              <div class="task-footer-push mt-auto pt-3">
+                <div class="flex items-center gap-2 text-xs text-gray-500 mb-3">
+                  <i class="far fa-calendar-alt"></i>
+                  <span>Tenggat: ${t.dueLabel || t.due}</span>
+                </div>
+                <div class="flex items-center justify-between gap-2">
+                  <button
+                    type="button"
+                    onclick="toggleTaskDone(${idx})"
+                    class="inline-flex items-center gap-1.5 text-sm font-semibold ${
+                      t.done ? "text-gray-500 hover:text-gray-700" : "text-primary hover:text-pink-600"
+                    } transition cursor-pointer"
+                  >
+                    <i class="fas ${t.done ? "fa-undo" : "fa-check-circle"}"></i>
+                    <span>${t.done ? "Tandai belum" : "Tandai selesai"}</span>
+                  </button>
+                  <div class="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onclick="openTaskForm(${idx})"
+                      class="w-9 h-9 rounded-xl bg-gray-100 hover:bg-pink-100 text-gray-600 hover:text-primary flex items-center justify-center transition cursor-pointer"
+                      title="Edit Tugas"
+                    >
+                      <i class="fas fa-pen text-xs"></i>
+                    </button>
+                    <button
+                      type="button"
+                      onclick="deleteTask(${idx})"
+                      class="w-9 h-9 rounded-xl bg-gray-100 hover:bg-red-100 text-gray-600 hover:text-red-500 flex items-center justify-center transition cursor-pointer"
+                      title="Hapus Tugas"
+                    >
+                      <i class="fas fa-trash text-xs"></i>
+                    </button>
+                  </div>
+                </div>
+              </div>
+              ${buildAttachmentHTML("tugas", t.title)}
+            </div>
+          `
+            )
+            .join("");
+        };
+
+        window.toggleTaskDone = function (idx) {
+          const tasks = getStorage(TASKS_KEY, defaultTasks);
+          if (tasks[idx]) {
+            tasks[idx].done = !tasks[idx].done;
+            setStorage(TASKS_KEY, tasks);
+            window.renderTasks();
+          }
+        };
+
+        window.deleteTask = function (idx) {
+          const tasks = getStorage(TASKS_KEY, defaultTasks);
+          tasks.splice(idx, 1);
+          setStorage(TASKS_KEY, tasks);
+          window.renderTasks();
+        };
+
+        window.openTaskForm = function (editIdx) {
+          const tasks = getStorage(TASKS_KEY, defaultTasks);
+          const item = typeof editIdx === "number" ? tasks[editIdx] : null;
+          const existing = item && recordsCache.tugas[item.title] ? recordsCache.tugas[item.title] : null;
+          const formModal = document.getElementById("formModal");
+          const formBox = document.getElementById("formBox");
+          if (!formModal || !formBox) return;
+
+          formBox.innerHTML = `
+            <h3 class="text-xl font-bold text-gray-900 mb-4">${item ? "Edit Tugas" : "Tambah Tugas"}</h3>
+            <form id="taskModalForm" class="space-y-3">
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Mata Kuliah</label>
+                <input type="text" id="tCourse" class="field" value="${item ? item.course : "Analisis dan Design PL"}" required />
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Judul Tugas</label>
+                <input type="text" id="tTitle" class="field" value="${item ? item.title : ""}" required />
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Deskripsi</label>
+                <textarea id="tDesc" rows="3" class="field">${item ? item.desc : ""}</textarea>
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Tenggat</label>
+                <input type="text" id="tDue" class="field" value="${item ? item.dueLabel : "Sen, 30 Nov 2026"}" />
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Tautan Google Drive / Link (opsional)</label>
+                <input type="url" id="tLink" class="field" value="${existing && existing.link ? existing.link.url : ""}" placeholder="https://drive.google.com/..." />
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Lampiran File PDF / Dokumen (opsional)</label>
+                <input type="file" id="tFile" accept=".pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.zip,.rar,.jpg,.jpeg,.png" class="field text-sm text-gray-600" />
+                ${
+                  existing && existing.file
+                    ? `<p class="text-xs text-emerald-600 mt-1">Tersimpan: ${existing.file.name}</p>`
+                    : item && item.title === "QUIZ"
+                    ? `<p class="text-xs text-amber-600 mt-1">Pilih file <strong>${DEFAULT_QUIZ_PDF_NAME}</strong> lalu Simpan untuk menampilkannya di kartu QUIZ.</p>`
+                    : ""
+                }
+              </div>
+              <div class="flex justify-end gap-2 pt-3">
+                <button type="button" id="cancelTaskBtn" class="px-4 py-2 rounded-lg border border-gray-200 text-gray-600">Batal</button>
+                <button type="submit" class="px-5 py-2 rounded-lg bg-primary text-white font-semibold">Simpan</button>
+              </div>
+            </form>
+          `;
+
+          formModal.classList.remove("hidden");
+          formModal.classList.add("flex");
+
+          document.getElementById("cancelTaskBtn").onclick = () => {
+            formModal.classList.add("hidden");
+            formModal.classList.remove("flex");
+          };
+
+          document.getElementById("taskModalForm").onsubmit = async (ev) => {
+            ev.preventDefault();
+            const newTitle = document.getElementById("tTitle").value.trim();
+            const newObj = {
+              id: item ? item.id : "task-" + Date.now(),
+              course: document.getElementById("tCourse").value.trim(),
+              title: newTitle,
+              desc: document.getElementById("tDesc").value.trim(),
+              dueLabel: document.getElementById("tDue").value.trim(),
+              daysLeft: item ? item.daysLeft : "6 hari lagi",
+              done: item ? item.done : false
+            };
+            if (typeof editIdx === "number") tasks[editIdx] = newObj;
+            else tasks.push(newObj);
+            setStorage(TASKS_KEY, tasks);
+
+            const linkVal = normalizeUrl(document.getElementById("tLink").value);
+            const fileEl = document.getElementById("tFile");
+            const file = fileEl.files && fileEl.files[0] ? fileEl.files[0] : null;
+
+            if (!recordsCache.tugas[newTitle]) recordsCache.tugas[newTitle] = { file: null, link: null };
+            recordsCache.tugas[newTitle].link = linkVal ? { url: linkVal } : null;
+
+            if (file) {
+              const buf = await file.arrayBuffer();
+              const blobObj = new Blob([buf], { type: file.type || "application/octet-stream" });
+              recordsCache.tugas[newTitle].file = {
+                name: file.name,
+                size: formatBytes(file.size),
+                type: file.type || "application/octet-stream",
+                blob: blobObj,
+                arrayBuffer: buf,
+                url: URL.createObjectURL(blobObj)
+              };
             }
 
-            if (isCompleted) {
-              card.classList.remove("task-card-pending");
-              card.classList.add("task-card-completed");
-              if (titleEl) titleEl.classList.add("task-title-completed");
+            await persistRecordToDB("tugas", newTitle, recordsCache.tugas[newTitle]);
+            window.renderTasks();
 
-              statusPill = document.createElement("span");
-              statusPill.className = "task-inline-status-pill status-pill-selesai";
-              statusPill.textContent = "Selesai";
+            formModal.classList.add("hidden");
+            formModal.classList.remove("flex");
+          };
+        };
 
-              if (topRow) {
-                topRow.appendChild(statusPill);
+        window.renderCourses = function () {
+          const courseList = document.getElementById("courseList");
+          if (!courseList) return;
+          const courses = getStorage(COURSES_KEY, defaultCourses);
+          courseList.innerHTML = courses
+            .map(
+              (c) => `
+            <div class="bg-white rounded-2xl p-6 shadow-sm border border-pink-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div>
+                <span class="px-3 py-1 rounded-full bg-pink-100 text-primary text-xs font-bold">${c.code} • ${c.sks} SKS</span>
+                <h3 class="text-xl font-bold text-gray-900 mt-2">${c.name}</h3>
+                <p class="text-sm text-gray-600 mt-1"><i class="far fa-user mr-1 text-primary"></i> ${c.lecturer} &nbsp;|&nbsp; <i class="far fa-clock mr-1 text-primary"></i> ${c.schedule}</p>
+              </div>
+            </div>
+          `
+            )
+            .join("");
+        };
+
+        window.openCourseForm = function () {
+          const formModal = document.getElementById("formModal");
+          const formBox = document.getElementById("formBox");
+          formBox.innerHTML = `
+            <h3 class="text-xl font-bold text-gray-900 mb-4">Tambah Mata Kuliah</h3>
+            <form id="courseModalForm" class="space-y-3">
+              <input type="text" id="cCode" class="field" placeholder="Kode MK (contoh: TI24-WEB)" required />
+              <input type="text" id="cName" class="field" placeholder="Nama Mata Kuliah" required />
+              <input type="text" id="cLect" class="field" placeholder="Dosen Pengampu" />
+              <input type="text" id="cSched" class="field" placeholder="Jadwal Kuliah" />
+              <div class="flex justify-end gap-2 pt-2">
+                <button type="button" id="cancelCourseBtn" class="px-4 py-2 rounded-lg border border-gray-200 text-gray-600">Batal</button>
+                <button type="submit" class="px-5 py-2 rounded-lg bg-primary text-white font-semibold">Simpan</button>
+              </div>
+            </form>
+          `;
+          formModal.classList.remove("hidden");
+          formModal.classList.add("flex");
+          document.getElementById("cancelCourseBtn").onclick = () => {
+            formModal.classList.add("hidden");
+            formModal.classList.remove("flex");
+          };
+          document.getElementById("courseModalForm").onsubmit = (e) => {
+            e.preventDefault();
+            const courses = getStorage(COURSES_KEY, defaultCourses);
+            courses.push({
+              code: document.getElementById("cCode").value.trim(),
+              name: document.getElementById("cName").value.trim(),
+              sks: 3,
+              lecturer: document.getElementById("cLect").value.trim() || "Dosen TI",
+              schedule: document.getElementById("cSched").value.trim() || "Jadwal Terdaftar"
+            });
+            setStorage(COURSES_KEY, courses);
+            window.renderCourses();
+            formModal.classList.add("hidden");
+            formModal.classList.remove("flex");
+          };
+        };
+
+        window.renderMateri = function () {
+          const materiList = document.getElementById("materiList");
+          const filterEl = document.getElementById("materiFilter");
+          const sumEl = document.getElementById("materiSummary");
+          if (!materiList) return;
+
+          const allMateri = getStorage(MATERI_KEY, defaultMateri);
+          if (filterEl && !filterEl.options.length) {
+            const uniqueCourses = ["Semua Mata Kuliah", ...new Set(allMateri.map((m) => m.course))];
+            filterEl.innerHTML = uniqueCourses.map((c) => `<option value="${c}">${c}</option>`).join("");
+          }
+
+          const selected = filterEl ? filterEl.value : "Semua Mata Kuliah";
+          const filtered =
+            !selected || selected === "Semua Mata Kuliah"
+              ? allMateri
+              : allMateri.filter((m) => m.course === selected);
+
+          if (sumEl) sumEl.textContent = `${filtered.length} materi`;
+
+          materiList.innerHTML = filtered
+            .map(
+              (m) => `
+            <div class="bg-white rounded-3xl p-6 shadow-sm border border-pink-100 flex flex-col">
+              <span class="self-start px-3 py-1 rounded-full bg-purple-100 text-purple-700 text-xs font-semibold mb-3">${m.course}</span>
+              <h3 class="text-lg font-bold text-gray-900 mb-2">${m.title}</h3>
+              <p class="text-sm text-gray-600 leading-relaxed">${m.desc}</p>
+              ${buildAttachmentHTML("materi", m.title)}
+            </div>
+          `
+            )
+            .join("");
+        };
+
+        window.openMateriForm = function () {
+          const formModal = document.getElementById("formModal");
+          const formBox = document.getElementById("formBox");
+          formBox.innerHTML = `
+            <h3 class="text-xl font-bold text-gray-900 mb-4">Tambah Materi</h3>
+            <form id="materiModalForm" class="space-y-3">
+              <input type="text" id="mCourse" class="field" value="Analisis dan Design PL" required />
+              <input type="text" id="mTitle" class="field" placeholder="Judul Materi" required />
+              <textarea id="mDesc" rows="3" class="field" placeholder="Ringkasan Materi"></textarea>
+              <input type="url" id="mLink" class="field" placeholder="Tautan Materi (opsional)" />
+              <input type="file" id="mFile" class="field text-sm text-gray-600" />
+              <div class="flex justify-end gap-2 pt-2">
+                <button type="button" id="cancelMateriBtn" class="px-4 py-2 rounded-lg border border-gray-200 text-gray-600">Batal</button>
+                <button type="submit" class="px-5 py-2 rounded-lg bg-primary text-white font-semibold">Simpan</button>
+              </div>
+            </form>
+          `;
+          formModal.classList.remove("hidden");
+          formModal.classList.add("flex");
+          document.getElementById("cancelMateriBtn").onclick = () => {
+            formModal.classList.add("hidden");
+            formModal.classList.remove("flex");
+          };
+          document.getElementById("materiModalForm").onsubmit = async (e) => {
+            e.preventDefault();
+            const list = getStorage(MATERI_KEY, defaultMateri);
+            const title = document.getElementById("mTitle").value.trim();
+            list.push({
+              course: document.getElementById("mCourse").value.trim(),
+              title,
+              desc: document.getElementById("mDesc").value.trim()
+            });
+            setStorage(MATERI_KEY, list);
+
+            const linkVal = normalizeUrl(document.getElementById("mLink").value);
+            const fileEl = document.getElementById("mFile");
+            const file = fileEl.files && fileEl.files[0] ? fileEl.files[0] : null;
+            if (linkVal || file) {
+              recordsCache.materi[title] = { link: linkVal ? { url: linkVal } : null, file: null };
+              if (file) {
+                const buf = await file.arrayBuffer();
+                const blobObj = new Blob([buf], { type: file.type || "application/octet-stream" });
+                recordsCache.materi[title].file = {
+                  name: file.name,
+                  size: formatBytes(file.size),
+                  type: file.type,
+                  blob: blobObj,
+                  arrayBuffer: buf,
+                  url: URL.createObjectURL(blobObj)
+                };
               }
-            } else {
-              card.classList.remove("task-card-completed");
-              card.classList.add("task-card-pending");
-              if (titleEl) titleEl.classList.remove("task-title-completed");
+              await persistRecordToDB("materi", title, recordsCache.materi[title]);
             }
+
+            window.renderMateri();
+            formModal.classList.add("hidden");
+            formModal.classList.remove("flex");
+          };
+        };
+
+        function showSection(hash) {
+          const targetId = (hash || "#beranda").replace("#", "") || "beranda";
+          document.querySelectorAll(".page-section").forEach((sec) => {
+            sec.classList.toggle("hidden", sec.id !== targetId);
+          });
+          document.querySelectorAll(".nav-link").forEach((link) => {
+            const active = link.getAttribute("href") === "#" + targetId;
+            link.classList.toggle("text-primary", active);
+            link.classList.toggle("font-bold", active);
+            link.classList.toggle("border-primary", active);
+            link.classList.toggle("text-gray-600", !active);
+            link.classList.toggle("border-transparent", !active);
           });
         }
 
-        function createAttachmentFieldsUI(fileInputId, linkInputId, existingData, hasNativeLinkInput, titleHint) {
-          const existingFile = existingData && existingData.file ? existingData.file : null;
-          const existingLink = existingData && existingData.link ? existingData.link : null;
+        window.logout = function () {
+          sessionStorage.removeItem(SESSION_KEY);
+          document.documentElement.classList.remove("authed");
+          const authScreen = document.getElementById("authScreen");
+          if (authScreen) authScreen.style.display = "flex";
+        };
 
-          const isQuizCard = (titleHint || "").toUpperCase() === "QUIZ";
-
-          const existingFileInfo = existingFile
-            ? `<div class="mt-2 text-xs text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-lg px-3 py-1.5 flex items-center justify-between">
-                 <span class="truncate"><i class="fas fa-check-circle mr-1"></i> File tersimpan permanen: <strong>${existingFile.name}</strong> (${existingFile.size})</span>
-               </div>`
-            : isQuizCard
-            ? `<div class="mt-2 text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-1.5">
-                 <i class="fas fa-info-circle mr-1"></i> Pilih file <strong>${DEFAULT_QUIZ_PDF_NAME}</strong> lalu klik Simpan agar tersimpan permanen.
-               </div>`
-            : "";
-
-          const linkSectionHTML = !hasNativeLinkInput
-            ? `
-              <div>
-                <label for="${linkInputId}" class="block text-sm font-medium text-gray-700 mb-1">
-                  Tautan (opsional)
-                </label>
-                <input
-                  type="url"
-                  id="${linkInputId}"
-                  value="${existingLink ? existingLink.url : ""}"
-                  placeholder="https://drive.google.com/... atau https://github.com/..."
-                  class="field w-full"
-                />
-              </div>
-            `
-            : "";
-
-          return `
-            <div class="space-y-4 mt-3 mb-4" id="wrap_${fileInputId}">
-              ${linkSectionHTML}
-              <div>
-                <label for="${fileInputId}" class="block text-sm font-medium text-gray-700 mb-1">
-                  Lampiran file (opsional)
-                </label>
-                <input
-                  type="file"
-                  id="${fileInputId}"
-                  accept=".pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.zip,.rar,.jpg,.jpeg,.png"
-                  class="field w-full text-sm text-gray-600 file:mr-3 file:py-1.5 file:px-3.5 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-pink-100 file:text-primary hover:file:bg-pink-200 cursor-pointer"
-                />
-                <p class="text-[11px] text-gray-400 mt-1">PDF, Word, PPT, Excel, ZIP, atau Gambar (Tersimpan permanen walau Keluar / ditutup)</p>
-                ${existingFileInfo}
-              </div>
-            </div>
-          `;
-        }
-
-        async function processAndSaveAttachments(category, titleKey, file, rawLinkUrl) {
-          if (!titleKey) return;
-
-          if (!recordsCache[category]) recordsCache[category] = {};
-          if (!recordsCache[category][titleKey]) {
-            recordsCache[category][titleKey] = { file: null, link: null };
-          }
-
-          const rec = recordsCache[category][titleKey];
-
-          if (rawLinkUrl !== null) {
-            const cleanUrl = normalizeUrl(rawLinkUrl);
-            rec.link = cleanUrl ? { url: cleanUrl } : null;
-          }
-
-          if (file) {
-            const buf = await file.arrayBuffer();
-            const blobObj = new Blob([buf], { type: file.type || "application/octet-stream" });
-            rec.file = {
-              name: file.name,
-              size: formatBytes(file.size),
-              type: file.type || "application/octet-stream",
-              blob: blobObj,
-              arrayBuffer: buf,
-              url: URL.createObjectURL(blobObj)
-            };
-          }
-
-          if (rec.file || rec.link) {
-            await persistRecordToDB(category, titleKey, rec);
-          } else {
-            delete recordsCache[category][titleKey];
-            await deleteRecordFromDB(category, titleKey);
-          }
-
-          renderAllBadges(true);
-        }
-
-        function injectFieldsToActiveForm() {
-          const formBox = document.getElementById("formBox");
-          if (!formBox || !formBox.innerHTML.trim()) return;
-
-          const boxText = (formBox.innerText || "").toLowerCase();
-          let category = null;
-          let fileInputId = null;
-          let linkInputId = null;
-
-          if (boxText.includes("tugas")) {
-            category = "tugas";
-            fileInputId = "inputFileTugas";
-            linkInputId = "inputLinkTugas";
-          } else if (boxText.includes("materi")) {
-            category = "materi";
-            fileInputId = "inputFileMateri";
-            linkInputId = "inputLinkMateri";
-          } else {
+        document.addEventListener("click", async (e) => {
+          const viewBtn = e.target.closest(".btn-view-attachment");
+          if (viewBtn) {
+            e.preventDefault();
+            const cat = viewBtn.getAttribute("data-view-cat");
+            const key = decodeURIComponent(viewBtn.getAttribute("data-view-key") || "");
+            if (recordsCache[cat] && recordsCache[cat][key] && recordsCache[cat][key].file) {
+              openFilePreviewModal(recordsCache[cat][key].file);
+            }
             return;
           }
 
-          if (document.getElementById(fileInputId)) return;
-
-          const form = formBox.querySelector("form") || formBox;
-          const titleInput =
-            form.querySelector("#fbTaskTitle") ||
-            Array.from(form.querySelectorAll('input[type="text"], input:not([type])')).pop();
-          const initialTitle = titleInput ? titleInput.value.trim() : "";
-
-          const nativeUrlInput = form.querySelector('input[type="url"]');
-          const hasNativeLinkInput = Boolean(nativeUrlInput) || boxText.includes("tautan (opsional)");
-
-          const existingData =
-            initialTitle && recordsCache[category] ? recordsCache[category][initialTitle] : null;
-
-          if (nativeUrlInput && !nativeUrlInput.value && existingData && existingData.link) {
-            nativeUrlInput.value = existingData.link.url;
-          }
-
-          const wrapper = document.createElement("div");
-          wrapper.innerHTML = createAttachmentFieldsUI(
-            fileInputId,
-            linkInputId,
-            existingData,
-            hasNativeLinkInput,
-            initialTitle
-          );
-          const fieldsBlock = wrapper.firstElementChild;
-
-          const allButtons = Array.from(form.querySelectorAll("button"));
-          const saveBtn =
-            form.querySelector('button[type="submit"]') ||
-            allButtons.find((b) => (b.innerText || "").toLowerCase().includes("simpan"));
-
-          if (saveBtn) {
-            const btnContainer = saveBtn.parentElement;
-            if (btnContainer && btnContainer !== form && btnContainer.parentElement) {
-              btnContainer.parentElement.insertBefore(fieldsBlock, btnContainer);
-            } else {
-              form.insertBefore(fieldsBlock, saveBtn);
+          if (e.target.closest("#closePreviewBtn") || e.target.id === "filePreviewModal") {
+            const modal = document.getElementById("filePreviewModal");
+            if (modal) {
+              modal.classList.add("hidden");
+              modal.classList.remove("flex");
             }
-          } else {
-            form.appendChild(fieldsBlock);
+            return;
           }
 
-          const handleSaveAction = async function () {
-            const fileEl = document.getElementById(fileInputId);
-            const linkEl = nativeUrlInput || document.getElementById(linkInputId);
-            const newTitle = titleInput ? titleInput.value.trim() : "";
-
-            if (initialTitle && newTitle && initialTitle !== newTitle) {
-              if (recordsCache[category] && recordsCache[category][initialTitle]) {
-                recordsCache[category][newTitle] = recordsCache[category][initialTitle];
-                delete recordsCache[category][initialTitle];
-                await deleteRecordFromDB(category, initialTitle);
+          const delBtn = e.target.closest(".btn-del-attachment");
+          if (delBtn) {
+            e.preventDefault();
+            const type = delBtn.getAttribute("data-del-type");
+            const cat = delBtn.getAttribute("data-del-cat");
+            const key = decodeURIComponent(delBtn.getAttribute("data-del-key") || "");
+            if (recordsCache[cat] && recordsCache[cat][key]) {
+              if (cat === "tugas" && key === "QUIZ" && type === "link") {
+                localStorage.setItem("portalAkademik.quizDefaultDeleted", "1");
               }
-            }
-
-            const selectedFile = fileEl && fileEl.files && fileEl.files[0] ? fileEl.files[0] : null;
-            const linkUrlVal = !hasNativeLinkInput && linkEl ? linkEl.value : null;
-
-            await processAndSaveAttachments(category, newTitle, selectedFile, linkUrlVal);
-          };
-
-          if (form.tagName === "FORM") {
-            form.addEventListener("submit", handleSaveAction, true);
-          }
-          if (saveBtn) {
-            saveBtn.addEventListener("click", handleSaveAction, true);
-          }
-        }
-
-        function renderBadgesForContainer(containerId, category, forceRefresh = false) {
-          const container = document.getElementById(containerId);
-          if (!container) return;
-
-          ensureDefaultQuizAttachment();
-          const itemsMap = recordsCache[category] || {};
-
-          Array.from(container.children).forEach((card) => {
-            const oldWrap = card.querySelector(".portal-attachments-wrapper");
-            if (oldWrap && !forceRefresh) return;
-            if (oldWrap && forceRefresh) oldWrap.remove();
-
-            const cardText = card.innerText || "";
-
-            for (const [titleKey, attData] of Object.entries(itemsMap)) {
-              if (titleKey && cardText.includes(titleKey) && (attData.file || attData.link)) {
-                const wrap = document.createElement("div");
-                wrap.className =
-                  "portal-attachments-wrapper mt-4 pt-3 border-t border-pink-100 space-y-2";
-
-                if (attData.file) {
-                  const fileInfo = attData.file;
-                  if (!fileInfo.url && fileInfo.blob) {
-                    fileInfo.url = URL.createObjectURL(fileInfo.blob);
-                  }
-                  const iconClass = getFileIcon(fileInfo.name);
-                  const fileBox = document.createElement("div");
-                  fileBox.className =
-                    "flex items-center justify-between gap-2 bg-pink-50/80 px-3 py-2 rounded-xl border border-pink-100";
-                  fileBox.innerHTML = `
-                    <div class="flex items-center gap-2 min-w-0">
-                      <i class="fas ${iconClass} text-base shrink-0"></i>
-                      <div class="min-w-0">
-                        <p class="text-xs font-semibold text-gray-800 truncate" title="${fileInfo.name}">${fileInfo.name}</p>
-                        <p class="text-[11px] text-gray-500">${fileInfo.size}</p>
-                      </div>
-                    </div>
-                    <div class="flex items-center gap-1.5 shrink-0">
-                      <button
-                        type="button"
-                        data-view-cat="${category}"
-                        data-view-key="${encodeURIComponent(titleKey)}"
-                        class="btn-view-attachment px-2.5 py-1 bg-white border border-pink-200 text-primary hover:bg-primary hover:text-white rounded-lg text-xs font-semibold transition cursor-pointer"
-                        title="Lihat File"
-                      >
-                        <i class="fas fa-eye mr-0.5"></i> Lihat
-                      </button>
-                      <a
-                        href="${fileInfo.url}"
-                        download="${fileInfo.name}"
-                        class="px-2.5 py-1 bg-primary text-white hover:bg-pink-600 rounded-lg text-xs font-semibold transition"
-                        title="Unduh File"
-                      >
-                        <i class="fas fa-download"></i>
-                      </a>
-                      <button
-                        type="button"
-                        data-del-type="file"
-                        data-del-cat="${category}"
-                        data-del-key="${encodeURIComponent(titleKey)}"
-                        class="btn-del-attachment px-2 py-1 bg-red-50 text-red-500 hover:bg-red-500 hover:text-white rounded-lg text-xs transition"
-                        title="Hapus Lampiran File"
-                      >
-                        <i class="fas fa-times"></i>
-                      </button>
-                    </div>
-                  `;
-                  wrap.appendChild(fileBox);
-                }
-
-                if (attData.link && attData.link.url) {
-                  const linkInfo = attData.link;
-                  const linkIcon = getLinkIcon(linkInfo.url);
-                  const isDriveFolder = linkInfo.url.includes("drive.google.com");
-                  const displayLabel = isDriveFolder
-                    ? "Google Drive - Folder Tugas & PDF QUIZ"
-                    : linkInfo.url.replace(/^https?:\/\//i, "");
-                  const linkBox = document.createElement("div");
-                  linkBox.className =
-                    "flex items-center justify-between gap-2 bg-rose-50/70 px-3 py-2 rounded-xl border border-pink-100";
-                  linkBox.innerHTML = `
-                    <div class="flex items-center gap-2 min-w-0">
-                      <i class="${linkIcon} text-sm shrink-0"></i>
-                      <div class="min-w-0">
-                        <p class="text-xs font-semibold text-gray-800 truncate" title="${linkInfo.url}">${displayLabel}</p>
-                        <p class="text-[10px] text-gray-400 truncate">${linkInfo.url}</p>
-                      </div>
-                    </div>
-                    <div class="flex items-center gap-1.5 shrink-0">
-                      <a
-                        href="${linkInfo.url}"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        class="btn-open-external-link px-2.5 py-1 bg-white border border-pink-200 text-primary hover:bg-primary hover:text-white rounded-lg text-xs font-semibold transition inline-flex items-center gap-1"
-                        title="Buka Tautan di Tab Baru"
-                      >
-                        <span>Buka</span> <i class="fas fa-external-link-alt text-[10px]"></i>
-                      </a>
-                      <button
-                        type="button"
-                        data-del-type="link"
-                        data-del-cat="${category}"
-                        data-del-key="${encodeURIComponent(titleKey)}"
-                        class="btn-del-attachment px-2 py-1 bg-red-50 text-red-500 hover:bg-red-500 hover:text-white rounded-lg text-xs transition"
-                        title="Hapus Tautan"
-                      >
-                        <i class="fas fa-times"></i>
-                      </button>
-                    </div>
-                  `;
-                  wrap.appendChild(linkBox);
-                }
-
-                card.appendChild(wrap);
-                break;
+              recordsCache[cat][key][type] = null;
+              if (recordsCache[cat][key].file || recordsCache[cat][key].link) {
+                await persistRecordToDB(cat, key, recordsCache[cat][key]);
+              } else {
+                delete recordsCache[cat][key];
+                await deleteRecordFromDB(cat, key);
               }
+              window.renderTasks();
+              window.renderMateri();
             }
-          });
-        }
+          }
+        });
 
-        function renderAllBadges(forceRefresh = false) {
-          renderBadgesForContainer("taskList", "tugas", forceRefresh);
-          renderBadgesForContainer("materiList", "materi", forceRefresh);
-          updateTaskStatusIndicators();
-        }
+        async function boot() {
+          const authForm = document.getElementById("authForm");
+          const authScreen = document.getElementById("authScreen");
+          const savedUser = sessionStorage.getItem(SESSION_KEY);
 
-        document.addEventListener(
-          "click",
-          async function (e) {
-            const viewBtn = e.target.closest(".btn-view-attachment");
-            if (viewBtn) {
+          if (savedUser) {
+            document.documentElement.classList.add("authed");
+            if (authScreen) authScreen.style.display = "none";
+            document.getElementById("navUser").textContent = savedUser;
+            document.getElementById("navUserM").textContent = savedUser;
+          }
+
+          if (authForm) {
+            authForm.addEventListener("submit", (e) => {
               e.preventDefault();
-              e.stopPropagation();
-              e.stopImmediatePropagation();
-              const cat = viewBtn.getAttribute("data-view-cat");
-              const key = decodeURIComponent(viewBtn.getAttribute("data-view-key") || "");
-              const attData = recordsCache[cat] ? recordsCache[cat][key] : null;
-              if (attData && attData.file) {
-                openFilePreviewModal(attData.file);
-              }
-              return;
-            }
-
-            const extLink = e.target.closest(".btn-open-external-link");
-            if (extLink) {
-              e.stopPropagation();
-              return;
-            }
-
-            if (e.target.closest("#closePreviewBtn") || e.target.id === "filePreviewModal") {
-              e.preventDefault();
-              e.stopPropagation();
-              closeFilePreviewModal();
-              return;
-            }
-
-            const delBtn = e.target.closest(".btn-del-attachment");
-            if (delBtn) {
-              e.preventDefault();
-              e.stopPropagation();
-              e.stopImmediatePropagation();
-              const delType = delBtn.getAttribute("data-del-type");
-              const cat = delBtn.getAttribute("data-del-cat");
-              const key = decodeURIComponent(delBtn.getAttribute("data-del-key") || "");
-              if (cat && key && recordsCache[cat] && recordsCache[cat][key]) {
-                if (cat === "tugas" && key === "QUIZ" && delType === "link") {
-                  localStorage.setItem("portalAkademik.quizDefaultDeleted", "1");
-                }
-                recordsCache[cat][key][delType] = null;
-                const rec = recordsCache[cat][key];
-                if (rec.file || rec.link) {
-                  await persistRecordToDB(cat, key, rec);
-                } else {
-                  delete recordsCache[cat][key];
-                  await deleteRecordFromDB(cat, key);
-                }
-                renderAllBadges(true);
-              }
-              return;
-            }
-
-            if (e.target.closest('button[onclick*="openTaskForm"], button[onclick*="openMateriForm"], button')) {
-              setTimeout(injectFieldsToActiveForm, 10);
-              setTimeout(injectFieldsToActiveForm, 60);
-              setTimeout(() => renderAllBadges(false), 60);
-            }
-          },
-          true
-        );
-
-        async function initAttachmentFeature() {
-          await loadAllPermanentRecords();
-          injectFieldsToActiveForm();
-          renderAllBadges(true);
-
-          setTimeout(() => renderAllBadges(false), 150);
-          setTimeout(() => renderAllBadges(false), 500);
-          setInterval(() => renderAllBadges(false), 1000);
-
-          const formBox = document.getElementById("formBox");
-          if (formBox) {
-            const formObserver = new MutationObserver(() => {
-              injectFieldsToActiveForm();
+              const uname = (document.getElementById("loginUsername").value || "Fatihatul Ikrimah").trim();
+              sessionStorage.setItem(SESSION_KEY, uname);
+              document.documentElement.classList.add("authed");
+              if (authScreen) authScreen.style.display = "none";
+              document.getElementById("navUser").textContent = uname;
+              document.getElementById("navUserM").textContent = uname;
             });
-            formObserver.observe(formBox, { childList: true, subtree: true });
           }
 
-          const listObserver = new MutationObserver(() => {
-            renderAllBadges(false);
+          document.querySelectorAll('a[href^="#"]').forEach((a) => {
+            a.addEventListener("click", (e) => {
+              const h = a.getAttribute("href");
+              if (h && h.length > 1) {
+                e.preventDefault();
+                window.location.hash = h;
+                showSection(h);
+                document.getElementById("mobile-menu")?.classList.add("hidden");
+              }
+            });
           });
 
-          const taskList = document.getElementById("taskList");
-          const materiList = document.getElementById("materiList");
-          if (taskList) {
-            listObserver.observe(taskList, { childList: true });
-            taskList.addEventListener("click", () => setTimeout(() => renderAllBadges(false), 50));
-          }
-          if (materiList) {
-            listObserver.observe(materiList, { childList: true });
-            materiList.addEventListener("click", () => setTimeout(() => renderAllBadges(false), 50));
+          document.getElementById("mobile-menu-btn")?.addEventListener("click", () => {
+            document.getElementById("mobile-menu")?.classList.toggle("hidden");
+          });
+
+          await loadAllPermanentRecords();
+          window.renderTasks();
+          window.renderCourses();
+          window.renderMateri();
+
+          if (window.location.hash) {
+            showSection(window.location.hash);
           }
         }
 
         if (document.readyState === "loading") {
-          document.addEventListener("DOMContentLoaded", initAttachmentFeature);
+          document.addEventListener("DOMContentLoaded", boot);
         } else {
-          initAttachmentFeature();
+          boot();
         }
       })();
     </script>
