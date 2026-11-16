@@ -599,7 +599,7 @@
     <script src="js/navigation.js"></script>
     <script src="js/app.js"></script>
 
-    <!-- Fitur Tambah File & Tautan Opsional pada Materi dan Daftar Tugas -->
+    <!-- Fitur Tambah File & Tautan Opsional Seragam pada Daftar Tugas dan Materi -->
     <script>
       (function () {
         const STORAGE_KEY_FILES = "portalAkademik.attachedFiles.v2";
@@ -609,14 +609,12 @@
             "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
         }
 
-        // Struktur: { tugas: { [judul]: { file: {...}, link: { url, label } } }, materi: { ... } }
         let savedAttachments = { tugas: {}, materi: {} };
         try {
           const raw = localStorage.getItem(STORAGE_KEY_FILES);
           if (raw) {
             savedAttachments = JSON.parse(raw);
           } else {
-            // Migrasi dari versi v1 jika sebelumnya sudah pernah menyimpan file
             const oldRaw = localStorage.getItem("portalAkademik.attachedFiles.v1");
             if (oldRaw) {
               const oldData = JSON.parse(oldRaw);
@@ -702,7 +700,6 @@
           }
         }
 
-        // Render halaman PDF ke dalam <canvas> menggunakan PDF.js
         async function renderPdfPagesToCanvas(fileInfo, container) {
           container.innerHTML = `
             <div class="my-auto text-center text-gray-600">
@@ -811,54 +808,50 @@
           if (container) container.innerHTML = "";
         }
 
-        function createAttachmentFieldsUI(fileInputId, linkInputId, linkLabelId, fileLabelText, existingData) {
+        // Membuat field Tautan (opsional) dan File (opsional) dengan gaya identik dengan form bawaan app.js
+        function createAttachmentFieldsUI(fileInputId, linkInputId, linkLabelId, existingData, hasNativeLinkInput) {
           const existingFile = existingData && existingData.file ? existingData.file : null;
           const existingLink = existingData && existingData.link ? existingData.link : null;
 
           const existingFileInfo = existingFile
             ? `<div class="mt-2 text-xs text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-lg px-3 py-1.5 flex items-center justify-between">
-                 <span class="truncate"><i class="fas fa-check-circle mr-1"></i> File saat ini: <strong>${existingFile.name}</strong> (${existingFile.size})</span>
+                 <span class="truncate"><i class="fas fa-check-circle mr-1"></i> File tersimpan: <strong>${existingFile.name}</strong> (${existingFile.size})</span>
                </div>`
             : "";
 
-          return `
-            <div class="mt-4 mb-4 pt-3 border-t border-pink-100 space-y-3" id="wrap_${fileInputId}">
-              <!-- Bagian 1: Upload File (Opsional) -->
+          // Jika form bawaan (seperti Materi) belum punya kolom "Tautan (opsional)", kita tampilkan dengan label & gaya yang sama persis
+          const linkSectionHTML = !hasNativeLinkInput
+            ? `
               <div>
-                <label for="${fileInputId}" class="block text-sm font-semibold text-gray-700 mb-1.5">
-                  <i class="fas fa-paperclip text-primary mr-1"></i> ${fileLabelText}
+                <label for="${linkInputId}" class="block text-sm font-medium text-gray-700 mb-1">
+                  Tautan (opsional)
+                </label>
+                <input
+                  type="url"
+                  id="${linkInputId}"
+                  value="${existingLink ? existingLink.url : ""}"
+                  placeholder="https://drive.google.com/... atau https://github.com/..."
+                  class="field w-full"
+                />
+              </div>
+            `
+            : "";
+
+          return `
+            <div class="space-y-4 mt-3 mb-4" id="wrap_${fileInputId}">
+              ${linkSectionHTML}
+              <div>
+                <label for="${fileInputId}" class="block text-sm font-medium text-gray-700 mb-1">
+                  Lampiran file (opsional)
                 </label>
                 <input
                   type="file"
                   id="${fileInputId}"
                   accept=".pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.zip,.rar,.jpg,.jpeg,.png"
-                  class="block w-full text-sm text-gray-600 file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-pink-100 file:text-primary hover:file:bg-pink-200 border border-dashed border-pink-300 rounded-xl p-2 bg-pink-50/40 cursor-pointer transition"
+                  class="field w-full text-sm text-gray-600 file:mr-3 file:py-1.5 file:px-3.5 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-pink-100 file:text-primary hover:file:bg-pink-200 cursor-pointer"
                 />
-                <p class="text-[11px] text-gray-400 mt-1">PDF, Word, PPT, Excel, ZIP, atau Gambar (Opsional)</p>
+                <p class="text-[11px] text-gray-400 mt-1">PDF, Word, PPT, Excel, ZIP, atau Gambar</p>
                 ${existingFileInfo}
-              </div>
-
-              <!-- Bagian 2: Tautan / Link (Opsional) -->
-              <div class="pt-2 border-t border-pink-50">
-                <label for="${linkInputId}" class="block text-sm font-semibold text-gray-700 mb-1.5">
-                  <i class="fas fa-link text-primary mr-1"></i> Tautan / Link (Opsional)
-                </label>
-                <div class="space-y-2">
-                  <input
-                    type="url"
-                    id="${linkInputId}"
-                    value="${existingLink ? existingLink.url : ""}"
-                    placeholder="https://drive.google.com/... atau https://github.com/..."
-                    class="field w-full text-sm"
-                  />
-                  <input
-                    type="text"
-                    id="${linkLabelId}"
-                    value="${existingLink && existingLink.label ? existingLink.label : ""}"
-                    placeholder="Label tautan (Opsional, contoh: Folder Google Drive / Repo GitHub)"
-                    class="field w-full text-xs"
-                  />
-                </div>
               </div>
             </div>
           `;
@@ -872,29 +865,25 @@
           return targetObj[category][titleKey];
         }
 
-        function processAttachments(category, titleKey, file, rawLinkUrl, rawLinkLabel) {
+        function processAttachments(category, titleKey, file, rawLinkUrl) {
           if (!titleKey) return;
 
           const cleanUrl = normalizeUrl(rawLinkUrl);
-          const cleanLabel = (rawLinkLabel || "").trim();
-
-          // Simpan atau perbarui tautan opsional
           const sessRec = ensureRecord(sessionAttachments, category, titleKey);
           const saveRec = ensureRecord(savedAttachments, category, titleKey);
 
-          if (cleanUrl) {
-            const linkObj = { url: cleanUrl, label: cleanLabel };
-            sessRec.link = linkObj;
-            saveRec.link = linkObj;
-            saveToLocal();
-          } else if (rawLinkUrl !== null) {
-            // Jika kolom tautan dikosongkan pengguna saat edit, hapus tautannya
-            sessRec.link = null;
-            saveRec.link = null;
+          if (rawLinkUrl !== null) {
+            if (cleanUrl) {
+              const linkObj = { url: cleanUrl, label: "" };
+              sessRec.link = linkObj;
+              saveRec.link = linkObj;
+            } else {
+              sessRec.link = null;
+              saveRec.link = null;
+            }
             saveToLocal();
           }
 
-          // Proses file jika ada file baru yang dipilih
           if (file) {
             const fileMeta = {
               name: file.name,
@@ -939,21 +928,15 @@
           let category = null;
           let fileInputId = null;
           let linkInputId = null;
-          let linkLabelId = null;
-          let fileLabelText = null;
 
           if (boxText.includes("tugas")) {
             category = "tugas";
             fileInputId = "inputFileTugas";
             linkInputId = "inputLinkTugas";
-            linkLabelId = "inputLinkLabelTugas";
-            fileLabelText = "Lampiran File Tugas / Soal (Opsional)";
           } else if (boxText.includes("materi")) {
             category = "materi";
             fileInputId = "inputFileMateri";
             linkInputId = "inputLinkMateri";
-            linkLabelId = "inputLinkLabelMateri";
-            fileLabelText = "Unggah File Materi (Opsional)";
           } else {
             return;
           }
@@ -964,6 +947,10 @@
           const titleInput = form.querySelector('input[type="text"], input:not([type])');
           const initialTitle = titleInput ? titleInput.value.trim() : "";
 
+          // Cek apakah form bawaan dari js/app.js sudah memiliki input URL / label "Tautan (opsional)"
+          const nativeUrlInput = form.querySelector('input[type="url"]');
+          const hasNativeLinkInput = Boolean(nativeUrlInput) || boxText.includes("tautan (opsional)");
+
           const mergedMap = getMergedAttachments(category);
           const existingData = initialTitle ? mergedMap[initialTitle] : null;
 
@@ -971,12 +958,13 @@
           wrapper.innerHTML = createAttachmentFieldsUI(
             fileInputId,
             linkInputId,
-            linkLabelId,
-            fileLabelText,
-            existingData
+            null,
+            existingData,
+            hasNativeLinkInput
           );
           const fieldsBlock = wrapper.firstElementChild;
 
+          // Tempatkan tepat di bawah Tautan (opsional) jika sudah ada di form bawaan, atau di atas tombol Batal & Simpan
           const allButtons = Array.from(form.querySelectorAll("button"));
           const saveBtn =
             form.querySelector('button[type="submit"]') ||
@@ -995,11 +983,9 @@
 
           const handleSaveAction = function () {
             const fileEl = document.getElementById(fileInputId);
-            const linkEl = document.getElementById(linkInputId);
-            const linkLabelEl = document.getElementById(linkLabelId);
+            const linkEl = nativeUrlInput || document.getElementById(linkInputId);
             const newTitle = titleInput ? titleInput.value.trim() : "";
 
-            // Pindahkan lampiran lama jika judul diubah saat Edit
             if (initialTitle && newTitle && initialTitle !== newTitle) {
               if (sessionAttachments[category][initialTitle]) {
                 sessionAttachments[category][newTitle] = sessionAttachments[category][initialTitle];
@@ -1013,10 +999,10 @@
             }
 
             const selectedFile = fileEl && fileEl.files && fileEl.files[0] ? fileEl.files[0] : null;
-            const linkUrlVal = linkEl ? linkEl.value : null;
-            const linkLabelVal = linkLabelEl ? linkLabelEl.value : "";
+            // Jika menggunakan nativeUrlInput bawaan app.js, biarkan app.js yang merender link bawaannya agar tidak dobel
+            const linkUrlVal = !hasNativeLinkInput && linkEl ? linkEl.value : null;
 
-            processAttachments(category, newTitle, selectedFile, linkUrlVal, linkLabelVal);
+            processAttachments(category, newTitle, selectedFile, linkUrlVal);
           };
 
           if (form.tagName === "FORM") {
@@ -1078,7 +1064,6 @@
                 wrap.className =
                   "portal-attachments-wrapper mt-4 pt-3 border-t border-pink-100 space-y-2";
 
-                // 1. Kotak File Lampiran (jika ada)
                 if (attData.file) {
                   const fileInfo = attData.file;
                   const iconClass = getFileIcon(fileInfo.name);
@@ -1126,11 +1111,10 @@
                   wrap.appendChild(fileBox);
                 }
 
-                // 2. Kotak Tautan Opsional (jika ada)
                 if (attData.link && attData.link.url) {
                   const linkInfo = attData.link;
                   const linkIcon = getLinkIcon(linkInfo.url);
-                  const displayLabel = linkInfo.label || linkInfo.url.replace(/^https?:\/\//i, "");
+                  const displayLabel = linkInfo.url.replace(/^https?:\/\//i, "");
                   const linkBox = document.createElement("div");
                   linkBox.className =
                     "flex items-center justify-between gap-2 bg-rose-50/70 px-3 py-2 rounded-xl border border-pink-100";
@@ -1139,7 +1123,6 @@
                       <i class="${linkIcon} text-sm shrink-0"></i>
                       <div class="min-w-0">
                         <p class="text-xs font-semibold text-gray-800 truncate" title="${linkInfo.url}">${displayLabel}</p>
-                        ${linkInfo.label ? `<p class="text-[10px] text-gray-400 truncate">${linkInfo.url}</p>` : ""}
                       </div>
                     </div>
                     <div class="flex items-center gap-1.5 shrink-0">
@@ -1182,7 +1165,6 @@
         document.addEventListener(
           "click",
           function (e) {
-            // 1. Klik tombol Lihat PDF/File
             const viewBtn = e.target.closest(".btn-view-attachment");
             if (viewBtn) {
               e.preventDefault();
@@ -1198,14 +1180,12 @@
               return;
             }
 
-            // 2. Pastikan klik tombol Buka Tautan tidak memicu event klik kartu induk
             const extLink = e.target.closest(".btn-open-external-link");
             if (extLink) {
               e.stopPropagation();
               return;
             }
 
-            // 3. Klik tutup modal pratinjau
             if (e.target.closest("#closePreviewBtn") || e.target.id === "filePreviewModal") {
               e.preventDefault();
               e.stopPropagation();
@@ -1213,7 +1193,6 @@
               return;
             }
 
-            // 4. Klik hapus lampiran file atau tautan
             const delBtn = e.target.closest(".btn-del-attachment");
             if (delBtn) {
               e.preventDefault();
@@ -1235,7 +1214,6 @@
               return;
             }
 
-            // 5. Pemicu saat tombol Tambah / Edit diklik
             if (e.target.closest('button[onclick*="openTaskForm"], button[onclick*="openMateriForm"], button')) {
               setTimeout(injectFieldsToActiveForm, 10);
               setTimeout(injectFieldsToActiveForm, 60);
