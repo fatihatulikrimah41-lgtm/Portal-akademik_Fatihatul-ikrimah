@@ -20,7 +20,7 @@
       rel="stylesheet"
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
     />
-    <!-- PDF.js untuk merender PDF langsung di halaman tanpa diblokir browser -->
+    <!-- PDF.js untuk merender PDF langsung di halaman -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 
     <script src="js/tailwind-config.js"></script>
@@ -70,7 +70,7 @@
       </div>
     </div>
 
-    <!-- Stemmed Flower Symbols (Bunga dengan Tangkai) -->
+    <!-- Stemmed Flower Symbols -->
     <svg style="display: none" aria-hidden="true">
       <symbol id="flower-tall" viewBox="0 0 100 250">
         <path
@@ -259,9 +259,7 @@
             <p class="text-lg text-gray-600 mb-8 leading-relaxed">
               Selamat datang di portal akademik pribadi saya. Website ini
               dirancang khusus untuk mendokumentasikan perjalanan belajar,
-              mengumpulkan tugas harian, dan merangkum materi perkuliahan,
-              khususnya pada mata kuliah
-              <strong>Analisis &amp; Desain Perangkat Lunak (ADPL)</strong>.
+              mengumpulkan tugas harian, dan merangkum materi perkuliahan.
             </p>
             <div class="flex flex-wrap gap-4">
               <a
@@ -388,4 +386,938 @@
 
       <!-- Global Decorations -->
       <div
-        class="w-full flex justify-center items-end mt
+        class="w-full flex justify-center items-end mt-auto pt-16 pb-4 relative z-0 pointer-events-none"
+      >
+        <div
+          class="absolute bottom-0 left-0 md:left-8 z-0 opacity-80 animate-sway"
+        >
+          <svg class="w-20 h-56 md:w-28 md:h-72 text-pink-400 drop-shadow-md">
+            <use href="#flower-tall"></use>
+          </svg>
+        </div>
+
+        <div class="flex justify-center items-end gap-6 relative z-10 mb-2">
+          <i
+            class="fas fa-heart text-2xl text-pink-300 animate-float-love delay-1"
+          ></i>
+          <i
+            class="fas fa-heart text-4xl text-pink-400 animate-float-love delay-2"
+          ></i>
+          <i
+            class="fas fa-heart text-3xl text-pink-500 animate-float-love delay-3"
+          ></i>
+          <i
+            class="fas fa-heart text-4xl text-pink-400 animate-float-love delay-4"
+          ></i>
+          <i
+            class="fas fa-heart text-2xl text-pink-300 animate-float-love delay-5"
+          ></i>
+        </div>
+
+        <div
+          class="absolute bottom-0 right-0 md:right-8 z-0 opacity-80 animate-sway-delayed"
+        >
+          <svg class="w-16 h-44 md:w-24 md:h-56 text-rose-400 drop-shadow-md">
+            <use href="#flower-short"></use>
+          </svg>
+        </div>
+      </div>
+    </main>
+
+    <!-- Footer -->
+    <footer
+      class="bg-pink-50/60 backdrop-blur-md border-t border-pink-200 py-8 relative z-10"
+    >
+      <div
+        class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row justify-between items-center gap-4"
+      >
+        <div class="text-gray-500 text-sm">
+          &copy; 2026
+          <span class="font-semibold text-gray-700">Fatihatul Ikrimah</span>.
+          Portal Akademik.
+        </div>
+        <div class="flex space-x-6">
+          <a
+            href="https://github.com/fatihatulikrimah41-lgtm/Portal-akademik_Fatihatul-ikrimah"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="text-gray-400 hover:text-primary transition"
+            ><i class="fab fa-github text-xl"></i
+          ></a>
+          <a href="#" class="text-gray-400 hover:text-primary transition"
+            ><i class="fab fa-linkedin text-xl"></i
+          ></a>
+          <a href="#" class="text-gray-400 hover:text-primary transition"
+            ><i class="fas fa-envelope text-xl"></i
+          ></a>
+        </div>
+      </div>
+    </footer>
+
+    <!-- Custom Modal for Alerts -->
+    <div
+      id="customModal"
+      class="fixed inset-0 bg-black/50 z-[100] hidden items-center justify-center opacity-0 transition-opacity duration-300 backdrop-blur-sm"
+    >
+      <div
+        class="bg-white rounded-2xl shadow-2xl p-6 md:p-8 max-w-md w-full mx-4 transform scale-95 transition-transform duration-300"
+        id="modalContent"
+      >
+        <div class="flex justify-between items-start mb-4">
+          <h3 id="modalTitle" class="text-xl font-bold text-gray-900">Judul</h3>
+          <button
+            onclick="closeModal()"
+            class="text-gray-400 hover:text-red-500 transition"
+          >
+            <i class="fas fa-times text-xl"></i>
+          </button>
+        </div>
+        <p id="modalBody" class="text-gray-600 mb-6 leading-relaxed">
+          Isi pesan...
+        </p>
+        <div class="flex justify-end">
+          <button
+            onclick="closeModal()"
+            class="bg-primary hover:bg-pink-600 text-white font-medium py-2 px-6 rounded-lg transition shadow-md"
+          >
+            Tutup
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Toast Notifikasi Tenggat -->
+    <div
+      id="dueToast"
+      class="fixed top-20 right-4 z-[90] max-w-sm w-[calc(100%-2rem)] hidden opacity-0 translate-y-[-8px] transition duration-300"
+    ></div>
+
+    <!-- Form Modal (Tambah / Edit) -->
+    <div
+      id="formModal"
+      class="fixed inset-0 bg-black/50 z-[110] hidden items-center justify-center opacity-0 transition-opacity duration-300 backdrop-blur-sm p-4"
+    >
+      <div
+        id="formBox"
+        class="bg-white rounded-2xl shadow-2xl p-6 md:p-8 max-w-lg w-full transform scale-95 transition-transform duration-300 max-h-[90vh] overflow-y-auto"
+      ></div>
+    </div>
+
+    <!-- Confirm Modal (Hapus) -->
+    <div
+      id="confirmModal"
+      class="fixed inset-0 bg-black/50 z-[120] hidden items-center justify-center opacity-0 transition-opacity duration-300 backdrop-blur-sm p-4"
+    >
+      <div
+        class="bg-white rounded-2xl shadow-2xl p-6 md:p-8 max-w-md w-full transform scale-95 transition-transform duration-300"
+      >
+        <div class="flex items-center gap-3 mb-3">
+          <div
+            class="w-10 h-10 bg-red-100 text-red-500 rounded-lg flex items-center justify-center"
+          >
+            <i class="fas fa-trash"></i>
+          </div>
+          <h3 id="confirmTitle" class="text-xl font-bold text-gray-900">
+            Hapus?
+          </h3>
+        </div>
+        <p id="confirmBody" class="text-gray-600 mb-6 leading-relaxed"></p>
+        <div class="flex justify-end gap-3">
+          <button
+            onclick="closeOv(confirmModal)"
+            class="bg-white border border-gray-200 text-gray-700 font-medium py-2 px-5 rounded-lg hover:bg-gray-50 transition"
+          >
+            Batal
+          </button>
+          <button
+            id="confirmOk"
+            class="bg-red-500 hover:bg-red-600 text-white font-medium py-2 px-5 rounded-lg transition shadow-md"
+          >
+            Hapus
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal Pratinjau File (Render PDF Canvas / Gambar) -->
+    <div
+      id="filePreviewModal"
+      class="fixed inset-0 bg-black/65 z-[180] hidden items-center justify-center p-3 sm:p-5 backdrop-blur-sm"
+    >
+      <div
+        class="bg-white rounded-2xl shadow-2xl w-full max-w-4xl h-[88vh] flex flex-col overflow-hidden border border-pink-200"
+      >
+        <div
+          class="px-5 py-3.5 bg-pink-50 border-b border-pink-200 flex items-center justify-between gap-3 shrink-0"
+        >
+          <div class="flex items-center gap-2 min-w-0">
+            <i class="fas fa-file-pdf text-primary text-lg"></i>
+            <h3
+              id="previewFileName"
+              class="font-bold text-gray-900 text-sm sm:text-base truncate"
+            >
+              Pratinjau Dokumen
+            </h3>
+          </div>
+          <div class="flex items-center gap-2 shrink-0">
+            <a
+              id="previewDownloadBtn"
+              href="javascript:void(0)"
+              download
+              class="bg-primary hover:bg-pink-600 text-white text-xs sm:text-sm font-semibold px-3.5 py-1.5 rounded-lg transition flex items-center gap-1.5"
+            >
+              <i class="fas fa-download"></i> Unduh
+            </a>
+            <button
+              type="button"
+              id="closePreviewBtn"
+              class="w-8 h-8 rounded-lg bg-white border border-pink-200 text-gray-500 hover:text-red-500 hover:bg-red-50 flex items-center justify-center transition"
+              title="Tutup Pratinjau"
+            >
+              <i class="fas fa-times"></i>
+            </button>
+          </div>
+        </div>
+        <div
+          id="previewContainer"
+          class="flex-1 bg-gray-200 relative overflow-y-auto p-4 flex flex-col items-center gap-4"
+        ></div>
+      </div>
+    </div>
+
+    <!-- File Navigasi & App Asli Anda -->
+    <script src="js/navigation.js"></script>
+    <script src="js/app.js"></script>
+
+    <!-- Penyimpanan Permanen IndexedDB -->
+    <script>
+      (function () {
+        const DB_NAME = "PortalAkademikPermanentDB";
+        const DB_VERSION = 1;
+        const STORE_NAME = "attachments";
+        const LOCAL_META_KEY = "portalAkademik.permanentAttachments.v3";
+
+        const DEFAULT_QUIZ_DRIVE_LINK =
+          "https://drive.google.com/drive/folders/1AralCU0Or88y3FkNgjsDD2ta9tYtxqRI?usp=sharing";
+
+        if (window.pdfjsLib) {
+          window.pdfjsLib.GlobalWorkerOptions.workerSrc =
+            "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+        }
+
+        let recordsCache = { tugas: {}, materi: {} };
+        let dbInstance = null;
+
+        function ensureDefaultQuizAttachment() {
+          const deletedFlag = localStorage.getItem("portalAkademik.quizDefaultDeleted");
+          if (deletedFlag === "1") return;
+
+          if (!recordsCache.tugas["QUIZ"]) {
+            recordsCache.tugas["QUIZ"] = { file: null, link: null };
+          }
+          if (!recordsCache.tugas["QUIZ"].link) {
+            recordsCache.tugas["QUIZ"].link = { url: DEFAULT_QUIZ_DRIVE_LINK };
+          }
+        }
+
+        function openPermanentDB() {
+          return new Promise((resolve) => {
+            if (dbInstance) return resolve(dbInstance);
+            if (!window.indexedDB) return resolve(null);
+
+            const req = indexedDB.open(DB_NAME, DB_VERSION);
+            req.onupgradeneeded = function (e) {
+              const db = e.target.result;
+              if (!db.objectStoreNames.contains(STORE_NAME)) {
+                db.createObjectStore(STORE_NAME, { keyPath: "id" });
+              }
+            };
+            req.onsuccess = function (e) {
+              dbInstance = e.target.result;
+              resolve(dbInstance);
+            };
+            req.onerror = function () {
+              resolve(null);
+            };
+          });
+        }
+
+        async function persistRecordToDB(category, titleKey, recordObj) {
+          saveBackupToLocalStorage();
+          const db = await openPermanentDB();
+          if (!db) return;
+
+          return new Promise((resolve) => {
+            try {
+              const tx = db.transaction(STORE_NAME, "readwrite");
+              const store = tx.objectStore(STORE_NAME);
+              const payload = {
+                id: `${category}::${titleKey}`,
+                category,
+                titleKey,
+                link: recordObj.link || null,
+                file: recordObj.file
+                  ? {
+                      name: recordObj.file.name,
+                      size: recordObj.file.size,
+                      type: recordObj.file.type || "application/octet-stream",
+                      blob: recordObj.file.blob || null,
+                      arrayBuffer: recordObj.file.arrayBuffer || null
+                    }
+                  : null
+              };
+              store.put(payload);
+              tx.oncomplete = () => resolve(true);
+              tx.onerror = () => resolve(false);
+            } catch (err) {
+              resolve(false);
+            }
+          });
+        }
+
+        async function deleteRecordFromDB(category, titleKey) {
+          saveBackupToLocalStorage();
+          const db = await openPermanentDB();
+          if (!db) return;
+          try {
+            const tx = db.transaction(STORE_NAME, "readwrite");
+            tx.objectStore(STORE_NAME).delete(`${category}::${titleKey}`);
+          } catch (e) {}
+        }
+
+        async function loadAllPermanentRecords() {
+          try {
+            const raw = localStorage.getItem(LOCAL_META_KEY);
+            if (raw) {
+              const parsed = JSON.parse(raw);
+              ["tugas", "materi"].forEach((cat) => {
+                if (parsed[cat]) {
+                  for (const [k, v] of Object.entries(parsed[cat])) {
+                    if (!recordsCache[cat][k]) recordsCache[cat][k] = { file: null, link: null };
+                    if (v.link) recordsCache[cat][k].link = v.link;
+                  }
+                }
+              });
+            }
+          } catch (e) {}
+
+          ensureDefaultQuizAttachment();
+
+          const db = await openPermanentDB();
+          if (!db) {
+            saveBackupToLocalStorage();
+            renderAllBadges(true);
+            return;
+          }
+
+          return new Promise((resolve) => {
+            try {
+              const tx = db.transaction(STORE_NAME, "readonly");
+              const store = tx.objectStore(STORE_NAME);
+              const req = store.getAll();
+              req.onsuccess = async function () {
+                const items = req.result || [];
+                items.forEach((item) => {
+                  const cat = item.category;
+                  const key = item.titleKey;
+                  if (!recordsCache[cat]) recordsCache[cat] = {};
+                  if (!recordsCache[cat][key]) recordsCache[cat][key] = { file: null, link: null };
+
+                  if (item.link) {
+                    recordsCache[cat][key].link = item.link;
+                  }
+
+                  if (item.file) {
+                    let blobObj = item.file.blob;
+                    if (!blobObj && item.file.arrayBuffer) {
+                      blobObj = new Blob([item.file.arrayBuffer], {
+                        type: item.file.type || "application/octet-stream"
+                      });
+                    }
+                    const objectUrl = blobObj ? URL.createObjectURL(blobObj) : "";
+                    recordsCache[cat][key].file = {
+                      name: item.file.name,
+                      size: item.file.size,
+                      type: item.file.type,
+                      blob: blobObj,
+                      arrayBuffer: item.file.arrayBuffer || null,
+                      url: objectUrl
+                    };
+                  }
+                });
+
+                ensureDefaultQuizAttachment();
+                if (recordsCache.tugas["QUIZ"]) {
+                  await persistRecordToDB("tugas", "QUIZ", recordsCache.tugas["QUIZ"]);
+                }
+
+                renderAllBadges(true);
+                resolve();
+              };
+              req.onerror = function () {
+                renderAllBadges(true);
+                resolve();
+              };
+            } catch (e) {
+              renderAllBadges(true);
+              resolve();
+            }
+          });
+        }
+
+        function saveBackupToLocalStorage() {
+          try {
+            const lightCopy = { tugas: {}, materi: {} };
+            ["tugas", "materi"].forEach((cat) => {
+              for (const [k, v] of Object.entries(recordsCache[cat] || {})) {
+                if (v.link || v.file) {
+                  lightCopy[cat][k] = {
+                    link: v.link || null,
+                    fileMeta: v.file ? { name: v.file.name, size: v.file.size } : null
+                  };
+                }
+              }
+            });
+            localStorage.setItem(LOCAL_META_KEY, JSON.stringify(lightCopy));
+          } catch (e) {}
+        }
+
+        function formatBytes(bytes) {
+          if (!bytes) return "0 KB";
+          const k = 1024;
+          const sizes = ["Bytes", "KB", "MB", "GB"];
+          const i = Math.floor(Math.log(bytes) / Math.log(k));
+          return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + " " + sizes[i];
+        }
+
+        function normalizeUrl(rawUrl) {
+          const trimmed = (rawUrl || "").trim();
+          if (!trimmed) return "";
+          if (/^https?:\/\//i.test(trimmed)) return trimmed;
+          return "https://" + trimmed;
+        }
+
+        function getFileIcon(filename) {
+          const ext = (filename.split(".").pop() || "").toLowerCase();
+          if (ext === "pdf") return "fa-file-pdf text-rose-500";
+          if (["doc", "docx"].includes(ext)) return "fa-file-word text-blue-500";
+          if (["ppt", "pptx"].includes(ext)) return "fa-file-powerpoint text-orange-500";
+          if (["xls", "xlsx"].includes(ext)) return "fa-file-excel text-emerald-500";
+          if (["zip", "rar", "7z"].includes(ext)) return "fa-file-archive text-amber-500";
+          if (["jpg", "jpeg", "png", "webp"].includes(ext)) return "fa-file-image text-purple-500";
+          return "fa-file-alt text-primary";
+        }
+
+        function getLinkIcon(url) {
+          const u = (url || "").toLowerCase();
+          if (u.includes("drive.google.com") || u.includes("docs.google.com"))
+            return "fab fa-google-drive text-emerald-600";
+          if (u.includes("github.com")) return "fab fa-github text-gray-800";
+          if (u.includes("youtube.com") || u.includes("youtu.be"))
+            return "fab fa-youtube text-red-600";
+          if (u.includes("figma.com")) return "fab fa-figma text-purple-600";
+          if (u.includes("canva.com")) return "fas fa-palette text-cyan-600";
+          return "fas fa-link text-primary";
+        }
+
+        async function renderPdfPagesToCanvas(fileInfo, container) {
+          container.innerHTML = `
+            <div class="my-auto text-center text-gray-600">
+              <i class="fas fa-spinner fa-spin text-2xl text-primary mb-2"></i>
+              <p class="text-sm font-medium">Memuat halaman PDF...</p>
+            </div>
+          `;
+
+          try {
+            let buf;
+            if (fileInfo.arrayBuffer) {
+              buf = fileInfo.arrayBuffer.slice(0);
+            } else if (fileInfo.blob) {
+              buf = await fileInfo.blob.arrayBuffer();
+            } else {
+              const resp = await fetch(fileInfo.url);
+              buf = await resp.arrayBuffer();
+            }
+
+            const pdfDoc = await window.pdfjsLib.getDocument({ data: new Uint8Array(buf) }).promise;
+            container.innerHTML = "";
+
+            const infoBar = document.createElement("div");
+            infoBar.className =
+              "text-xs font-semibold text-gray-600 bg-white px-3 py-1 rounded-full shadow-sm border border-pink-100 sticky top-0 z-10";
+            infoBar.textContent = `Total ${pdfDoc.numPages} Halaman`;
+            container.appendChild(infoBar);
+
+            for (let pageNum = 1; pageNum <= pdfDoc.numPages; pageNum++) {
+              const page = await pdfDoc.getPage(pageNum);
+              const viewport = page.getViewport({ scale: 1.4 });
+              const canvas = document.createElement("canvas");
+              const ctx = canvas.getContext("2d");
+              canvas.height = viewport.height;
+              canvas.width = viewport.width;
+              canvas.className =
+                "bg-white shadow-md rounded-lg max-w-full h-auto border border-gray-300";
+
+              container.appendChild(canvas);
+              await page.render({ canvasContext: ctx, viewport: viewport }).promise;
+            }
+          } catch (err) {
+            container.innerHTML = `
+              <div class="my-auto text-center p-6 bg-white rounded-2xl shadow max-w-md">
+                <i class="fas fa-exclamation-circle text-3xl text-rose-500 mb-3"></i>
+                <h4 class="font-bold text-gray-900 mb-1">Gagal Menampilkan Pratinjau</h4>
+                <p class="text-xs text-gray-600 mb-4">File PDF tidak dapat dirender langsung. Silakan unduh dokumen.</p>
+                <a href="${fileInfo.url}" download="${fileInfo.name}" class="inline-flex items-center gap-2 bg-primary text-white text-xs font-semibold px-4 py-2 rounded-lg">
+                  <i class="fas fa-download"></i> Unduh PDF
+                </a>
+              </div>
+            `;
+          }
+        }
+
+        function openFilePreviewModal(fileInfo) {
+          const modal = document.getElementById("filePreviewModal");
+          const titleEl = document.getElementById("previewFileName");
+          const downloadBtn = document.getElementById("previewDownloadBtn");
+          const container = document.getElementById("previewContainer");
+
+          if (!modal || !container) return;
+
+          if (!fileInfo.url && fileInfo.blob) {
+            fileInfo.url = URL.createObjectURL(fileInfo.blob);
+          }
+
+          const ext = (fileInfo.name.split(".").pop() || "").toLowerCase();
+
+          titleEl.textContent = fileInfo.name;
+          downloadBtn.href = fileInfo.url;
+          downloadBtn.setAttribute("download", fileInfo.name);
+
+          modal.classList.remove("hidden");
+          modal.classList.add("flex");
+
+          if (ext === "pdf" && window.pdfjsLib) {
+            renderPdfPagesToCanvas(fileInfo, container);
+          } else if (["jpg", "jpeg", "png", "webp", "gif"].includes(ext)) {
+            container.innerHTML = `<img src="${fileInfo.url}" alt="${fileInfo.name}" class="my-auto max-w-full max-h-full object-contain rounded-lg shadow bg-white p-2" />`;
+          } else {
+            container.innerHTML = `
+              <div class="my-auto text-center p-8 max-w-md bg-white rounded-2xl shadow-sm">
+                <div class="w-16 h-16 mx-auto bg-pink-100 text-primary rounded-2xl flex items-center justify-center text-3xl mb-4">
+                  <i class="fas fa-file-alt"></i>
+                </div>
+                <h4 class="font-bold text-gray-900 mb-2">${fileInfo.name}</h4>
+                <p class="text-sm text-gray-600 mb-5">Pratinjau langsung tersedia untuk file <strong>PDF</strong> dan <strong>Gambar</strong>.</p>
+                <a href="${fileInfo.url}" download="${fileInfo.name}" class="inline-flex items-center gap-2 bg-primary hover:bg-pink-600 text-white font-semibold px-5 py-2.5 rounded-xl transition">
+                  <i class="fas fa-download"></i> Unduh File
+                </a>
+              </div>
+            `;
+          }
+        }
+
+        function closeFilePreviewModal() {
+          const modal = document.getElementById("filePreviewModal");
+          const container = document.getElementById("previewContainer");
+          if (modal) {
+            modal.classList.add("hidden");
+            modal.classList.remove("flex");
+          }
+          if (container) container.innerHTML = "";
+        }
+
+        function createAttachmentFieldsUI(fileInputId, linkInputId, existingData, hasNativeLinkInput, titleHint) {
+          const existingFile = existingData && existingData.file ? existingData.file : null;
+          const existingLink = existingData && existingData.link ? existingData.link : null;
+
+          const existingFileInfo = existingFile
+            ? `<div class="mt-2 text-xs text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-lg px-3 py-1.5 flex items-center justify-between">
+                 <span class="truncate"><i class="fas fa-check-circle mr-1"></i> File tersimpan: <strong>${existingFile.name}</strong> (${existingFile.size})</span>
+               </div>`
+            : "";
+
+          const linkSectionHTML = !hasNativeLinkInput
+            ? `
+              <div>
+                <label for="${linkInputId}" class="block text-sm font-medium text-gray-700 mb-1">
+                  Tautan (opsional)
+                </label>
+                <input
+                  type="url"
+                  id="${linkInputId}"
+                  value="${existingLink ? existingLink.url : ""}"
+                  placeholder="https://drive.google.com/..."
+                  class="field w-full"
+                />
+              </div>
+            `
+            : "";
+
+          return `
+            <div class="space-y-4 mt-3 mb-4" id="wrap_${fileInputId}">
+              ${linkSectionHTML}
+              <div>
+                <label for="${fileInputId}" class="block text-sm font-medium text-gray-700 mb-1">
+                  Lampiran file (opsional)
+                </label>
+                <input
+                  type="file"
+                  id="${fileInputId}"
+                  accept=".pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.zip,.rar,.jpg,.jpeg,.png"
+                  class="field w-full text-sm text-gray-600 file:mr-3 file:py-1.5 file:px-3.5 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-pink-100 file:text-primary hover:file:bg-pink-200 cursor-pointer"
+                />
+                <p class="text-[11px] text-gray-400 mt-1">PDF, Word, PPT, Excel, ZIP, atau Gambar (Tersimpan permanen)</p>
+                ${existingFileInfo}
+              </div>
+            </div>
+          `;
+        }
+
+        async function processAndSaveAttachments(category, titleKey, file, rawLinkUrl) {
+          if (!titleKey) return;
+
+          if (!recordsCache[category]) recordsCache[category] = {};
+          if (!recordsCache[category][titleKey]) {
+            recordsCache[category][titleKey] = { file: null, link: null };
+          }
+
+          const rec = recordsCache[category][titleKey];
+
+          if (rawLinkUrl !== null) {
+            const cleanUrl = normalizeUrl(rawLinkUrl);
+            rec.link = cleanUrl ? { url: cleanUrl } : null;
+          }
+
+          if (file) {
+            const buf = await file.arrayBuffer();
+            const blobObj = new Blob([buf], { type: file.type || "application/octet-stream" });
+            rec.file = {
+              name: file.name,
+              size: formatBytes(file.size),
+              type: file.type || "application/octet-stream",
+              blob: blobObj,
+              arrayBuffer: buf,
+              url: URL.createObjectURL(blobObj)
+            };
+          }
+
+          if (rec.file || rec.link) {
+            await persistRecordToDB(category, titleKey, rec);
+          } else {
+            delete recordsCache[category][titleKey];
+            await deleteRecordFromDB(category, titleKey);
+          }
+
+          renderAllBadges(true);
+        }
+
+        function injectFieldsToActiveForm() {
+          const formBox = document.getElementById("formBox");
+          if (!formBox || !formBox.innerHTML.trim()) return;
+
+          const boxText = (formBox.innerText || "").toLowerCase();
+          let category = null;
+          let fileInputId = null;
+          let linkInputId = null;
+
+          if (boxText.includes("tugas")) {
+            category = "tugas";
+            fileInputId = "inputFileTugas";
+            linkInputId = "inputLinkTugas";
+          } else if (boxText.includes("materi")) {
+            category = "materi";
+            fileInputId = "inputFileMateri";
+            linkInputId = "inputLinkMateri";
+          } else {
+            return;
+          }
+
+          if (document.getElementById(fileInputId)) return;
+
+          const form = formBox.querySelector("form") || formBox;
+          const titleInput = form.querySelector('input[type="text"], input:not([type])');
+          const initialTitle = titleInput ? titleInput.value.trim() : "";
+
+          const nativeUrlInput = form.querySelector('input[type="url"]');
+          const hasNativeLinkInput = Boolean(nativeUrlInput) || boxText.includes("tautan (opsional)");
+
+          const existingData =
+            initialTitle && recordsCache[category] ? recordsCache[category][initialTitle] : null;
+
+          if (nativeUrlInput && !nativeUrlInput.value && existingData && existingData.link) {
+            nativeUrlInput.value = existingData.link.url;
+          }
+
+          const wrapper = document.createElement("div");
+          wrapper.innerHTML = createAttachmentFieldsUI(
+            fileInputId,
+            linkInputId,
+            existingData,
+            hasNativeLinkInput,
+            initialTitle
+          );
+          const fieldsBlock = wrapper.firstElementChild;
+
+          const allButtons = Array.from(form.querySelectorAll("button"));
+          const saveBtn =
+            form.querySelector('button[type="submit"]') ||
+            allButtons.find((b) => (b.innerText || "").toLowerCase().includes("simpan"));
+
+          if (saveBtn) {
+            const btnContainer = saveBtn.parentElement;
+            if (btnContainer && btnContainer !== form && btnContainer.parentElement) {
+              btnContainer.parentElement.insertBefore(fieldsBlock, btnContainer);
+            } else {
+              form.insertBefore(fieldsBlock, saveBtn);
+            }
+          } else {
+            form.appendChild(fieldsBlock);
+          }
+
+          const handleSaveAction = async function () {
+            const fileEl = document.getElementById(fileInputId);
+            const linkEl = nativeUrlInput || document.getElementById(linkInputId);
+            const newTitle = titleInput ? titleInput.value.trim() : "";
+
+            if (initialTitle && newTitle && initialTitle !== newTitle) {
+              if (recordsCache[category] && recordsCache[category][initialTitle]) {
+                recordsCache[category][newTitle] = recordsCache[category][initialTitle];
+                delete recordsCache[category][initialTitle];
+                await deleteRecordFromDB(category, initialTitle);
+              }
+            }
+
+            const selectedFile = fileEl && fileEl.files && fileEl.files[0] ? fileEl.files[0] : null;
+            const linkUrlVal = !hasNativeLinkInput && linkEl ? linkEl.value : null;
+
+            await processAndSaveAttachments(category, newTitle, selectedFile, linkUrlVal);
+          };
+
+          if (form.tagName === "FORM") {
+            form.addEventListener("submit", handleSaveAction, true);
+          }
+          if (saveBtn) {
+            saveBtn.addEventListener("click", handleSaveAction, true);
+          }
+        }
+
+        function renderBadgesForContainer(containerId, category, forceRefresh = false) {
+          const container = document.getElementById(containerId);
+          if (!container) return;
+
+          const itemsMap = recordsCache[category] || {};
+
+          Array.from(container.children).forEach((card) => {
+            const oldWrap = card.querySelector(".portal-attachments-wrapper");
+            if (oldWrap && !forceRefresh) return;
+            if (oldWrap && forceRefresh) oldWrap.remove();
+
+            const cardText = card.innerText || "";
+
+            for (const [titleKey, attData] of Object.entries(itemsMap)) {
+              if (titleKey && cardText.includes(titleKey) && (attData.file || attData.link)) {
+                const wrap = document.createElement("div");
+                wrap.className =
+                  "portal-attachments-wrapper mt-4 pt-3 border-t border-pink-100 space-y-2";
+
+                if (attData.file) {
+                  const fileInfo = attData.file;
+                  if (!fileInfo.url && fileInfo.blob) {
+                    fileInfo.url = URL.createObjectURL(fileInfo.blob);
+                  }
+                  const iconClass = getFileIcon(fileInfo.name);
+                  const fileBox = document.createElement("div");
+                  fileBox.className =
+                    "flex items-center justify-between gap-2 bg-pink-50/80 px-3 py-2 rounded-xl border border-pink-100";
+                  fileBox.innerHTML = `
+                    <div class="flex items-center gap-2 min-w-0">
+                      <i class="fas ${iconClass} text-base shrink-0"></i>
+                      <div class="min-w-0">
+                        <p class="text-xs font-semibold text-gray-800 truncate" title="${fileInfo.name}">${fileInfo.name}</p>
+                        <p class="text-[11px] text-gray-500">${fileInfo.size}</p>
+                      </div>
+                    </div>
+                    <div class="flex items-center gap-1.5 shrink-0">
+                      <button
+                        type="button"
+                        data-view-cat="${category}"
+                        data-view-key="${encodeURIComponent(titleKey)}"
+                        class="btn-view-attachment px-2.5 py-1 bg-white border border-pink-200 text-primary hover:bg-primary hover:text-white rounded-lg text-xs font-semibold transition cursor-pointer"
+                        title="Lihat File"
+                      >
+                        <i class="fas fa-eye mr-0.5"></i> Lihat
+                      </button>
+                      <a
+                        href="${fileInfo.url}"
+                        download="${fileInfo.name}"
+                        class="px-2.5 py-1 bg-primary text-white hover:bg-pink-600 rounded-lg text-xs font-semibold transition"
+                        title="Unduh File"
+                      >
+                        <i class="fas fa-download"></i>
+                      </a>
+                      <button
+                        type="button"
+                        data-del-type="file"
+                        data-del-cat="${category}"
+                        data-del-key="${encodeURIComponent(titleKey)}"
+                        class="btn-del-attachment px-2 py-1 bg-red-50 text-red-500 hover:bg-red-500 hover:text-white rounded-lg text-xs transition"
+                        title="Hapus File"
+                      >
+                        <i class="fas fa-times"></i>
+                      </button>
+                    </div>
+                  `;
+                  wrap.appendChild(fileBox);
+                }
+
+                if (attData.link && attData.link.url) {
+                  const linkInfo = attData.link;
+                  const linkIcon = getLinkIcon(linkInfo.url);
+                  const isDriveFolder = linkInfo.url.includes("drive.google.com");
+                  const displayLabel = isDriveFolder
+                    ? "Google Drive - Folder Tugas & PDF"
+                    : linkInfo.url.replace(/^https?:\/\//i, "");
+                  const linkBox = document.createElement("div");
+                  linkBox.className =
+                    "flex items-center justify-between gap-2 bg-rose-50/70 px-3 py-2 rounded-xl border border-pink-100";
+                  linkBox.innerHTML = `
+                    <div class="flex items-center gap-2 min-w-0">
+                      <i class="${linkIcon} text-sm shrink-0"></i>
+                      <div class="min-w-0">
+                        <p class="text-xs font-semibold text-gray-800 truncate" title="${linkInfo.url}">${displayLabel}</p>
+                        <p class="text-[10px] text-gray-400 truncate">${linkInfo.url}</p>
+                      </div>
+                    </div>
+                    <div class="flex items-center gap-1.5 shrink-0">
+                      <a
+                        href="${linkInfo.url}"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        class="btn-open-external-link px-2.5 py-1 bg-white border border-pink-200 text-primary hover:bg-primary hover:text-white rounded-lg text-xs font-semibold transition inline-flex items-center gap-1"
+                        title="Buka Tautan"
+                      >
+                        <span>Buka</span> <i class="fas fa-external-link-alt text-[10px]"></i>
+                      </a>
+                      <button
+                        type="button"
+                        data-del-type="link"
+                        data-del-cat="${category}"
+                        data-del-key="${encodeURIComponent(titleKey)}"
+                        class="btn-del-attachment px-2 py-1 bg-red-50 text-red-500 hover:bg-red-500 hover:text-white rounded-lg text-xs transition"
+                        title="Hapus Tautan"
+                      >
+                        <i class="fas fa-times"></i>
+                      </button>
+                    </div>
+                  `;
+                  wrap.appendChild(linkBox);
+                }
+
+                card.appendChild(wrap);
+                break;
+              }
+            }
+          });
+        }
+
+        function renderAllBadges(forceRefresh = false) {
+          renderBadgesForContainer("taskList", "tugas", forceRefresh);
+          renderBadgesForContainer("materiList", "materi", forceRefresh);
+        }
+
+        document.addEventListener(
+          "click",
+          async function (e) {
+            const viewBtn = e.target.closest(".btn-view-attachment");
+            if (viewBtn) {
+              e.preventDefault();
+              e.stopPropagation();
+              e.stopImmediatePropagation();
+              const cat = viewBtn.getAttribute("data-view-cat");
+              const key = decodeURIComponent(viewBtn.getAttribute("data-view-key") || "");
+              const attData = recordsCache[cat] ? recordsCache[cat][key] : null;
+              if (attData && attData.file) {
+                openFilePreviewModal(attData.file);
+              }
+              return;
+            }
+
+            const extLink = e.target.closest(".btn-open-external-link");
+            if (extLink) {
+              e.stopPropagation();
+              return;
+            }
+
+            if (e.target.closest("#closePreviewBtn") || e.target.id === "filePreviewModal") {
+              e.preventDefault();
+              e.stopPropagation();
+              closeFilePreviewModal();
+              return;
+            }
+
+            const delBtn = e.target.closest(".btn-del-attachment");
+            if (delBtn) {
+              e.preventDefault();
+              e.stopPropagation();
+              e.stopImmediatePropagation();
+              const delType = delBtn.getAttribute("data-del-type");
+              const cat = delBtn.getAttribute("data-del-cat");
+              const key = decodeURIComponent(delBtn.getAttribute("data-del-key") || "");
+              if (cat && key && recordsCache[cat] && recordsCache[cat][key]) {
+                if (cat === "tugas" && key === "QUIZ" && delType === "link") {
+                  localStorage.setItem("portalAkademik.quizDefaultDeleted", "1");
+                }
+                recordsCache[cat][key][delType] = null;
+                const rec = recordsCache[cat][key];
+                if (rec.file || rec.link) {
+                  await persistRecordToDB(cat, key, rec);
+                } else {
+                  delete recordsCache[cat][key];
+                  await deleteRecordFromDB(cat, key);
+                }
+                renderAllBadges(true);
+              }
+              return;
+            }
+
+            if (e.target.closest('button[onclick*="openTaskForm"], button[onclick*="openMateriForm"], button')) {
+              setTimeout(injectFieldsToActiveForm, 10);
+              setTimeout(injectFieldsToActiveForm, 60);
+            }
+          },
+          true
+        );
+
+        async function initAttachmentFeature() {
+          await loadAllPermanentRecords();
+          injectFieldsToActiveForm();
+
+          const formBox = document.getElementById("formBox");
+          if (formBox) {
+            const formObserver = new MutationObserver(() => {
+              injectFieldsToActiveForm();
+            });
+            formObserver.observe(formBox, { childList: true, subtree: true });
+          }
+
+          const listObserver = new MutationObserver(() => {
+            renderAllBadges(false);
+          });
+
+          const taskList = document.getElementById("taskList");
+          const materiList = document.getElementById("materiList");
+          const courseList = document.getElementById("courseList");
+          if (taskList) listObserver.observe(taskList, { childList: true });
+          if (materiList) listObserver.observe(materiList, { childList: true });
+          if (courseList) listObserver.observe(courseList, { childList: true });
+        }
+
+        if (document.readyState === "loading") {
+          document.addEventListener("DOMContentLoaded", initAttachmentFeature);
+        } else {
+          initAttachmentFeature();
+        }
+      })();
+    </script>
+  </body>
+</html>
