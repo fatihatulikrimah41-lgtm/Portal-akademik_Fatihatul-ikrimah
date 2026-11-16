@@ -621,7 +621,7 @@
     <script src="js/navigation.js"></script>
     <script src="js/app.js"></script>
 
-    <!-- Penyimpanan Permanen IndexedDB + LocalStorage + Tanda Selesai / Belum Selesai Manual -->
+    <!-- Penyimpanan Permanen IndexedDB + LocalStorage + Hanya Tampilkan Lencana Selesai Saja -->
     <script>
       (function () {
         const DB_NAME = "PortalAkademikPermanentDB";
@@ -960,7 +960,7 @@
           if (container) container.innerHTML = "";
         }
 
-        // Menampilkan lencana status "Selesai" / "Belum selesai" secara manual berdasarkan klik tombol
+        // HANYA menampilkan lencana "Selesai" (hijau) JIKA tombol Selesai diklik. Bagian belum selesai dibersihkan total.
         function updateTaskStatusIndicators() {
           const taskList = document.getElementById("taskList");
           if (!taskList) return;
@@ -984,40 +984,35 @@
             let statusPill = card.querySelector(".task-inline-status-pill");
             if (statusPill) statusPill.remove();
 
-            statusPill = document.createElement("span");
-            statusPill.className = "task-inline-status-pill";
-
             if (isCompleted) {
               card.classList.remove("task-card-pending");
               card.classList.add("task-card-completed");
               if (titleEl) titleEl.classList.add("task-title-completed");
 
-              statusPill.classList.add("status-pill-selesai");
+              statusPill = document.createElement("span");
+              statusPill.className = "task-inline-status-pill status-pill-selesai";
               statusPill.innerHTML = `<i class="fas fa-check-circle"></i> Selesai`;
+
+              if (topRow) {
+                const rightSide = topRow.lastElementChild;
+                if (rightSide && rightSide !== topRow.firstElementChild) {
+                  if (rightSide.classList.contains("task-badges-group")) {
+                    rightSide.appendChild(statusPill);
+                  } else {
+                    const group = document.createElement("div");
+                    group.className = "task-badges-group inline-flex items-center flex-wrap justify-end gap-1.5";
+                    topRow.insertBefore(group, rightSide);
+                    group.appendChild(rightSide);
+                    group.appendChild(statusPill);
+                  }
+                } else {
+                  topRow.appendChild(statusPill);
+                }
+              }
             } else {
               card.classList.remove("task-card-completed");
               card.classList.add("task-card-pending");
               if (titleEl) titleEl.classList.remove("task-title-completed");
-
-              statusPill.classList.add("status-pill-belum");
-              statusPill.innerHTML = `<i class="far fa-clock"></i> Belum selesai`;
-            }
-
-            if (topRow) {
-              const rightSide = topRow.lastElementChild;
-              if (rightSide && rightSide !== topRow.firstElementChild) {
-                if (rightSide.classList.contains("task-badges-group")) {
-                  rightSide.appendChild(statusPill);
-                } else {
-                  const group = document.createElement("div");
-                  group.className = "task-badges-group inline-flex items-center flex-wrap justify-end gap-1.5";
-                  topRow.insertBefore(group, rightSide);
-                  group.appendChild(rightSide);
-                  group.appendChild(statusPill);
-                }
-              } else {
-                topRow.appendChild(statusPill);
-              }
             }
           });
         }
@@ -1383,7 +1378,6 @@
               return;
             }
 
-            // Tangkap klik tombol Tandai selesai / Batal selesai agar lencana status langsung terupdate
             if (
               e.target.closest('button[onclick*="openTaskForm"], button[onclick*="openMateriForm"], button')
             ) {
@@ -1414,8 +1408,8 @@
 
           const taskList = document.getElementById("taskList");
           const materiList = document.getElementById("materiList");
-          if (taskList) listObserver.observe(taskList, { childList: true });
-          if (materiList) listObserver.observe(materiList, { childList: true });
+          if (taskList) taskList.addEventListener("click", () => setTimeout(updateTaskStatusIndicators, 40));
+          if (materiList) materiList.addEventListener("click", () => setTimeout(updateTaskStatusIndicators, 40));
         }
 
         if (document.readyState === "loading") {
