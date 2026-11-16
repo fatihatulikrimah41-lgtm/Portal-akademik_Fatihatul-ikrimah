@@ -114,7 +114,7 @@
       </div>
     </div>
 
-    <!-- Stemmed Flower Symbols (Bunga dengan Tangkai) -->
+    <!-- Stemmed Flower Symbols -->
     <svg style="display: none" aria-hidden="true">
       <symbol id="flower-tall" viewBox="0 0 100 250">
         <path
@@ -634,7 +634,7 @@
     <script src="js/navigation.js"></script>
     <script src="js/app.js"></script>
 
-    <!-- Penyimpanan Permanen IndexedDB + LocalStorage + Tanda Selesai / Belum Selesai Otomatis -->
+    <!-- Penyimpanan Permanen IndexedDB + LocalStorage + Tanda Selesai / Belum Selesai Manual -->
     <script>
       (function () {
         const DB_NAME = "PortalAkademikPermanentDB";
@@ -974,6 +974,7 @@
         }
 
         // Menampilkan lencana status "Selesai" / "Belum selesai" tepat di samping badge tenggat ("Hari ini!" / "7 hari lagi")
+        // berdasarkan tombol manual Selesai yang kamu klik sendiri
         function updateTaskStatusIndicators() {
           const taskList = document.getElementById("taskList");
           if (!taskList) return;
@@ -1396,7 +1397,10 @@
               return;
             }
 
-            if (e.target.closest('button[onclick*="openTaskForm"], button[onclick*="openMateriForm"], button')) {
+            // Tangkap klik pada tombol Tandai selesai / Batal selesai agar status langsung terupdate
+            if (
+              e.target.closest('button[onclick*="openTaskForm"], button[onclick*="openMateriForm"], button')
+            ) {
               setTimeout(injectFieldsToActiveForm, 10);
               setTimeout(injectFieldsToActiveForm, 60);
               setTimeout(updateTaskStatusIndicators, 40);
