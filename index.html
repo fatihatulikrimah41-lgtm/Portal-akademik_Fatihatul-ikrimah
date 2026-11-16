@@ -10,9 +10,24 @@
     />
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              primary: "#ec4899",
+              secondary: "#be185d"
+            },
+            fontFamily: {
+              sans: ["Inter", "sans-serif"]
+            }
+          }
+        }
+      };
+    </script>
     <!-- Google Fonts: Inter -->
     <link
-      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
       rel="stylesheet"
     />
     <!-- Font Awesome for Icons -->
@@ -23,14 +38,125 @@
     <!-- PDF.js untuk merender PDF langsung di halaman tanpa diblokir browser -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 
-    <script src="js/tailwind-config.js"></script>
+    <script src="js/tailwind-config.js" onerror="void 0"></script>
     <script>
       try {
         if (sessionStorage.getItem("portalAkademik.session"))
           document.documentElement.classList.add("authed");
       } catch (e) {}
     </script>
-    <link rel="stylesheet" href="css/style.css" />
+    <link rel="stylesheet" href="css/style.css" onerror="void 0" />
+    <style>
+      html.authed #authScreen {
+        display: none !important;
+      }
+
+      .field {
+        width: 100%;
+        padding: 0.65rem 0.9rem;
+        border-radius: 0.75rem;
+        border: 1px solid #fbcfe8;
+        background-color: #ffffff;
+        font-size: 0.875rem;
+        color: #1f2937;
+        outline: none;
+        transition: border-color 0.2s, box-shadow 0.2s;
+      }
+
+      .field:focus {
+        border-color: #ec4899;
+        box-shadow: 0 0 0 3px rgba(236, 72, 153, 0.15);
+      }
+
+      /* Tata letak Daftar Tugas & Laporan agar persis seperti referensi */
+      body main section#tugas > div {
+        max-width: 900px !important;
+        margin-left: auto !important;
+        margin-right: auto !important;
+      }
+
+      body main section#tugas h2 {
+        text-align: center !important;
+        width: 100% !important;
+        display: block !important;
+        margin-left: auto !important;
+        margin-right: auto !important;
+      }
+
+      body main section#tugas #taskList {
+        display: grid !important;
+        grid-template-columns: repeat(auto-fit, minmax(320px, 385px)) !important;
+        justify-content: center !important;
+        align-items: stretch !important;
+        gap: 1.75rem !important;
+        width: 100% !important;
+        margin-left: auto !important;
+        margin-right: auto !important;
+      }
+
+      body main section#tugas #taskList > div {
+        width: 100% !important;
+        max-width: 385px !important;
+        margin: 0 auto !important;
+        padding: 1.5rem !important;
+        border-radius: 1.5rem !important;
+        background-color: #ffffff !important;
+        box-shadow: 0 12px 30px -8px rgba(236, 72, 153, 0.12) !important;
+        border: 1px solid #fce7f3 !important;
+        display: flex !important;
+        flex-direction: column !important;
+        transition: all 0.25s ease !important;
+      }
+
+      body main section#tugas #taskList > div .task-footer-push {
+        margin-top: auto !important;
+      }
+
+      body main section#tugas #taskList > div.task-card-completed {
+        background: linear-gradient(180deg, #ffffff 0%, #f0fdf4 100%) !important;
+        border: 1.5px solid #bbf7d0 !important;
+        box-shadow: 0 12px 28px -6px rgba(16, 185, 129, 0.12) !important;
+      }
+
+      .task-title-completed {
+        text-decoration: line-through !important;
+        text-decoration-color: #4b5563 !important;
+        text-decoration-thickness: 2px !important;
+        color: #4b5563 !important;
+      }
+
+      .status-pill-selesai {
+        display: inline-flex !important;
+        align-items: center !important;
+        gap: 4px !important;
+        background-color: #dcfce7 !important;
+        color: #16a34a !important;
+        font-size: 12px !important;
+        font-weight: 700 !important;
+        padding: 3px 12px !important;
+        border-radius: 9999px !important;
+        white-space: nowrap !important;
+      }
+
+      .portal-attachments-wrapper {
+        margin-top: 1rem !important;
+        padding-top: 0.85rem !important;
+      }
+
+      .portal-attachments-wrapper > div {
+        padding: 0.55rem 0.75rem !important;
+        border-radius: 0.85rem !important;
+      }
+
+      @keyframes blob {
+        0%, 100% { transform: translate(0px, 0px) scale(1); }
+        33% { transform: translate(20px, -25px) scale(1.05); }
+        66% { transform: translate(-15px, 15px) scale(0.95); }
+      }
+      .animate-blob { animation: blob 8s infinite; }
+      .animation-delay-2000 { animation-delay: 2s; }
+      .animation-delay-4000 { animation-delay: 4s; }
+    </style>
   </head>
   <body
     class="bg-pink-100 text-gray-800 font-sans antialiased flex flex-col min-h-screen relative overflow-x-hidden"
@@ -52,7 +178,7 @@
         ></div>
       </div>
       <div
-        class="relative w-full max-w-md bg-white/85 backdrop-blur-md rounded-3xl shadow-2xl shadow-pink-200 border border-pink-100 p-8"
+        class="relative w-full max-w-md bg-white/90 backdrop-blur-md rounded-3xl shadow-2xl shadow-pink-200 border border-pink-100 p-8"
       >
         <div class="text-center mb-6">
           <div
@@ -63,7 +189,9 @@
           <h1 id="authTitle" class="text-2xl font-extrabold text-secondary">
             Masuk
           </h1>
-          <p id="authSub" class="text-sm text-gray-600 mt-1"></p>
+          <p id="authSub" class="text-sm text-gray-600 mt-1">
+            Silakan masuk ke Portal Akademik Anda
+          </p>
         </div>
         <form id="authForm" class="space-y-4" novalidate></form>
         <div id="authLinks" class="text-center text-sm mt-5"></div>
@@ -171,7 +299,7 @@
               class="hidden lg:inline-flex items-center gap-2 text-sm text-gray-700 bg-white/70 border border-pink-200 rounded-full px-3 py-1.5"
             >
               <i class="far fa-user-circle text-primary"></i>
-              <span id="navUser"></span>
+              <span id="navUser">Fatihatul Ikrimah</span>
             </span>
             <button
               onclick="logout()"
@@ -225,7 +353,7 @@
           >
             <i class="fas fa-sign-out-alt mr-1"></i> Keluar (<span
               id="navUserM"
-            ></span
+            >Fatihatul Ikrimah</span
             >)
           </button>
         </div>
@@ -287,6 +415,7 @@
               ></div>
               <img
                 src="assets/personal_photo.jpg"
+                onerror="this.src='https://ui-avatars.com/api/?name=Fatihatul+Ikrimah&background=ec4899&color=fff&size=400'"
                 alt="Profile"
                 class="relative rounded-3xl shadow-2xl shadow-pink-300 object-cover w-full h-full border-4 border-white transform rotate-2 hover:rotate-0 transition duration-500"
               />
@@ -298,29 +427,32 @@
       <!-- Tasks / Assignments Section -->
       <section
         id="tugas"
-        class="page-section hidden w-full py-16 bg-white/40 backdrop-blur-md border-t border-white/50 relative z-10 page-transition min-h-[70vh]"
+        class="page-section hidden w-full py-14 bg-white/40 backdrop-blur-md border-t border-white/50 relative z-10 page-transition min-h-[70vh]"
       >
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-          <div class="text-center mb-8">
-            <h2 class="text-3xl font-bold text-gray-900">
+        <div
+          style="max-width: 900px; margin: 0 auto;"
+          class="px-4 sm:px-6 lg:px-8 relative z-10"
+        >
+          <div style="text-align: center;" class="mb-8">
+            <h2 style="text-align: center;" class="text-3xl font-bold text-gray-900">
               Daftar Tugas &amp; Laporan
             </h2>
           </div>
-          <div id="dueBanner" class="space-y-3 mb-6"></div>
+          <div id="dueBanner" class="max-w-3xl mx-auto space-y-3 mb-6"></div>
           <div
-            class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-8"
+            class="max-w-3xl mx-auto flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-8"
           >
             <p id="taskSummary" class="text-sm text-gray-600"></p>
             <button
               onclick="openTaskForm()"
-              class="bg-primary hover:bg-pink-600 text-white font-semibold py-2.5 px-5 rounded-lg shadow-lg shadow-pink-200 transition flex items-center justify-center gap-2"
+              class="bg-primary hover:bg-pink-600 text-white font-semibold py-2.5 px-5 rounded-xl shadow-lg shadow-pink-200 transition flex items-center justify-center gap-2"
             >
               <i class="fas fa-plus"></i> Tambah Tugas
             </button>
           </div>
           <div
             id="taskList"
-            class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"
+            class="grid justify-center items-stretch gap-7"
           ></div>
         </div>
       </section>
@@ -587,8 +719,304 @@
       </div>
     </div>
 
-    <script src="js/navigation.js"></script>
-    <script src="js/app.js"></script>
+    <script src="js/navigation.js" onerror="void 0"></script>
+    <script src="js/app.js" onerror="void 0"></script>
+
+    <!-- Fallback Mandiri + Penyimpanan Permanen IndexedDB + Tata Letak Kartu -->
+    <script>
+      (function () {
+        const SESSION_KEY = "portalAkademik.session";
+        const TASKS_KEY = "portalAkademik.tasks.fallback.v1";
+
+        const defaultTasks = [
+          {
+            id: "task-1",
+            course: "Interaksi Manusia & Komputer",
+            title: "download aplikasi canva",
+            desc: "buat kelompok",
+            due: "2026-11-23",
+            dueLabel: "Sen, 23 Nov 2026",
+            daysLeft: "6 hari lagi",
+            done: false
+          },
+          {
+            id: "task-2",
+            course: "Analisis dan Design PL",
+            title: "QUIZ",
+            desc: "Soal Quiz: 1. Beri judul Project System Anda, kemudian jelaskan latarbelakang minimal 5 paragraph beserta citasi nya. 2. Jabarkan urgensi penelitiam Anda beserta Manfaat Penelitiam 3. Jelaskan Metode Penelitian yang digunakan. Jelaskan perbedaanya dari penelitian sebelumnya. Buatkan 5 kajian reference sebelumnya ditinjau dari Metode Penelitian! 4. Uraikan tools yang digunakan! 5. Tuliskan Daftar Pustaka. Minimal 30 referensi yg digunakan",
+            due: "2026-11-16",
+            dueLabel: "Sen, 16 Nov 2026",
+            daysLeft: "Selesai",
+            done: true
+          }
+        ];
+
+        function loadFallbackTasks() {
+          try {
+            const raw = localStorage.getItem(TASKS_KEY);
+            if (raw) return JSON.parse(raw);
+          } catch (e) {}
+          return defaultTasks;
+        }
+
+        function saveFallbackTasks(list) {
+          try {
+            localStorage.setItem(TASKS_KEY, JSON.stringify(list));
+          } catch (e) {}
+        }
+
+        function showSection(hash) {
+          const targetId = (hash || "#beranda").replace("#", "") || "beranda";
+          const sections = document.querySelectorAll(".page-section");
+          let matched = false;
+          sections.forEach((sec) => {
+            if (sec.id === targetId) {
+              sec.classList.remove("hidden");
+              matched = true;
+            } else {
+              sec.classList.add("hidden");
+            }
+          });
+          if (!matched && sections[0]) sections[0].classList.remove("hidden");
+
+          document.querySelectorAll(".nav-link").forEach((link) => {
+            const href = link.getAttribute("href");
+            if (href === "#" + targetId) {
+              link.classList.add("text-primary", "font-bold", "border-primary");
+              link.classList.remove("text-gray-600", "border-transparent");
+            } else {
+              link.classList.remove("text-primary", "font-bold", "border-primary");
+              link.classList.add("text-gray-600", "border-transparent");
+            }
+          });
+        }
+
+        function initFallbackAuthAndNav() {
+          const authForm = document.getElementById("authForm");
+          const authScreen = document.getElementById("authScreen");
+          const navUser = document.getElementById("navUser");
+          const navUserM = document.getElementById("navUserM");
+
+          const savedUser = sessionStorage.getItem(SESSION_KEY);
+          if (savedUser) {
+            document.documentElement.classList.add("authed");
+            if (authScreen) authScreen.style.display = "none";
+            if (navUser && !navUser.textContent) navUser.textContent = savedUser;
+            if (navUserM && !navUserM.textContent) navUserM.textContent = savedUser;
+          }
+
+          if (authForm && !authForm.innerHTML.trim()) {
+            authForm.innerHTML = `
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Username / NIM</label>
+                <input type="text" id="fbUsername" value="Fatihatul Ikrimah" required class="field" placeholder="Masukkan username atau NIM" />
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Kata Sandi</label>
+                <input type="password" id="fbPassword" value="123456" required class="field" placeholder="Masukkan kata sandi" />
+              </div>
+              <button type="submit" class="w-full bg-primary hover:bg-pink-600 text-white font-semibold py-2.5 px-4 rounded-xl shadow-lg shadow-pink-200 transition">
+                Masuk ke Portal
+              </button>
+            `;
+            authForm.addEventListener("submit", function (e) {
+              e.preventDefault();
+              const uname = (document.getElementById("fbUsername").value || "Fatihatul Ikrimah").trim();
+              sessionStorage.setItem(SESSION_KEY, uname);
+              document.documentElement.classList.add("authed");
+              if (authScreen) authScreen.style.display = "none";
+              if (navUser) navUser.textContent = uname;
+              if (navUserM) navUserM.textContent = uname;
+            });
+          }
+
+          if (typeof window.logout !== "function") {
+            window.logout = function () {
+              sessionStorage.removeItem(SESSION_KEY);
+              document.documentElement.classList.remove("authed");
+              if (authScreen) authScreen.style.display = "flex";
+            };
+          }
+
+          document.querySelectorAll('a[href^="#"]').forEach((a) => {
+            a.addEventListener("click", function (e) {
+              const h = a.getAttribute("href");
+              if (h && h.length > 1) {
+                e.preventDefault();
+                window.location.hash = h;
+                showSection(h);
+                const mm = document.getElementById("mobile-menu");
+                if (mm) mm.classList.add("hidden");
+              }
+            });
+          });
+
+          const mobileBtn = document.getElementById("mobile-menu-btn");
+          if (mobileBtn) {
+            mobileBtn.onclick = function () {
+              const mm = document.getElementById("mobile-menu");
+              if (mm) mm.classList.toggle("hidden");
+            };
+          }
+
+          if (window.location.hash) {
+            showSection(window.location.hash);
+          }
+
+          // Fallback render Daftar Tugas jika app.js eksternal gagal dimuat
+          const taskList = document.getElementById("taskList");
+          if (taskList && !taskList.children.length) {
+            window.renderFallbackTasks = function () {
+              const tasks = loadFallbackTasks();
+              const doneCount = tasks.filter((t) => t.done).length;
+              const pendingCount = tasks.length - doneCount;
+              const sumEl = document.getElementById("taskSummary");
+              if (sumEl) {
+                sumEl.textContent = `${tasks.length} tugas | ${doneCount} selesai | ${pendingCount} belum selesai`;
+              }
+
+              taskList.innerHTML = tasks
+                .map(
+                  (t, idx) => `
+                <div class="bg-white rounded-3xl p-6 shadow-sm border border-pink-100 flex flex-col">
+                  <div class="flex items-center justify-between gap-2 mb-3">
+                    <span class="px-3 py-1 rounded-full bg-purple-100 text-purple-700 text-xs font-semibold">${t.course}</span>
+                    <span class="px-3 py-1 rounded-full bg-pink-100 text-primary text-xs font-semibold">${t.daysLeft || "Aktif"}</span>
+                  </div>
+                  <h3 class="text-lg font-bold text-gray-900 mb-2">${t.title}</h3>
+                  <p class="text-sm text-gray-600 leading-relaxed mb-6">${t.desc}</p>
+                  <div class="task-footer-push mt-auto pt-3">
+                    <div class="flex items-center gap-2 text-xs text-gray-500 mb-3">
+                      <i class="far fa-calendar-alt"></i>
+                      <span>Tenggat: ${t.dueLabel || t.due}</span>
+                    </div>
+                    <div class="flex items-center justify-between gap-2">
+                      <button
+                        type="button"
+                        onclick="toggleFallbackTask(${idx})"
+                        class="inline-flex items-center gap-1.5 text-sm font-semibold ${
+                          t.done ? "text-gray-500 hover:text-gray-700" : "text-primary hover:text-pink-600"
+                        } transition"
+                      >
+                        <i class="fas ${t.done ? "fa-undo" : "fa-check-circle"}"></i>
+                        <span>${t.done ? "Tandai belum" : "Tandai selesai"}</span>
+                      </button>
+                      <div class="flex items-center gap-2">
+                        <button
+                          type="button"
+                          onclick="openTaskForm(${idx})"
+                          class="w-9 h-9 rounded-xl bg-gray-100 hover:bg-pink-100 text-gray-600 hover:text-primary flex items-center justify-center transition"
+                          title="Edit Tugas"
+                        >
+                          <i class="fas fa-pen text-xs"></i>
+                        </button>
+                        <button
+                          type="button"
+                          onclick="deleteFallbackTask(${idx})"
+                          class="w-9 h-9 rounded-xl bg-gray-100 hover:bg-red-100 text-gray-600 hover:text-red-500 flex items-center justify-center transition"
+                          title="Hapus Tugas"
+                        >
+                          <i class="fas fa-trash text-xs"></i>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              `
+                )
+                .join("");
+            };
+
+            window.toggleFallbackTask = function (idx) {
+              const tasks = loadFallbackTasks();
+              if (tasks[idx]) {
+                tasks[idx].done = !tasks[idx].done;
+                saveFallbackTasks(tasks);
+                window.renderFallbackTasks();
+              }
+            };
+
+            window.deleteFallbackTask = function (idx) {
+              const tasks = loadFallbackTasks();
+              tasks.splice(idx, 1);
+              saveFallbackTasks(tasks);
+              window.renderFallbackTasks();
+            };
+
+            if (typeof window.openTaskForm !== "function") {
+              window.openTaskForm = function (editIdx) {
+                const tasks = loadFallbackTasks();
+                const item = typeof editIdx === "number" ? tasks[editIdx] : null;
+                const formModal = document.getElementById("formModal");
+                const formBox = document.getElementById("formBox");
+                if (!formModal || !formBox) return;
+
+                formBox.innerHTML = `
+                  <h3 class="text-xl font-bold text-gray-900 mb-4">${item ? "Edit Tugas" : "Tambah Tugas"}</h3>
+                  <form id="fbTaskForm" class="space-y-3">
+                    <div>
+                      <label class="block text-sm font-medium text-gray-700 mb-1">Mata Kuliah</label>
+                      <input type="text" id="fbTaskCourse" class="field" value="${item ? item.course : "Analisis dan Design PL"}" required />
+                    </div>
+                    <div>
+                      <label class="block text-sm font-medium text-gray-700 mb-1">Judul Tugas</label>
+                      <input type="text" id="fbTaskTitle" class="field" value="${item ? item.title : ""}" required />
+                    </div>
+                    <div>
+                      <label class="block text-sm font-medium text-gray-700 mb-1">Deskripsi</label>
+                      <textarea id="fbTaskDesc" rows="3" class="field">${item ? item.desc : ""}</textarea>
+                    </div>
+                    <div>
+                      <label class="block text-sm font-medium text-gray-700 mb-1">Tenggat</label>
+                      <input type="text" id="fbTaskDue" class="field" value="${item ? item.dueLabel : "Sen, 30 Nov 2026"}" />
+                    </div>
+                    <div class="flex justify-end gap-2 pt-2">
+                      <button type="button" id="fbCancelTask" class="px-4 py-2 rounded-lg border border-gray-200 text-gray-600">Batal</button>
+                      <button type="submit" class="px-5 py-2 rounded-lg bg-primary text-white font-semibold">Simpan</button>
+                    </div>
+                  </form>
+                `;
+
+                formModal.classList.remove("hidden", "opacity-0");
+                formModal.classList.add("flex", "opacity-100");
+
+                document.getElementById("fbCancelTask").onclick = function () {
+                  formModal.classList.add("hidden");
+                  formModal.classList.remove("flex");
+                };
+
+                document.getElementById("fbTaskForm").onsubmit = function (ev) {
+                  ev.preventDefault();
+                  const newObj = {
+                    id: item ? item.id : "task-" + Date.now(),
+                    course: document.getElementById("fbTaskCourse").value.trim(),
+                    title: document.getElementById("fbTaskTitle").value.trim(),
+                    desc: document.getElementById("fbTaskDesc").value.trim(),
+                    dueLabel: document.getElementById("fbTaskDue").value.trim(),
+                    daysLeft: "6 hari lagi",
+                    done: item ? item.done : false
+                  };
+                  if (typeof editIdx === "number") tasks[editIdx] = newObj;
+                  else tasks.push(newObj);
+                  saveFallbackTasks(tasks);
+                  window.renderFallbackTasks();
+                  formModal.classList.add("hidden");
+                  formModal.classList.remove("flex");
+                };
+              };
+            }
+
+            window.renderFallbackTasks();
+          }
+        }
+
+        if (document.readyState === "loading") {
+          document.addEventListener("DOMContentLoaded", initFallbackAuthAndNav);
+        } else {
+          initFallbackAuthAndNav();
+        }
+      })();
+    </script>
 
     <!-- Penyimpanan Permanen IndexedDB + LocalStorage + Seed Link Drive QUIZ -->
     <script>
@@ -598,7 +1026,6 @@
         const STORE_NAME = "attachments";
         const LOCAL_META_KEY = "portalAkademik.permanentAttachments.v3";
 
-        // Default permanent attachment untuk kartu QUIZ (Analisis dan Design PL)
         const DEFAULT_QUIZ_DRIVE_LINK =
           "https://drive.google.com/drive/folders/1AralCU0Or88y3FkNgjsDD2ta9tYtxqRI?usp=sharing";
         const DEFAULT_QUIZ_PDF_NAME = "240511136_Fatihatul ikrimah_TI24D_QUIZ.pdf";
@@ -611,7 +1038,6 @@
         let recordsCache = { tugas: {}, materi: {} };
         let dbInstance = null;
 
-        // Pastikan link Google Drive QUIZ selalu tersedia secara permanen jika belum dihapus manual
         function ensureDefaultQuizAttachment() {
           const deletedFlag = localStorage.getItem("portalAkademik.quizDefaultDeleted");
           if (deletedFlag === "1") return;
@@ -648,7 +1074,6 @@
 
         async function persistRecordToDB(category, titleKey, recordObj) {
           saveBackupToLocalStorage();
-
           const db = await openPermanentDB();
           if (!db) return;
 
@@ -931,6 +1356,67 @@
           if (container) container.innerHTML = "";
         }
 
+        function updateTaskStatusIndicators() {
+          const taskList = document.getElementById("taskList");
+          if (!taskList) return;
+
+          Array.from(taskList.children).forEach((card) => {
+            const titleEl = card.querySelector("h3, h4");
+
+            Array.from(card.children).forEach((child) => {
+              if (
+                !child.classList.contains("portal-attachments-wrapper") &&
+                (child.innerText || "").includes("Tenggat:")
+              ) {
+                child.classList.add("task-footer-push");
+              }
+            });
+
+            const toggleBtn = Array.from(card.querySelectorAll("button")).find((btn) => {
+              const t = (btn.innerText || "").toLowerCase();
+              return (
+                t.includes("tandai selesai") ||
+                t.includes("tandai belum") ||
+                t.includes("batal selesai")
+              );
+            });
+
+            const btnText = toggleBtn ? (toggleBtn.innerText || "").toLowerCase() : "";
+            const isCompleted = btnText.includes("belum") || btnText.includes("batal");
+
+            const topRow = card.firstElementChild;
+            let statusPill = card.querySelector(".task-inline-status-pill");
+            if (statusPill) statusPill.remove();
+
+            if (topRow) {
+              topRow.classList.add("flex", "items-center", "justify-between", "gap-2", "mb-3");
+              Array.from(topRow.children).forEach((child, idx) => {
+                if (idx > 0 && !child.classList.contains("task-inline-status-pill")) {
+                  child.style.display = isCompleted ? "none" : "";
+                }
+              });
+            }
+
+            if (isCompleted) {
+              card.classList.remove("task-card-pending");
+              card.classList.add("task-card-completed");
+              if (titleEl) titleEl.classList.add("task-title-completed");
+
+              statusPill = document.createElement("span");
+              statusPill.className = "task-inline-status-pill status-pill-selesai";
+              statusPill.textContent = "Selesai";
+
+              if (topRow) {
+                topRow.appendChild(statusPill);
+              }
+            } else {
+              card.classList.remove("task-card-completed");
+              card.classList.add("task-card-pending");
+              if (titleEl) titleEl.classList.remove("task-title-completed");
+            }
+          });
+        }
+
         function createAttachmentFieldsUI(fileInputId, linkInputId, existingData, hasNativeLinkInput, titleHint) {
           const existingFile = existingData && existingData.file ? existingData.file : null;
           const existingLink = existingData && existingData.link ? existingData.link : null;
@@ -1046,7 +1532,9 @@
           if (document.getElementById(fileInputId)) return;
 
           const form = formBox.querySelector("form") || formBox;
-          const titleInput = form.querySelector('input[type="text"], input:not([type])');
+          const titleInput =
+            form.querySelector("#fbTaskTitle") ||
+            Array.from(form.querySelectorAll('input[type="text"], input:not([type])')).pop();
           const initialTitle = titleInput ? titleInput.value.trim() : "";
 
           const nativeUrlInput = form.querySelector('input[type="url"]');
@@ -1116,6 +1604,7 @@
           const container = document.getElementById(containerId);
           if (!container) return;
 
+          ensureDefaultQuizAttachment();
           const itemsMap = recordsCache[category] || {};
 
           Array.from(container.children).forEach((card) => {
@@ -1234,6 +1723,7 @@
         function renderAllBadges(forceRefresh = false) {
           renderBadgesForContainer("taskList", "tugas", forceRefresh);
           renderBadgesForContainer("materiList", "materi", forceRefresh);
+          updateTaskStatusIndicators();
         }
 
         document.addEventListener(
@@ -1294,6 +1784,7 @@
             if (e.target.closest('button[onclick*="openTaskForm"], button[onclick*="openMateriForm"], button')) {
               setTimeout(injectFieldsToActiveForm, 10);
               setTimeout(injectFieldsToActiveForm, 60);
+              setTimeout(() => renderAllBadges(false), 60);
             }
           },
           true
@@ -1302,6 +1793,11 @@
         async function initAttachmentFeature() {
           await loadAllPermanentRecords();
           injectFieldsToActiveForm();
+          renderAllBadges(true);
+
+          setTimeout(() => renderAllBadges(false), 150);
+          setTimeout(() => renderAllBadges(false), 500);
+          setInterval(() => renderAllBadges(false), 1000);
 
           const formBox = document.getElementById("formBox");
           if (formBox) {
@@ -1317,8 +1813,14 @@
 
           const taskList = document.getElementById("taskList");
           const materiList = document.getElementById("materiList");
-          if (taskList) listObserver.observe(taskList, { childList: true });
-          if (materiList) listObserver.observe(materiList, { childList: true });
+          if (taskList) {
+            listObserver.observe(taskList, { childList: true });
+            taskList.addEventListener("click", () => setTimeout(() => renderAllBadges(false), 50));
+          }
+          if (materiList) {
+            listObserver.observe(materiList, { childList: true });
+            materiList.addEventListener("click", () => setTimeout(() => renderAllBadges(false), 50));
+          }
         }
 
         if (document.readyState === "loading") {
