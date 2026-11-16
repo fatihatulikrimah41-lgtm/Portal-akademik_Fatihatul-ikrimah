@@ -66,7 +66,7 @@
         box-shadow: 0 0 0 3px rgba(236, 72, 153, 0.15);
       }
 
-      /* Tata letak Daftar Tugas & Laporan agar persis seperti gambar referensi */
+      /* Tata letak Daftar Tugas & Laporan */
       body main section#tugas > div {
         max-width: 900px !important;
         margin-left: auto !important;
@@ -159,7 +159,7 @@
   <body
     class="bg-pink-100 text-gray-800 font-sans antialiased flex flex-col min-h-screen relative overflow-x-hidden"
   >
-    <!-- Layar Login / Daftar (Langsung Terisi Penuh & Siap Pakai) -->
+    <!-- Layar Login / Daftar -->
     <div
       id="authScreen"
       class="fixed inset-0 z-[200] bg-pink-100 overflow-y-auto flex items-center justify-center p-4"
@@ -509,7 +509,7 @@
               <i class="fas fa-plus"></i> Tambah Mata Kuliah
             </button>
           </div>
-          <div id="courseList" class="space-y-8"></div>
+          <div id="courseList" class="space-y-6"></div>
         </div>
       </section>
 
@@ -678,13 +678,13 @@
       </div>
     </div>
 
-    <!-- Aplikasi Lengkap & Mandiri (Tanpa ketergantungan js/app.js eksternal yang rusak) -->
+    <!-- Aplikasi Lengkap & Mandiri -->
     <script>
       (function () {
         const SESSION_KEY = "portalAkademik.session";
         const TASKS_KEY = "portalAkademik.tasks.v2";
-        const COURSES_KEY = "portalAkademik.courses.v2";
-        const MATERI_KEY = "portalAkademik.materi.v2";
+        const COURSES_KEY = "portalAkademik.courses.v3";
+        const MATERI_KEY = "portalAkademik.materi.v3";
         const DB_NAME = "PortalAkademikPermanentDB";
         const DB_VERSION = 1;
         const STORE_NAME = "attachments";
@@ -722,6 +722,7 @@
           }
         ];
 
+        // 1 Mata Kuliah Default
         const defaultCourses = [
           {
             code: "TI24-ADPL",
@@ -729,13 +730,6 @@
             sks: 3,
             lecturer: "Dosen Pengampu ADPL",
             schedule: "Senin, 08:00 - 10:30"
-          },
-          {
-            code: "TI24-IMK",
-            name: "Interaksi Manusia & Komputer",
-            sks: 3,
-            lecturer: "Dosen Pengampu IMK",
-            schedule: "Rabu, 10:30 - 13:00"
           }
         ];
 
@@ -744,11 +738,6 @@
             course: "Analisis dan Design PL",
             title: "Pengantar SDLC & Metodologi Penelitian Perangkat Lunak",
             desc: "Konsep dasar rekayasa perangkat lunak, tahapan analisis kebutuhan, dan perancangan sistem."
-          },
-          {
-            course: "Interaksi Manusia & Komputer",
-            title: "Prinsip Usability & Prototipe Antarmuka",
-            desc: "Dasar desain antarmuka pengguna menggunakan Canva dan Figma."
           }
         ];
 
@@ -1037,6 +1026,7 @@
           return html;
         }
 
+        /* ==================== DAFTAR TUGAS (TAMBAH, EDIT, HAPUS, SELESAI) ==================== */
         window.renderTasks = function () {
           const taskList = document.getElementById("taskList");
           if (!taskList) return;
@@ -1048,6 +1038,11 @@
           const sumEl = document.getElementById("taskSummary");
           if (sumEl) {
             sumEl.textContent = `${tasks.length} tugas | ${doneCount} selesai | ${pendingCount} belum selesai`;
+          }
+
+          if (!tasks.length) {
+            taskList.innerHTML = `<div class="col-span-full text-center py-12 bg-white/80 rounded-3xl border border-pink-100 text-gray-500 text-sm">Belum ada tugas. Klik <strong>+ Tambah Tugas</strong> untuk menambahkan.</div>`;
+            return;
           }
 
           taskList.innerHTML = tasks
@@ -1118,6 +1113,9 @@
 
         window.deleteTask = function (idx) {
           const tasks = getStorage(TASKS_KEY, defaultTasks);
+          const removed = tasks[idx];
+          if (!removed) return;
+          if (!confirm(`Hapus tugas "${removed.title}"?`)) return;
           tasks.splice(idx, 1);
           setStorage(TASKS_KEY, tasks);
           window.renderTasks();
@@ -1182,6 +1180,7 @@
 
           document.getElementById("taskModalForm").onsubmit = async (ev) => {
             ev.preventDefault();
+            const oldTitle = item ? item.title : null;
             const newTitle = document.getElementById("tTitle").value.trim();
             const newObj = {
               id: item ? item.id : "task-" + Date.now(),
@@ -1195,6 +1194,12 @@
             if (typeof editIdx === "number") tasks[editIdx] = newObj;
             else tasks.push(newObj);
             setStorage(TASKS_KEY, tasks);
+
+            if (oldTitle && oldTitle !== newTitle && recordsCache.tugas[oldTitle]) {
+              recordsCache.tugas[newTitle] = recordsCache.tugas[oldTitle];
+              delete recordsCache.tugas[oldTitle];
+              await deleteRecordFromDB("tugas", oldTitle);
+            }
 
             const linkVal = normalizeUrl(document.getElementById("tLink").value);
             const fileEl = document.getElementById("tFile");
@@ -1224,18 +1229,43 @@
           };
         };
 
+        /* ==================== MATA KULIAH (1 DEFAULT + TAMBAH, EDIT, HAPUS) ==================== */
         window.renderCourses = function () {
           const courseList = document.getElementById("courseList");
           if (!courseList) return;
           const courses = getStorage(COURSES_KEY, defaultCourses);
+
+          if (!courses.length) {
+            courseList.innerHTML = `<div class="text-center py-12 bg-white/80 rounded-3xl border border-pink-100 text-gray-500 text-sm">Belum ada mata kuliah. Klik <strong>+ Tambah Mata Kuliah</strong> untuk menambahkan.</div>`;
+            return;
+          }
+
           courseList.innerHTML = courses
             .map(
-              (c) => `
-            <div class="bg-white rounded-2xl p-6 shadow-sm border border-pink-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              (c, idx) => `
+            <div class="bg-white rounded-3xl p-6 shadow-sm border border-pink-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div>
                 <span class="px-3 py-1 rounded-full bg-pink-100 text-primary text-xs font-bold">${c.code} • ${c.sks} SKS</span>
                 <h3 class="text-xl font-bold text-gray-900 mt-2">${c.name}</h3>
                 <p class="text-sm text-gray-600 mt-1"><i class="far fa-user mr-1 text-primary"></i> ${c.lecturer} &nbsp;|&nbsp; <i class="far fa-clock mr-1 text-primary"></i> ${c.schedule}</p>
+              </div>
+              <div class="flex items-center gap-2 self-end sm:self-center shrink-0">
+                <button
+                  type="button"
+                  onclick="openCourseForm(${idx})"
+                  class="w-9 h-9 rounded-xl bg-gray-100 hover:bg-pink-100 text-gray-600 hover:text-primary flex items-center justify-center transition cursor-pointer"
+                  title="Edit Mata Kuliah"
+                >
+                  <i class="fas fa-pen text-xs"></i>
+                </button>
+                <button
+                  type="button"
+                  onclick="deleteCourse(${idx})"
+                  class="w-9 h-9 rounded-xl bg-gray-100 hover:bg-red-100 text-gray-600 hover:text-red-500 flex items-center justify-center transition cursor-pointer"
+                  title="Hapus Mata Kuliah"
+                >
+                  <i class="fas fa-trash text-xs"></i>
+                </button>
               </div>
             </div>
           `
@@ -1243,16 +1273,45 @@
             .join("");
         };
 
-        window.openCourseForm = function () {
+        window.deleteCourse = function (idx) {
+          const courses = getStorage(COURSES_KEY, defaultCourses);
+          const removed = courses[idx];
+          if (!removed) return;
+          if (!confirm(`Hapus mata kuliah "${removed.name}"?`)) return;
+          courses.splice(idx, 1);
+          setStorage(COURSES_KEY, courses);
+          window.renderCourses();
+          window.renderMateri();
+        };
+
+        window.openCourseForm = function (editIdx) {
+          const courses = getStorage(COURSES_KEY, defaultCourses);
+          const item = typeof editIdx === "number" ? courses[editIdx] : null;
           const formModal = document.getElementById("formModal");
           const formBox = document.getElementById("formBox");
           formBox.innerHTML = `
-            <h3 class="text-xl font-bold text-gray-900 mb-4">Tambah Mata Kuliah</h3>
+            <h3 class="text-xl font-bold text-gray-900 mb-4">${item ? "Edit Mata Kuliah" : "Tambah Mata Kuliah"}</h3>
             <form id="courseModalForm" class="space-y-3">
-              <input type="text" id="cCode" class="field" placeholder="Kode MK (contoh: TI24-WEB)" required />
-              <input type="text" id="cName" class="field" placeholder="Nama Mata Kuliah" required />
-              <input type="text" id="cLect" class="field" placeholder="Dosen Pengampu" />
-              <input type="text" id="cSched" class="field" placeholder="Jadwal Kuliah" />
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Kode Mata Kuliah</label>
+                <input type="text" id="cCode" class="field" value="${item ? item.code : ""}" placeholder="Kode MK (contoh: TI24-WEB)" required />
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Nama Mata Kuliah</label>
+                <input type="text" id="cName" class="field" value="${item ? item.name : ""}" placeholder="Nama Mata Kuliah" required />
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Jumlah SKS</label>
+                <input type="number" id="cSks" min="1" max="6" class="field" value="${item ? item.sks : 3}" required />
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Dosen Pengampu</label>
+                <input type="text" id="cLect" class="field" value="${item ? item.lecturer : ""}" placeholder="Dosen Pengampu" />
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Jadwal Kuliah</label>
+                <input type="text" id="cSched" class="field" value="${item ? item.schedule : ""}" placeholder="Jadwal Kuliah" />
+              </div>
               <div class="flex justify-end gap-2 pt-2">
                 <button type="button" id="cancelCourseBtn" class="px-4 py-2 rounded-lg border border-gray-200 text-gray-600">Batal</button>
                 <button type="submit" class="px-5 py-2 rounded-lg bg-primary text-white font-semibold">Simpan</button>
@@ -1267,21 +1326,24 @@
           };
           document.getElementById("courseModalForm").onsubmit = (e) => {
             e.preventDefault();
-            const courses = getStorage(COURSES_KEY, defaultCourses);
-            courses.push({
+            const newCourse = {
               code: document.getElementById("cCode").value.trim(),
               name: document.getElementById("cName").value.trim(),
-              sks: 3,
+              sks: parseInt(document.getElementById("cSks").value, 10) || 3,
               lecturer: document.getElementById("cLect").value.trim() || "Dosen TI",
               schedule: document.getElementById("cSched").value.trim() || "Jadwal Terdaftar"
-            });
+            };
+            if (typeof editIdx === "number") courses[editIdx] = newCourse;
+            else courses.push(newCourse);
             setStorage(COURSES_KEY, courses);
             window.renderCourses();
+            window.renderMateri();
             formModal.classList.add("hidden");
             formModal.classList.remove("flex");
           };
         };
 
+        /* ==================== MATERI PERKULIAHAN (TAMBAH, EDIT, HAPUS) ==================== */
         window.renderMateri = function () {
           const materiList = document.getElementById("materiList");
           const filterEl = document.getElementById("materiFilter");
@@ -1289,26 +1351,61 @@
           if (!materiList) return;
 
           const allMateri = getStorage(MATERI_KEY, defaultMateri);
-          if (filterEl && !filterEl.options.length) {
-            const uniqueCourses = ["Semua Mata Kuliah", ...new Set(allMateri.map((m) => m.course))];
+          const courses = getStorage(COURSES_KEY, defaultCourses);
+
+          if (filterEl) {
+            const prevVal = filterEl.value;
+            const uniqueCourses = [
+              "Semua Mata Kuliah",
+              ...new Set([...courses.map((c) => c.name), ...allMateri.map((m) => m.course)])
+            ];
             filterEl.innerHTML = uniqueCourses.map((c) => `<option value="${c}">${c}</option>`).join("");
+            if (prevVal && uniqueCourses.includes(prevVal)) {
+              filterEl.value = prevVal;
+            }
           }
 
           const selected = filterEl ? filterEl.value : "Semua Mata Kuliah";
+          const mapped = allMateri.map((m, idx) => ({ ...m, _idx: idx }));
           const filtered =
             !selected || selected === "Semua Mata Kuliah"
-              ? allMateri
-              : allMateri.filter((m) => m.course === selected);
+              ? mapped
+              : mapped.filter((m) => m.course === selected);
 
           if (sumEl) sumEl.textContent = `${filtered.length} materi`;
+
+          if (!filtered.length) {
+            materiList.innerHTML = `<div class="col-span-full text-center py-12 bg-white/80 rounded-3xl border border-pink-100 text-gray-500 text-sm">Belum ada materi. Klik <strong>+ Tambah Materi</strong> untuk menambahkan.</div>`;
+            return;
+          }
 
           materiList.innerHTML = filtered
             .map(
               (m) => `
             <div class="bg-white rounded-3xl p-6 shadow-sm border border-pink-100 flex flex-col">
-              <span class="self-start px-3 py-1 rounded-full bg-purple-100 text-purple-700 text-xs font-semibold mb-3">${m.course}</span>
+              <div class="flex items-start justify-between gap-2 mb-3">
+                <span class="px-3 py-1 rounded-full bg-purple-100 text-purple-700 text-xs font-semibold">${m.course}</span>
+                <div class="flex items-center gap-1.5 shrink-0">
+                  <button
+                    type="button"
+                    onclick="openMateriForm(${m._idx})"
+                    class="w-8 h-8 rounded-xl bg-gray-100 hover:bg-pink-100 text-gray-600 hover:text-primary flex items-center justify-center transition cursor-pointer"
+                    title="Edit Materi"
+                  >
+                    <i class="fas fa-pen text-xs"></i>
+                  </button>
+                  <button
+                    type="button"
+                    onclick="deleteMateri(${m._idx})"
+                    class="w-8 h-8 rounded-xl bg-gray-100 hover:bg-red-100 text-gray-600 hover:text-red-500 flex items-center justify-center transition cursor-pointer"
+                    title="Hapus Materi"
+                  >
+                    <i class="fas fa-trash text-xs"></i>
+                  </button>
+                </div>
+              </div>
               <h3 class="text-lg font-bold text-gray-900 mb-2">${m.title}</h3>
-              <p class="text-sm text-gray-600 leading-relaxed">${m.desc}</p>
+              <p class="text-sm text-gray-600 leading-relaxed mb-2">${m.desc}</p>
               ${buildAttachmentHTML("materi", m.title)}
             </div>
           `
@@ -1316,17 +1413,51 @@
             .join("");
         };
 
-        window.openMateriForm = function () {
+        window.deleteMateri = async function (idx) {
+          const list = getStorage(MATERI_KEY, defaultMateri);
+          const removed = list[idx];
+          if (!removed) return;
+          if (!confirm(`Hapus materi "${removed.title}"?`)) return;
+          list.splice(idx, 1);
+          setStorage(MATERI_KEY, list);
+          if (recordsCache.materi[removed.title]) {
+            delete recordsCache.materi[removed.title];
+            await deleteRecordFromDB("materi", removed.title);
+          }
+          window.renderMateri();
+        };
+
+        window.openMateriForm = function (editIdx) {
+          const list = getStorage(MATERI_KEY, defaultMateri);
+          const item = typeof editIdx === "number" ? list[editIdx] : null;
+          const existing = item && recordsCache.materi[item.title] ? recordsCache.materi[item.title] : null;
           const formModal = document.getElementById("formModal");
           const formBox = document.getElementById("formBox");
+
           formBox.innerHTML = `
-            <h3 class="text-xl font-bold text-gray-900 mb-4">Tambah Materi</h3>
+            <h3 class="text-xl font-bold text-gray-900 mb-4">${item ? "Edit Materi" : "Tambah Materi"}</h3>
             <form id="materiModalForm" class="space-y-3">
-              <input type="text" id="mCourse" class="field" value="Analisis dan Design PL" required />
-              <input type="text" id="mTitle" class="field" placeholder="Judul Materi" required />
-              <textarea id="mDesc" rows="3" class="field" placeholder="Ringkasan Materi"></textarea>
-              <input type="url" id="mLink" class="field" placeholder="Tautan Materi (opsional)" />
-              <input type="file" id="mFile" class="field text-sm text-gray-600" />
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Mata Kuliah</label>
+                <input type="text" id="mCourse" class="field" value="${item ? item.course : "Analisis dan Design PL"}" required />
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Judul Materi</label>
+                <input type="text" id="mTitle" class="field" value="${item ? item.title : ""}" placeholder="Judul Materi" required />
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Ringkasan Materi</label>
+                <textarea id="mDesc" rows="3" class="field" placeholder="Ringkasan Materi">${item ? item.desc : ""}</textarea>
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Tautan Materi (opsional)</label>
+                <input type="url" id="mLink" class="field" value="${existing && existing.link ? existing.link.url : ""}" placeholder="https://..." />
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Lampiran File (opsional)</label>
+                <input type="file" id="mFile" class="field text-sm text-gray-600" />
+                ${existing && existing.file ? `<p class="text-xs text-emerald-600 mt-1">Tersimpan: ${existing.file.name}</p>` : ""}
+              </div>
               <div class="flex justify-end gap-2 pt-2">
                 <button type="button" id="cancelMateriBtn" class="px-4 py-2 rounded-lg border border-gray-200 text-gray-600">Batal</button>
                 <button type="submit" class="px-5 py-2 rounded-lg bg-primary text-white font-semibold">Simpan</button>
@@ -1341,32 +1472,41 @@
           };
           document.getElementById("materiModalForm").onsubmit = async (e) => {
             e.preventDefault();
-            const list = getStorage(MATERI_KEY, defaultMateri);
+            const oldTitle = item ? item.title : null;
             const title = document.getElementById("mTitle").value.trim();
-            list.push({
+            const newObj = {
               course: document.getElementById("mCourse").value.trim(),
               title,
               desc: document.getElementById("mDesc").value.trim()
-            });
+            };
+            if (typeof editIdx === "number") list[editIdx] = newObj;
+            else list.push(newObj);
             setStorage(MATERI_KEY, list);
+
+            if (oldTitle && oldTitle !== title && recordsCache.materi[oldTitle]) {
+              recordsCache.materi[title] = recordsCache.materi[oldTitle];
+              delete recordsCache.materi[oldTitle];
+              await deleteRecordFromDB("materi", oldTitle);
+            }
 
             const linkVal = normalizeUrl(document.getElementById("mLink").value);
             const fileEl = document.getElementById("mFile");
             const file = fileEl.files && fileEl.files[0] ? fileEl.files[0] : null;
-            if (linkVal || file) {
-              recordsCache.materi[title] = { link: linkVal ? { url: linkVal } : null, file: null };
-              if (file) {
-                const buf = await file.arrayBuffer();
-                const blobObj = new Blob([buf], { type: file.type || "application/octet-stream" });
-                recordsCache.materi[title].file = {
-                  name: file.name,
-                  size: formatBytes(file.size),
-                  type: file.type,
-                  blob: blobObj,
-                  arrayBuffer: buf,
-                  url: URL.createObjectURL(blobObj)
-                };
-              }
+            if (!recordsCache.materi[title]) recordsCache.materi[title] = { link: null, file: null };
+            recordsCache.materi[title].link = linkVal ? { url: linkVal } : null;
+            if (file) {
+              const buf = await file.arrayBuffer();
+              const blobObj = new Blob([buf], { type: file.type || "application/octet-stream" });
+              recordsCache.materi[title].file = {
+                name: file.name,
+                size: formatBytes(file.size),
+                type: file.type,
+                blob: blobObj,
+                arrayBuffer: buf,
+                url: URL.createObjectURL(blobObj)
+              };
+            }
+            if (recordsCache.materi[title].link || recordsCache.materi[title].file) {
               await persistRecordToDB("materi", title, recordsCache.materi[title]);
             }
 
@@ -1443,6 +1583,12 @@
         });
 
         async function boot() {
+          // Bersihkan cache lama v2 agar mata kuliah kembali menjadi 1 default (Analisis dan Design PL)
+          try {
+            localStorage.removeItem("portalAkademik.courses.v2");
+            localStorage.removeItem("portalAkademik.materi.v2");
+          } catch (e) {}
+
           const authForm = document.getElementById("authForm");
           const authScreen = document.getElementById("authScreen");
           const savedUser = sessionStorage.getItem(SESSION_KEY);
