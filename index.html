@@ -1,4 +1,3 @@
-index
 <!doctype html>
 <html lang="id">
   <head>
@@ -32,6 +31,24 @@ index
       } catch (e) {}
     </script>
     <link rel="stylesheet" href="css/style.css" />
+    <style>
+      /* Gaya visual jelas untuk kartu Tugas yang sudah ditandai Selesai */
+      .task-card-completed {
+        background: linear-gradient(135deg, #f0fdf4 0%, #ffffff 65%) !important;
+        border: 2px solid #86efac !important;
+        box-shadow: 0 10px 25px -5px rgba(16, 185, 129, 0.14) !important;
+      }
+      .task-title-completed {
+        text-decoration: line-through;
+        text-decoration-color: #10b981;
+        text-decoration-thickness: 2px;
+        color: #4b5563 !important;
+      }
+      /* Gaya visual jelas untuk kartu Tugas yang Belum Selesai */
+      .task-card-pending {
+        border: 1.5px solid #fbcfe8 !important;
+      }
+    </style>
   </head>
   <body
     class="bg-pink-100 text-gray-800 font-sans antialiased flex flex-col min-h-screen relative overflow-x-hidden"
@@ -591,15 +608,15 @@ index
     <script src="js/navigation.js"></script>
     <script src="js/app.js"></script>
 
-    <!-- Penyimpanan Permanen IndexedDB + LocalStorage + Seed Link Drive QUIZ -->
+    <!-- Penyimpanan Permanen IndexedDB + LocalStorage + Tanda Selesai & Belum Selesai -->
     <script>
       (function () {
         const DB_NAME = "PortalAkademikPermanentDB";
         const DB_VERSION = 1;
         const STORE_NAME = "attachments";
         const LOCAL_META_KEY = "portalAkademik.permanentAttachments.v3";
+        const COMPLETED_META_KEY = "portalAkademik.completedMeta.v1";
 
-        // Default permanent attachment untuk kartu QUIZ (Analisis dan Design PL)
         const DEFAULT_QUIZ_DRIVE_LINK =
           "https://drive.google.com/drive/folders/1AralCU0Or88y3FkNgjsDD2ta9tYtxqRI?usp=sharing";
         const DEFAULT_QUIZ_PDF_NAME = "240511136_Fatihatul ikrimah_TI24D_QUIZ.pdf";
@@ -610,9 +627,20 @@ index
         }
 
         let recordsCache = { tugas: {}, materi: {} };
+        let completedTimestamps = {};
+        try {
+          const rawComp = localStorage.getItem(COMPLETED_META_KEY);
+          if (rawComp) completedTimestamps = JSON.parse(rawComp);
+        } catch (e) {}
+
         let dbInstance = null;
 
-        // Pastikan link Google Drive QUIZ selalu tersedia secara permanen jika belum dihapus manual
+        function saveCompletedTimestamps() {
+          try {
+            localStorage.setItem(COMPLETED_META_KEY, JSON.stringify(completedTimestamps));
+          } catch (e) {}
+        }
+
         function ensureDefaultQuizAttachment() {
           const deletedFlag = localStorage.getItem("portalAkademik.quizDefaultDeleted");
           if (deletedFlag === "1") return;
@@ -932,6 +960,122 @@ index
           if (container) container.innerHTML = "";
         }
 
+        // Menampilkan tanda status Selesai (hijau) maupun Belum Selesai (pink/amber) secara jelas pada setiap kartu tugas
+        function updateTaskStatusIndicators() {
+          const taskList = document.getElementById("taskList");
+          if (!taskList) return;
+
+          Array.from(taskList.children).forEach((card) => {
+            const titleEl = card.querySelector("h3, h4");
+            const titleText = titleEl ? titleEl.innerText.trim() : "";
+
+            // Cari tombol toggle selesai bawaan app.js
+            const toggleBtn = Array.from(card.querySelectorAll("button")).find((btn) => {
+              const t = (btn.innerText || "").toLowerCase();
+              return (
+                t.includes("tandai selesai") ||
+                t.includes("batal selesai") ||
+                t.includes("sudah selesai")
+              );
+            });
+
+            // Cek apakah kartu dalam status selesai (dari tombol "Batal selesai" / "Sudah Selesai" atau badge "Selesai")
+            const leafTexts = Array.from(card.querySelectorAll("span, div"))
+              .filter((el) => !el.closest(".task-status-banner") && !el.closest(".portal-attachments-wrapper"))
+              .map((el) => (el.children.length === 0 ? el.innerText.trim() : ""));
+
+            const isCompleted =
+              (toggleBtn &&
+                ((toggleBtn.innerText || "").toLowerCase().includes("batal") ||
+                  (toggleBtn.innerText || "").toLowerCase().includes("sudah selesai"))) ||
+              leafTexts.some((txt) => /^selesai$/i.test(txt));
+
+            // Hapus banner lama jika ada agar selalu terbarui secara akurat
+            const oldBanner = card.querySelector(".task-status-banner");
+            if (oldBanner) oldBanner.remove();
+
+            const banner = document.createElement("div");
+
+            if (isCompleted) {
+              if (titleText && !completedTimestamps[titleText]) {
+                const now = new Date();
+                completedTimestamps[titleText] = now.toLocaleDateString("id-ID", {
+                  day: "numeric",
+                  month: "short",
+                  year: "numeric",
+                  hour: "2-digit",
+                  minute: "2-digit"
+                });
+                saveCompletedTimestamps();
+              }
+
+              card.classList.remove("task-card-pending");
+              card.classList.add("task-card-completed");
+              if (titleEl) titleEl.classList.add("task-title-completed");
+
+              if (toggleBtn) {
+                toggleBtn.className =
+                  "inline-flex items-center text-xs sm:text-sm text-emerald-700 bg-emerald-100 hover:bg-emerald-200 px-3 py-1.5 rounded-lg font-bold transition cursor-pointer";
+                toggleBtn.innerHTML = `<i class="fas fa-check-circle mr-1.5"></i> Sudah Selesai`;
+              }
+
+              const timeInfo =
+                titleText && completedTimestamps[titleText]
+                  ? `<span class="text-[11px] font-normal text-emerald-700">${completedTimestamps[titleText]}</span>`
+                  : "";
+
+              banner.className =
+                "task-status-banner mb-3 flex items-center justify-between gap-2 bg-emerald-100/90 border border-emerald-300 text-emerald-800 px-3 py-1.5 rounded-xl text-xs font-semibold";
+              banner.innerHTML = `
+                <span class="flex items-center gap-1.5">
+                  <i class="fas fa-check-circle text-emerald-600 text-sm"></i>
+                  <span>Status: Selesai</span>
+                </span>
+                ${timeInfo}
+              `;
+            } else {
+              if (titleText && completedTimestamps[titleText]) {
+                delete completedTimestamps[titleText];
+                saveCompletedTimestamps();
+              }
+
+              card.classList.remove("task-card-completed");
+              card.classList.add("task-card-pending");
+              if (titleEl) titleEl.classList.remove("task-title-completed");
+
+              if (toggleBtn) {
+                toggleBtn.className =
+                  "inline-flex items-center text-xs sm:text-sm text-primary hover:bg-pink-50 px-2.5 py-1.5 rounded-lg font-semibold transition cursor-pointer";
+                toggleBtn.innerHTML = `<i class="fas fa-check-circle mr-1.5"></i> Tandai selesai`;
+              }
+
+              // Cek apakah melewati tenggat ("Terlambat")
+              const isOverdue = leafTexts.some((txt) => /terlambat/i.test(txt));
+              if (isOverdue) {
+                banner.className =
+                  "task-status-banner mb-3 flex items-center justify-between gap-2 bg-red-50 border border-red-200 text-red-700 px-3 py-1.5 rounded-xl text-xs font-semibold";
+                banner.innerHTML = `
+                  <span class="flex items-center gap-1.5">
+                    <i class="fas fa-exclamation-circle text-red-500 text-sm"></i>
+                    <span>Status: Belum Selesai (Terlambat)</span>
+                  </span>
+                `;
+              } else {
+                banner.className =
+                  "task-status-banner mb-3 flex items-center justify-between gap-2 bg-amber-50/90 border border-amber-200 text-amber-800 px-3 py-1.5 rounded-xl text-xs font-semibold";
+                banner.innerHTML = `
+                  <span class="flex items-center gap-1.5">
+                    <i class="far fa-clock text-amber-500 text-sm"></i>
+                    <span>Status: Belum Selesai</span>
+                  </span>
+                `;
+              }
+            }
+
+            card.insertBefore(banner, card.firstChild);
+          });
+        }
+
         function createAttachmentFieldsUI(fileInputId, linkInputId, existingData, hasNativeLinkInput, titleHint) {
           const existingFile = existingData && existingData.file ? existingData.file : null;
           const existingLink = existingData && existingData.link ? existingData.link : null;
@@ -1235,6 +1379,7 @@ index
         function renderAllBadges(forceRefresh = false) {
           renderBadgesForContainer("taskList", "tugas", forceRefresh);
           renderBadgesForContainer("materiList", "materi", forceRefresh);
+          updateTaskStatusIndicators();
         }
 
         document.addEventListener(
@@ -1295,6 +1440,7 @@ index
             if (e.target.closest('button[onclick*="openTaskForm"], button[onclick*="openMateriForm"], button')) {
               setTimeout(injectFieldsToActiveForm, 10);
               setTimeout(injectFieldsToActiveForm, 60);
+              setTimeout(updateTaskStatusIndicators, 50);
             }
           },
           true
@@ -1303,6 +1449,7 @@ index
         async function initAttachmentFeature() {
           await loadAllPermanentRecords();
           injectFieldsToActiveForm();
+          updateTaskStatusIndicators();
 
           const formBox = document.getElementById("formBox");
           if (formBox) {
