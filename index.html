@@ -32,25 +32,37 @@
     </script>
     <link rel="stylesheet" href="css/style.css" />
     <style>
-      /* Judul & header Daftar Tugas rata tengah */
-      #tugas h2 {
-        text-align: center !important;
+      /* Paksa seluruh kontainer Daftar Tugas rata tengah & rapi */
+      body main section#tugas > div {
+        max-width: 900px !important;
+        margin-left: auto !important;
+        margin-right: auto !important;
       }
 
-      /* Grid kartu Daftar Tugas: lebar kartu ~390px, tinggi sejajar (stretch) */
-      #tugas #taskList {
+      body main section#tugas h2 {
+        text-align: center !important;
+        width: 100% !important;
+        display: block !important;
+        margin-left: auto !important;
+        margin-right: auto !important;
+      }
+
+      /* Grid kartu Daftar Tugas: 2 kartu sejajar dengan tinggi sama persis seperti contoh */
+      body main section#tugas #taskList {
         display: grid !important;
-        grid-template-columns: repeat(auto-fit, minmax(330px, 400px)) !important;
+        grid-template-columns: repeat(auto-fit, minmax(320px, 385px)) !important;
         justify-content: center !important;
         align-items: stretch !important;
         gap: 1.75rem !important;
         width: 100% !important;
+        margin-left: auto !important;
+        margin-right: auto !important;
       }
 
       /* Kartu Tugas individual */
-      #tugas #taskList > div {
+      body main section#tugas #taskList > div {
         width: 100% !important;
-        max-width: 400px !important;
+        max-width: 385px !important;
         margin: 0 auto !important;
         padding: 1.5rem !important;
         border-radius: 1.5rem !important;
@@ -62,14 +74,13 @@
         transition: all 0.25s ease !important;
       }
 
-      /* Dorong baris Tenggat & tombol aksi agar sejajar rata di bagian bawah kartu */
-      #tugas #taskList > div > div:nth-last-child(2):not(.portal-attachments-wrapper),
-      #tugas #taskList > div > div.task-footer-push {
+      /* Dorong baris Tenggat & tombol aksi ke dasar kartu agar sejajar rata */
+      body main section#tugas #taskList > div .task-footer-push {
         margin-top: auto !important;
       }
 
       /* Kartu Tugas yang sudah Selesai */
-      #tugas #taskList > div.task-card-completed {
+      body main section#tugas #taskList > div.task-card-completed {
         background: linear-gradient(180deg, #ffffff 0%, #f0fdf4 100%) !important;
         border: 1.5px solid #bbf7d0 !important;
         box-shadow: 0 12px 28px -6px rgba(16, 185, 129, 0.12) !important;
@@ -375,4 +386,223 @@
           <div class="lg:w-1/2 mt-12 lg:mt-0 flex justify-center">
             <div class="relative w-72 h-72 sm:w-96 sm:h-96">
               <div
-                class="absolute inset-0 bg-gradient-to-br from-pink-300 to-rose-300 rounded-
+                class="absolute inset-0 bg-gradient-to-br from-pink-300 to-rose-300 rounded-full blur-2xl opacity-60 animate-pulse"
+              ></div>
+              <img
+                src="assets/personal_photo.jpg"
+                alt="Profile"
+                class="relative rounded-3xl shadow-2xl shadow-pink-300 object-cover w-full h-full border-4 border-white transform rotate-2 hover:rotate-0 transition duration-500"
+              />
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Tasks / Assignments Section -->
+      <section
+        id="tugas"
+        class="page-section hidden w-full py-14 bg-white/40 backdrop-blur-md border-t border-white/50 relative z-10 page-transition min-h-[70vh]"
+      >
+        <div
+          style="max-width: 900px; margin: 0 auto;"
+          class="px-4 sm:px-6 lg:px-8 relative z-10"
+        >
+          <div style="text-align: center;" class="mb-8">
+            <h2 style="text-align: center;" class="text-3xl font-bold text-gray-900">
+              Daftar Tugas &amp; Laporan
+            </h2>
+          </div>
+          <div id="dueBanner" class="max-w-3xl mx-auto space-y-3 mb-6"></div>
+          <div
+            class="max-w-3xl mx-auto flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-8"
+          >
+            <p id="taskSummary" class="text-sm text-gray-600"></p>
+            <button
+              onclick="openTaskForm()"
+              class="bg-primary hover:bg-pink-600 text-white font-semibold py-2.5 px-5 rounded-xl shadow-lg shadow-pink-200 transition flex items-center justify-center gap-2"
+            >
+              <i class="fas fa-plus"></i> Tambah Tugas
+            </button>
+          </div>
+          <div
+            id="taskList"
+            class="grid justify-center items-stretch gap-7"
+          ></div>
+        </div>
+      </section>
+
+      <!-- Courses Information Section -->
+      <section
+        id="matakuliah"
+        class="page-section hidden w-full py-16 relative z-10 page-transition min-h-[70vh]"
+      >
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 mb-10">
+          <div class="text-center mb-8">
+            <h2 class="text-3xl font-bold text-gray-900">
+              Informasi Mata Kuliah
+            </h2>
+          </div>
+          <div class="flex justify-end mb-8">
+            <button
+              onclick="openCourseForm()"
+              class="bg-primary hover:bg-pink-600 text-white font-semibold py-2.5 px-5 rounded-lg shadow-lg shadow-pink-200 transition flex items-center justify-center gap-2"
+            >
+              <i class="fas fa-plus"></i> Tambah Mata Kuliah
+            </button>
+          </div>
+          <div id="courseList" class="space-y-8"></div>
+        </div>
+      </section>
+
+      <!-- Materi Section -->
+      <section
+        id="materi"
+        class="page-section hidden w-full py-16 bg-white/40 backdrop-blur-md border-t border-white/50 relative z-10 page-transition min-h-[70vh]"
+      >
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+          <div class="text-center mb-8">
+            <h2 class="text-3xl font-bold text-gray-900">Materi Perkuliahan</h2>
+          </div>
+          <div
+            class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-8"
+          >
+            <div class="flex items-center gap-3">
+              <select
+                id="materiFilter"
+                onchange="renderMateri()"
+                class="field sm:w-64"
+                aria-label="Filter mata kuliah"
+              ></select>
+              <p
+                id="materiSummary"
+                class="text-sm text-gray-600 whitespace-nowrap"
+              ></p>
+            </div>
+            <button
+              onclick="openMateriForm()"
+              class="bg-primary hover:bg-pink-600 text-white font-semibold py-2.5 px-5 rounded-lg shadow-lg shadow-pink-200 transition flex items-center justify-center gap-2"
+            >
+              <i class="fas fa-plus"></i> Tambah Materi
+            </button>
+          </div>
+          <div
+            id="materiList"
+            class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"
+          ></div>
+        </div>
+      </section>
+
+      <!-- Global Decorations -->
+      <div
+        class="w-full flex justify-center items-end mt-auto pt-16 pb-4 relative z-0 pointer-events-none"
+      >
+        <div
+          class="absolute bottom-0 left-0 md:left-8 z-0 opacity-80 animate-sway"
+        >
+          <svg class="w-20 h-56 md:w-28 md:h-72 text-pink-400 drop-shadow-md">
+            <use href="#flower-tall"></use>
+          </svg>
+        </div>
+
+        <div class="flex justify-center items-end gap-6 relative z-10 mb-2">
+          <i
+            class="fas fa-heart text-2xl text-pink-300 animate-float-love delay-1"
+          ></i>
+          <i
+            class="fas fa-heart text-4xl text-pink-400 animate-float-love delay-2"
+          ></i>
+          <i
+            class="fas fa-heart text-3xl text-pink-500 animate-float-love delay-3"
+          ></i>
+          <i
+            class="fas fa-heart text-4xl text-pink-400 animate-float-love delay-4"
+          ></i>
+          <i
+            class="fas fa-heart text-2xl text-pink-300 animate-float-love delay-5"
+          ></i>
+        </div>
+
+        <div
+          class="absolute bottom-0 right-0 md:right-8 z-0 opacity-80 animate-sway-delayed"
+        >
+          <svg class="w-16 h-44 md:w-24 md:h-56 text-rose-400 drop-shadow-md">
+            <use href="#flower-short"></use>
+          </svg>
+        </div>
+      </div>
+    </main>
+
+    <!-- Footer -->
+    <footer
+      class="bg-pink-50/60 backdrop-blur-md border-t border-pink-200 py-8 relative z-10"
+    >
+      <div
+        class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row justify-between items-center gap-4"
+      >
+        <div class="text-gray-500 text-sm">
+          &copy; 2026
+          <span class="font-semibold text-gray-700">Fatihatul Ikrimah</span>.
+          Portal Akademik.
+        </div>
+        <div class="flex space-x-6">
+          <a
+            href="https://github.com/fatihatulikrimah41-lgtm/Portal-akademik_Fatihatul-ikrimah"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="text-gray-400 hover:text-primary transition"
+            ><i class="fab fa-github text-xl"></i
+          ></a>
+          <a href="#" class="text-gray-400 hover:text-primary transition"
+            ><i class="fab fa-linkedin text-xl"></i
+          ></a>
+          <a href="#" class="text-gray-400 hover:text-primary transition"
+            ><i class="fas fa-envelope text-xl"></i
+          ></a>
+        </div>
+      </div>
+    </footer>
+
+    <!-- Custom Modal for Alerts -->
+    <div
+      id="customModal"
+      class="fixed inset-0 bg-black/50 z-[100] hidden items-center justify-center opacity-0 transition-opacity duration-300 backdrop-blur-sm"
+    >
+      <div
+        class="bg-white rounded-2xl shadow-2xl p-6 md:p-8 max-w-md w-full mx-4 transform scale-95 transition-transform duration-300"
+        id="modalContent"
+      >
+        <div class="flex justify-between items-start mb-4">
+          <h3 id="modalTitle" class="text-xl font-bold text-gray-900">Judul</h3>
+          <button
+            onclick="closeModal()"
+            class="text-gray-400 hover:text-red-500 transition"
+          >
+            <i class="fas fa-times text-xl"></i>
+          </button>
+        </div>
+        <p id="modalBody" class="text-gray-600 mb-6 leading-relaxed">
+          Isi pesan...
+        </p>
+        <div class="flex justify-end">
+          <button
+            onclick="closeModal()"
+            class="bg-primary hover:bg-pink-600 text-white font-medium py-2 px-6 rounded-lg transition shadow-md"
+          >
+            Tutup
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Toast Notifikasi Tenggat -->
+    <div
+      id="dueToast"
+      class="fixed top-20 right-4 z-[90] max-w-sm w-[calc(100%-2rem)] hidden opacity-0 translate-y-[-8px] transition duration-300"
+    ></div>
+
+    <!-- Form Modal (Tambah / Edit) -->
+    <div
+      id="formModal"
+      class="fixed inset-0 bg-black/50 z-[110] hidden items-center justify-center opacity-0 transition-opacity duration-300 backdrop-blur-sm p-4"
+    >
+      <div
