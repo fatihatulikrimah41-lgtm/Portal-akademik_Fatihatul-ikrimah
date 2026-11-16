@@ -1,4 +1,4 @@
-html_content = """<!doctype html>
+<!doctype html>
 <html lang="id">
   <head>
     <meta charset="UTF-8" />
@@ -192,13 +192,12 @@ html_content = """<!doctype html>
               >Materi</a
             >
           </div>
-          <!-- Akun, Notifikasi Lonceng Asli, & Keluar -->
+          <!-- Akun, Tombol Lonceng Aktif, & Keluar -->
           <div class="hidden md:flex items-center gap-3">
-            <!-- Tombol Lonceng Pemberitahuan Asli bawaan template portal -->
             <button
               type="button"
               id="globalNotificationBtn"
-              class="w-9 h-9 rounded-full bg-white/70 border border-pink-200 text-gray-600 hover:text-primary hover:bg-pink-50 flex items-center justify-center transition relative shadow-sm"
+              class="w-9 h-9 rounded-full bg-white/70 border border-pink-200 text-gray-600 hover:text-primary hover:bg-pink-50 flex items-center justify-center transition relative shadow-sm cursor-pointer"
               title="Pemberitahuan"
             >
               <i class="fas fa-bell text-sm"></i>
@@ -635,7 +634,7 @@ html_content = """<!doctype html>
     <script src="js/navigation.js"></script>
     <script src="js/app.js"></script>
 
-    <!-- Script Pengaktifan Lonceng, Penyimpanan Permanen, & Hanya Lencana Selesai Saja -->
+    <!-- Penyimpanan Permanen IndexedDB + LocalStorage + Pratinjau PDF & Tautan Drive Lengkap -->
     <script>
       (function () {
         const DB_NAME = "PortalAkademikPermanentDB";
@@ -973,8 +972,7 @@ html_content = """<!doctype html>
           if (container) container.innerHTML = "";
         }
 
-        // HANYA menampilkan lencana "Selesai" (hijau) JIKA tombol Selesai diklik. Bagian belum selesai dibersihkan total.
-        // Tombol lonceng pemberitahuan asli di-attach agar berfungsi menampilkan notifikasi/alert.
+        // HANYA menampilkan lencana "Selesai" (hijau) JIKA tombol Selesai diklik. Lencana Belum Selesai sepenuhnya dibersihkan.
         function updateTaskStatusIndicators() {
           const taskList = document.getElementById("taskList");
           if (!taskList) return;
@@ -1340,7 +1338,7 @@ html_content = """<!doctype html>
         document.addEventListener(
           "click",
           async function (e) {
-            // Tangkap klik tombol lonceng pemberitahuan agar memunculkan alert/notifikasi interaktif
+            // Tangkap klik tombol lonceng pemberitahuan agar berfungsi normal memunculkan alert
             const notifBtn = e.target.closest("#globalNotificationBtn, #globalNotificationBtnM");
             if (notifBtn) {
               e.preventDefault();
