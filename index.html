@@ -550,7 +550,7 @@
       </div>
     </div>
 
-    <!-- Modal Pratinjau File (Render PDF Canvas / Gambar tanpa iframe yang diblokir Edge/Chrome) -->
+    <!-- Modal Pratinjau File (Render PDF Canvas / Gambar di dalam halaman) -->
     <div
       id="filePreviewModal"
       class="fixed inset-0 bg-black/65 z-[180] hidden items-center justify-center p-3 sm:p-5 backdrop-blur-sm"
@@ -573,7 +573,7 @@
           <div class="flex items-center gap-2 shrink-0">
             <a
               id="previewDownloadBtn"
-              href="#"
+              href="javascript:void(0)"
               download
               class="bg-primary hover:bg-pink-600 text-white text-xs sm:text-sm font-semibold px-3.5 py-1.5 rounded-lg transition flex items-center gap-1.5"
             >
@@ -813,7 +813,6 @@
 
           sessionBlobFiles[category][titleKey] = fileMeta;
 
-          // Simpan ArrayBuffer di memori agar PDF.js dapat merender dengan cepat tanpa bergantung pada fetch blob
           file.arrayBuffer().then((buf) => {
             fileMeta.arrayBuffer = buf;
           });
@@ -828,11 +827,11 @@
                 dataUrl: evt.target.result
               };
               saveToLocal();
-              renderAllFileBadges();
+              renderAllFileBadges(true);
             };
             reader.readAsDataURL(file);
           } else {
-            renderAllFileBadges();
+            renderAllFileBadges(true);
           }
         }
 
@@ -906,7 +905,7 @@
             if (fileEl && fileEl.files && fileEl.files[0]) {
               processUploadedFile(category, newTitle, fileEl.files[0]);
             } else {
-              setTimeout(renderAllFileBadges, 100);
+              setTimeout(() => renderAllFileBadges(true), 100);
             }
           };
 
@@ -943,14 +942,17 @@
           return merged;
         }
 
-        function renderBadgesForContainer(containerId, category) {
+        function renderBadgesForContainer(containerId, category, forceRefresh = false) {
           const container = document.getElementById(containerId);
           if (!container) return;
 
           const filesMap = getMergedFiles(category);
 
           Array.from(container.children).forEach((card) => {
-            if (card.querySelector(".portal-file-attachment")) return;
+            const oldBadge = card.querySelector(".portal-file-attachment");
+            if (oldBadge && !forceRefresh) return;
+            if (oldBadge && forceRefresh) oldBadge.remove();
+
             const cardText = card.innerText || "";
 
             for (const [titleKey, fileInfo] of Object.entries(filesMap)) {
@@ -1003,55 +1005,64 @@
           });
         }
 
-        function renderAllFileBadges() {
-          renderBadgesForContainer("taskList", "tugas");
-          renderBadgesForContainer("materiList", "materi");
+        function renderAllFileBadges(forceRefresh = false) {
+          renderBadgesForContainer("taskList", "tugas", forceRefresh);
+          renderBadgesForContainer("materiList", "materi", forceRefresh);
         }
 
-        document.addEventListener("click", function (e) {
-          const viewBtn = e.target.closest(".btn-view-attachment");
-          if (viewBtn) {
-            e.preventDefault();
-            e.stopPropagation();
-            const cat = viewBtn.getAttribute("data-view-cat");
-            const key = decodeURIComponent(viewBtn.getAttribute("data-view-key") || "");
-            const filesMap = getMergedFiles(cat);
-            const fileInfo = filesMap[key];
-            if (fileInfo) {
-              openFilePreviewModal(fileInfo);
+        // TANGKAP DI CAPTURE PHASE (true) SEBELUM HANDLER CARD / LINK BISA MEMBUKA TAB BARU (about:blank#blocked)
+        document.addEventListener(
+          "click",
+          function (e) {
+            const viewBtn = e.target.closest(".btn-view-attachment");
+            if (viewBtn) {
+              e.preventDefault();
+              e.stopPropagation();
+              e.stopImmediatePropagation();
+              const cat = viewBtn.getAttribute("data-view-cat");
+              const key = decodeURIComponent(viewBtn.getAttribute("data-view-key") || "");
+              const filesMap = getMergedFiles(cat);
+              const fileInfo = filesMap[key];
+              if (fileInfo) {
+                openFilePreviewModal(fileInfo);
+              }
+              return;
             }
-            return;
-          }
 
-          if (e.target.closest("#closePreviewBtn") || e.target.id === "filePreviewModal") {
-            closeFilePreviewModal();
-            return;
-          }
-
-          const delBtn = e.target.closest(".btn-del-attachment");
-          if (delBtn) {
-            e.preventDefault();
-            e.stopPropagation();
-            const cat = delBtn.getAttribute("data-del-cat");
-            const key = decodeURIComponent(delBtn.getAttribute("data-del-key") || "");
-            if (cat && key) {
-              delete sessionBlobFiles[cat][key];
-              delete savedFiles[cat][key];
-              saveToLocal();
-              const box = delBtn.closest(".portal-file-attachment");
-              if (box) box.remove();
+            if (e.target.closest("#closePreviewBtn") || e.target.id === "filePreviewModal") {
+              e.preventDefault();
+              e.stopPropagation();
+              closeFilePreviewModal();
+              return;
             }
-            return;
-          }
 
-          if (e.target.closest('button[onclick*="openTaskForm"], button[onclick*="openMateriForm"], button')) {
-            setTimeout(injectFileInputToActiveForm, 10);
-            setTimeout(injectFileInputToActiveForm, 60);
-          }
-        });
+            const delBtn = e.target.closest(".btn-del-attachment");
+            if (delBtn) {
+              e.preventDefault();
+              e.stopPropagation();
+              e.stopImmediatePropagation();
+              const cat = delBtn.getAttribute("data-del-cat");
+              const key = decodeURIComponent(delBtn.getAttribute("data-del-key") || "");
+              if (cat && key) {
+                delete sessionBlobFiles[cat][key];
+                delete savedFiles[cat][key];
+                saveToLocal();
+                const box = delBtn.closest(".portal-file-attachment");
+                if (box) box.remove();
+              }
+              return;
+            }
+
+            if (e.target.closest('button[onclick*="openTaskForm"], button[onclick*="openMateriForm"], button')) {
+              setTimeout(injectFileInputToActiveForm, 10);
+              setTimeout(injectFileInputToActiveForm, 60);
+            }
+          },
+          true
+        );
 
         function initAttachmentFeature() {
-          renderAllFileBadges();
+          renderAllFileBadges(true);
           injectFileInputToActiveForm();
 
           const formBox = document.getElementById("formBox");
@@ -1063,7 +1074,7 @@
           }
 
           const listObserver = new MutationObserver(() => {
-            renderAllFileBadges();
+            renderAllFileBadges(false);
           });
 
           const taskList = document.getElementById("taskList");
