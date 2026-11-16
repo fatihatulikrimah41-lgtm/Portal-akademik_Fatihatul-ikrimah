@@ -599,27 +599,43 @@
     <script src="js/navigation.js"></script>
     <script src="js/app.js"></script>
 
-    <!-- Fitur Tambah, Pratinjau PDF (via PDF.js Canvas), Unduh & Simpan File pada Materi dan Daftar Tugas -->
+    <!-- Fitur Tambah File & Tautan Opsional pada Materi dan Daftar Tugas -->
     <script>
       (function () {
-        const STORAGE_KEY_FILES = "portalAkademik.attachedFiles.v1";
+        const STORAGE_KEY_FILES = "portalAkademik.attachedFiles.v2";
 
         if (window.pdfjsLib) {
           window.pdfjsLib.GlobalWorkerOptions.workerSrc =
             "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
         }
 
-        let savedFiles = { tugas: {}, materi: {} };
+        // Struktur: { tugas: { [judul]: { file: {...}, link: { url, label } } }, materi: { ... } }
+        let savedAttachments = { tugas: {}, materi: {} };
         try {
           const raw = localStorage.getItem(STORAGE_KEY_FILES);
-          if (raw) savedFiles = JSON.parse(raw);
+          if (raw) {
+            savedAttachments = JSON.parse(raw);
+          } else {
+            // Migrasi dari versi v1 jika sebelumnya sudah pernah menyimpan file
+            const oldRaw = localStorage.getItem("portalAkademik.attachedFiles.v1");
+            if (oldRaw) {
+              const oldData = JSON.parse(oldRaw);
+              ["tugas", "materi"].forEach((cat) => {
+                if (oldData[cat]) {
+                  for (const [k, v] of Object.entries(oldData[cat])) {
+                    savedAttachments[cat][k] = { file: v, link: null };
+                  }
+                }
+              });
+            }
+          }
         } catch (e) {}
 
-        const sessionBlobFiles = { tugas: {}, materi: {} };
+        const sessionAttachments = { tugas: {}, materi: {} };
 
         function saveToLocal() {
           try {
-            localStorage.setItem(STORAGE_KEY_FILES, JSON.stringify(savedFiles));
+            localStorage.setItem(STORAGE_KEY_FILES, JSON.stringify(savedAttachments));
           } catch (e) {}
         }
 
@@ -631,6 +647,13 @@
           return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + " " + sizes[i];
         }
 
+        function normalizeUrl(rawUrl) {
+          const trimmed = (rawUrl || "").trim();
+          if (!trimmed) return "";
+          if (/^https?:\/\//i.test(trimmed)) return trimmed;
+          return "https://" + trimmed;
+        }
+
         function getFileIcon(filename) {
           const ext = (filename.split(".").pop() || "").toLowerCase();
           if (ext === "pdf") return "fa-file-pdf text-rose-500";
@@ -640,6 +663,18 @@
           if (["zip", "rar", "7z"].includes(ext)) return "fa-file-archive text-amber-500";
           if (["jpg", "jpeg", "png", "webp"].includes(ext)) return "fa-file-image text-purple-500";
           return "fa-file-alt text-primary";
+        }
+
+        function getLinkIcon(url) {
+          const u = (url || "").toLowerCase();
+          if (u.includes("drive.google.com") || u.includes("docs.google.com"))
+            return "fab fa-google-drive text-emerald-600";
+          if (u.includes("github.com")) return "fab fa-github text-gray-800";
+          if (u.includes("youtube.com") || u.includes("youtu.be"))
+            return "fab fa-youtube text-red-600";
+          if (u.includes("figma.com")) return "fab fa-figma text-purple-600";
+          if (u.includes("canva.com")) return "fas fa-palette text-cyan-600";
+          return "fas fa-link text-primary";
         }
 
         function dataUrlToUint8Array(dataUrl) {
@@ -667,7 +702,7 @@
           }
         }
 
-        // Render halaman PDF ke dalam <canvas> menggunakan PDF.js sehingga 100% bebas blokir about:blank#blocked
+        // Render halaman PDF ke dalam <canvas> menggunakan PDF.js
         async function renderPdfPagesToCanvas(fileInfo, container) {
           container.innerHTML = `
             <div class="my-auto text-center text-gray-600">
@@ -776,99 +811,171 @@
           if (container) container.innerHTML = "";
         }
 
-        function createFileInputUI(inputId, labelText, existingFile) {
-          const existingInfo = existingFile
+        function createAttachmentFieldsUI(fileInputId, linkInputId, linkLabelId, fileLabelText, existingData) {
+          const existingFile = existingData && existingData.file ? existingData.file : null;
+          const existingLink = existingData && existingData.link ? existingData.link : null;
+
+          const existingFileInfo = existingFile
             ? `<div class="mt-2 text-xs text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-lg px-3 py-1.5 flex items-center justify-between">
                  <span class="truncate"><i class="fas fa-check-circle mr-1"></i> File saat ini: <strong>${existingFile.name}</strong> (${existingFile.size})</span>
                </div>`
             : "";
 
           return `
-            <div class="mt-4 mb-4 pt-3 border-t border-pink-100" id="wrap_${inputId}">
-              <label for="${inputId}" class="block text-sm font-semibold text-gray-700 mb-1.5">
-                <i class="fas fa-paperclip text-primary mr-1"></i> ${labelText}
-              </label>
-              <input
-                type="file"
-                id="${inputId}"
-                accept=".pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.zip,.rar,.jpg,.jpeg,.png"
-                class="block w-full text-sm text-gray-600 file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-pink-100 file:text-primary hover:file:bg-pink-200 border border-dashed border-pink-300 rounded-xl p-2 bg-pink-50/40 cursor-pointer transition"
-              />
-              <p class="text-[11px] text-gray-400 mt-1">Format didukung: PDF, Word, PPT, Excel, ZIP, atau Gambar (Opsional)</p>
-              ${existingInfo}
+            <div class="mt-4 mb-4 pt-3 border-t border-pink-100 space-y-3" id="wrap_${fileInputId}">
+              <!-- Bagian 1: Upload File (Opsional) -->
+              <div>
+                <label for="${fileInputId}" class="block text-sm font-semibold text-gray-700 mb-1.5">
+                  <i class="fas fa-paperclip text-primary mr-1"></i> ${fileLabelText}
+                </label>
+                <input
+                  type="file"
+                  id="${fileInputId}"
+                  accept=".pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.zip,.rar,.jpg,.jpeg,.png"
+                  class="block w-full text-sm text-gray-600 file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-pink-100 file:text-primary hover:file:bg-pink-200 border border-dashed border-pink-300 rounded-xl p-2 bg-pink-50/40 cursor-pointer transition"
+                />
+                <p class="text-[11px] text-gray-400 mt-1">PDF, Word, PPT, Excel, ZIP, atau Gambar (Opsional)</p>
+                ${existingFileInfo}
+              </div>
+
+              <!-- Bagian 2: Tautan / Link (Opsional) -->
+              <div class="pt-2 border-t border-pink-50">
+                <label for="${linkInputId}" class="block text-sm font-semibold text-gray-700 mb-1.5">
+                  <i class="fas fa-link text-primary mr-1"></i> Tautan / Link (Opsional)
+                </label>
+                <div class="space-y-2">
+                  <input
+                    type="url"
+                    id="${linkInputId}"
+                    value="${existingLink ? existingLink.url : ""}"
+                    placeholder="https://drive.google.com/... atau https://github.com/..."
+                    class="field w-full text-sm"
+                  />
+                  <input
+                    type="text"
+                    id="${linkLabelId}"
+                    value="${existingLink && existingLink.label ? existingLink.label : ""}"
+                    placeholder="Label tautan (Opsional, contoh: Folder Google Drive / Repo GitHub)"
+                    class="field w-full text-xs"
+                  />
+                </div>
+              </div>
             </div>
           `;
         }
 
-        function processUploadedFile(category, titleKey, file) {
-          if (!file || !titleKey) return;
+        function ensureRecord(targetObj, category, titleKey) {
+          if (!targetObj[category]) targetObj[category] = {};
+          if (!targetObj[category][titleKey]) {
+            targetObj[category][titleKey] = { file: null, link: null };
+          }
+          return targetObj[category][titleKey];
+        }
 
-          const fileMeta = {
-            name: file.name,
-            size: formatBytes(file.size),
-            url: URL.createObjectURL(file),
-            arrayBuffer: null,
-            dataUrl: null
-          };
+        function processAttachments(category, titleKey, file, rawLinkUrl, rawLinkLabel) {
+          if (!titleKey) return;
 
-          sessionBlobFiles[category][titleKey] = fileMeta;
+          const cleanUrl = normalizeUrl(rawLinkUrl);
+          const cleanLabel = (rawLinkLabel || "").trim();
 
-          file.arrayBuffer().then((buf) => {
-            fileMeta.arrayBuffer = buf;
-          });
+          // Simpan atau perbarui tautan opsional
+          const sessRec = ensureRecord(sessionAttachments, category, titleKey);
+          const saveRec = ensureRecord(savedAttachments, category, titleKey);
 
-          if (file.size <= 2 * 1024 * 1024) {
-            const reader = new FileReader();
-            reader.onload = function (evt) {
-              fileMeta.dataUrl = evt.target.result;
-              savedFiles[category][titleKey] = {
-                name: file.name,
-                size: formatBytes(file.size),
-                dataUrl: evt.target.result
-              };
-              saveToLocal();
-              renderAllFileBadges(true);
+          if (cleanUrl) {
+            const linkObj = { url: cleanUrl, label: cleanLabel };
+            sessRec.link = linkObj;
+            saveRec.link = linkObj;
+            saveToLocal();
+          } else if (rawLinkUrl !== null) {
+            // Jika kolom tautan dikosongkan pengguna saat edit, hapus tautannya
+            sessRec.link = null;
+            saveRec.link = null;
+            saveToLocal();
+          }
+
+          // Proses file jika ada file baru yang dipilih
+          if (file) {
+            const fileMeta = {
+              name: file.name,
+              size: formatBytes(file.size),
+              url: URL.createObjectURL(file),
+              arrayBuffer: null,
+              dataUrl: null
             };
-            reader.readAsDataURL(file);
+
+            sessRec.file = fileMeta;
+
+            file.arrayBuffer().then((buf) => {
+              fileMeta.arrayBuffer = buf;
+            });
+
+            if (file.size <= 2 * 1024 * 1024) {
+              const reader = new FileReader();
+              reader.onload = function (evt) {
+                fileMeta.dataUrl = evt.target.result;
+                saveRec.file = {
+                  name: file.name,
+                  size: formatBytes(file.size),
+                  dataUrl: evt.target.result
+                };
+                saveToLocal();
+                renderAllBadges(true);
+              };
+              reader.readAsDataURL(file);
+            } else {
+              renderAllBadges(true);
+            }
           } else {
-            renderAllFileBadges(true);
+            setTimeout(() => renderAllBadges(true), 90);
           }
         }
 
-        function injectFileInputToActiveForm() {
+        function injectFieldsToActiveForm() {
           const formBox = document.getElementById("formBox");
           if (!formBox || !formBox.innerHTML.trim()) return;
 
           const boxText = (formBox.innerText || "").toLowerCase();
           let category = null;
-          let inputId = null;
-          let labelText = null;
+          let fileInputId = null;
+          let linkInputId = null;
+          let linkLabelId = null;
+          let fileLabelText = null;
 
           if (boxText.includes("tugas")) {
             category = "tugas";
-            inputId = "inputFileTugas";
-            labelText = "Lampiran File Tugas / Soal";
+            fileInputId = "inputFileTugas";
+            linkInputId = "inputLinkTugas";
+            linkLabelId = "inputLinkLabelTugas";
+            fileLabelText = "Lampiran File Tugas / Soal (Opsional)";
           } else if (boxText.includes("materi")) {
             category = "materi";
-            inputId = "inputFileMateri";
-            labelText = "Unggah File Materi";
+            fileInputId = "inputFileMateri";
+            linkInputId = "inputLinkMateri";
+            linkLabelId = "inputLinkLabelMateri";
+            fileLabelText = "Unggah File Materi (Opsional)";
           } else {
             return;
           }
 
-          if (document.getElementById(inputId)) return;
+          if (document.getElementById(fileInputId)) return;
 
           const form = formBox.querySelector("form") || formBox;
           const titleInput = form.querySelector('input[type="text"], input:not([type])');
           const initialTitle = titleInput ? titleInput.value.trim() : "";
-          const existingFile =
-            (sessionBlobFiles[category] && sessionBlobFiles[category][initialTitle]) ||
-            (savedFiles[category] && savedFiles[category][initialTitle]) ||
-            null;
+
+          const mergedMap = getMergedAttachments(category);
+          const existingData = initialTitle ? mergedMap[initialTitle] : null;
 
           const wrapper = document.createElement("div");
-          wrapper.innerHTML = createFileInputUI(inputId, labelText, existingFile);
-          const fileBlock = wrapper.firstElementChild;
+          wrapper.innerHTML = createAttachmentFieldsUI(
+            fileInputId,
+            linkInputId,
+            linkLabelId,
+            fileLabelText,
+            existingData
+          );
+          const fieldsBlock = wrapper.firstElementChild;
 
           const allButtons = Array.from(form.querySelectorAll("button"));
           const saveBtn =
@@ -878,35 +985,38 @@
           if (saveBtn) {
             const btnContainer = saveBtn.parentElement;
             if (btnContainer && btnContainer !== form && btnContainer.parentElement) {
-              btnContainer.parentElement.insertBefore(fileBlock, btnContainer);
+              btnContainer.parentElement.insertBefore(fieldsBlock, btnContainer);
             } else {
-              form.insertBefore(fileBlock, saveBtn);
+              form.insertBefore(fieldsBlock, saveBtn);
             }
           } else {
-            form.appendChild(fileBlock);
+            form.appendChild(fieldsBlock);
           }
 
           const handleSaveAction = function () {
-            const fileEl = document.getElementById(inputId);
+            const fileEl = document.getElementById(fileInputId);
+            const linkEl = document.getElementById(linkInputId);
+            const linkLabelEl = document.getElementById(linkLabelId);
             const newTitle = titleInput ? titleInput.value.trim() : "";
 
+            // Pindahkan lampiran lama jika judul diubah saat Edit
             if (initialTitle && newTitle && initialTitle !== newTitle) {
-              if (sessionBlobFiles[category][initialTitle]) {
-                sessionBlobFiles[category][newTitle] = sessionBlobFiles[category][initialTitle];
-                delete sessionBlobFiles[category][initialTitle];
+              if (sessionAttachments[category][initialTitle]) {
+                sessionAttachments[category][newTitle] = sessionAttachments[category][initialTitle];
+                delete sessionAttachments[category][initialTitle];
               }
-              if (savedFiles[category][initialTitle]) {
-                savedFiles[category][newTitle] = savedFiles[category][initialTitle];
-                delete savedFiles[category][initialTitle];
+              if (savedAttachments[category][initialTitle]) {
+                savedAttachments[category][newTitle] = savedAttachments[category][initialTitle];
+                delete savedAttachments[category][initialTitle];
                 saveToLocal();
               }
             }
 
-            if (fileEl && fileEl.files && fileEl.files[0]) {
-              processUploadedFile(category, newTitle, fileEl.files[0]);
-            } else {
-              setTimeout(() => renderAllFileBadges(true), 100);
-            }
+            const selectedFile = fileEl && fileEl.files && fileEl.files[0] ? fileEl.files[0] : null;
+            const linkUrlVal = linkEl ? linkEl.value : null;
+            const linkLabelVal = linkLabelEl ? linkLabelEl.value : "";
+
+            processAttachments(category, newTitle, selectedFile, linkUrlVal, linkLabelVal);
           };
 
           if (form.tagName === "FORM") {
@@ -917,28 +1027,35 @@
           }
         }
 
-        function getMergedFiles(category) {
+        function getMergedAttachments(category) {
           const merged = {};
-          for (const [k, v] of Object.entries(savedFiles[category] || {})) {
-            if (!sessionBlobFiles[category][k] && v.dataUrl) {
-              sessionBlobFiles[category][k] = {
-                name: v.name,
-                size: v.size,
-                url: dataUrlToBlobUrl(v.dataUrl),
-                dataUrl: v.dataUrl,
+          const savedCat = savedAttachments[category] || {};
+          const sessCat = sessionAttachments[category] || {};
+
+          const allKeys = new Set([...Object.keys(savedCat), ...Object.keys(sessCat)]);
+          allKeys.forEach((key) => {
+            const sItem = savedCat[key] || {};
+            const mItem = sessCat[key] || {};
+
+            let fileObj = mItem.file || null;
+            if (!fileObj && sItem.file) {
+              fileObj = {
+                name: sItem.file.name,
+                size: sItem.file.size,
+                url: dataUrlToBlobUrl(sItem.file.dataUrl),
+                dataUrl: sItem.file.dataUrl,
                 arrayBuffer: null
               };
+              ensureRecord(sessionAttachments, category, key).file = fileObj;
             }
-            merged[k] = sessionBlobFiles[category][k] || {
-              name: v.name,
-              size: v.size,
-              url: v.dataUrl,
-              dataUrl: v.dataUrl
-            };
-          }
-          for (const [k, v] of Object.entries(sessionBlobFiles[category] || {})) {
-            merged[k] = v;
-          }
+
+            const linkObj = mItem.link !== undefined ? mItem.link : sItem.link || null;
+
+            if (fileObj || linkObj) {
+              merged[key] = { file: fileObj, link: linkObj };
+            }
+          });
+
           return merged;
         }
 
@@ -946,74 +1063,126 @@
           const container = document.getElementById(containerId);
           if (!container) return;
 
-          const filesMap = getMergedFiles(category);
+          const itemsMap = getMergedAttachments(category);
 
           Array.from(container.children).forEach((card) => {
-            const oldBadge = card.querySelector(".portal-file-attachment");
-            if (oldBadge && !forceRefresh) return;
-            if (oldBadge && forceRefresh) oldBadge.remove();
+            const oldWrap = card.querySelector(".portal-attachments-wrapper");
+            if (oldWrap && !forceRefresh) return;
+            if (oldWrap && forceRefresh) oldWrap.remove();
 
             const cardText = card.innerText || "";
 
-            for (const [titleKey, fileInfo] of Object.entries(filesMap)) {
-              if (titleKey && cardText.includes(titleKey)) {
-                const iconClass = getFileIcon(fileInfo.name);
-                const box = document.createElement("div");
-                box.className =
-                  "portal-file-attachment mt-4 pt-3 border-t border-pink-100 flex items-center justify-between gap-2 bg-pink-50/80 px-3 py-2.5 rounded-xl";
-                box.innerHTML = `
-                  <div class="flex items-center gap-2 min-w-0">
-                    <i class="fas ${iconClass} text-base shrink-0"></i>
-                    <div class="min-w-0">
-                      <p class="text-xs font-semibold text-gray-800 truncate" title="${fileInfo.name}">${fileInfo.name}</p>
-                      <p class="text-[11px] text-gray-500">${fileInfo.size}</p>
+            for (const [titleKey, attData] of Object.entries(itemsMap)) {
+              if (titleKey && cardText.includes(titleKey) && (attData.file || attData.link)) {
+                const wrap = document.createElement("div");
+                wrap.className =
+                  "portal-attachments-wrapper mt-4 pt-3 border-t border-pink-100 space-y-2";
+
+                // 1. Kotak File Lampiran (jika ada)
+                if (attData.file) {
+                  const fileInfo = attData.file;
+                  const iconClass = getFileIcon(fileInfo.name);
+                  const fileBox = document.createElement("div");
+                  fileBox.className =
+                    "flex items-center justify-between gap-2 bg-pink-50/80 px-3 py-2 rounded-xl border border-pink-100";
+                  fileBox.innerHTML = `
+                    <div class="flex items-center gap-2 min-w-0">
+                      <i class="fas ${iconClass} text-base shrink-0"></i>
+                      <div class="min-w-0">
+                        <p class="text-xs font-semibold text-gray-800 truncate" title="${fileInfo.name}">${fileInfo.name}</p>
+                        <p class="text-[11px] text-gray-500">${fileInfo.size}</p>
+                      </div>
                     </div>
-                  </div>
-                  <div class="flex items-center gap-1.5 shrink-0">
-                    <button
-                      type="button"
-                      data-view-cat="${category}"
-                      data-view-key="${encodeURIComponent(titleKey)}"
-                      class="btn-view-attachment px-2.5 py-1 bg-white border border-pink-200 text-primary hover:bg-primary hover:text-white rounded-lg text-xs font-semibold transition cursor-pointer"
-                      title="Lihat File"
-                    >
-                      <i class="fas fa-eye mr-0.5"></i> Lihat
-                    </button>
-                    <a
-                      href="${fileInfo.url}"
-                      download="${fileInfo.name}"
-                      class="px-2.5 py-1 bg-primary text-white hover:bg-pink-600 rounded-lg text-xs font-semibold transition"
-                      title="Unduh File"
-                    >
-                      <i class="fas fa-download"></i>
-                    </a>
-                    <button
-                      type="button"
-                      data-del-cat="${category}"
-                      data-del-key="${encodeURIComponent(titleKey)}"
-                      class="btn-del-attachment px-2 py-1 bg-red-50 text-red-500 hover:bg-red-500 hover:text-white rounded-lg text-xs transition"
-                      title="Hapus Lampiran File"
-                    >
-                      <i class="fas fa-times"></i>
-                    </button>
-                  </div>
-                `;
-                card.appendChild(box);
+                    <div class="flex items-center gap-1.5 shrink-0">
+                      <button
+                        type="button"
+                        data-view-cat="${category}"
+                        data-view-key="${encodeURIComponent(titleKey)}"
+                        class="btn-view-attachment px-2.5 py-1 bg-white border border-pink-200 text-primary hover:bg-primary hover:text-white rounded-lg text-xs font-semibold transition cursor-pointer"
+                        title="Lihat File"
+                      >
+                        <i class="fas fa-eye mr-0.5"></i> Lihat
+                      </button>
+                      <a
+                        href="${fileInfo.url}"
+                        download="${fileInfo.name}"
+                        class="px-2.5 py-1 bg-primary text-white hover:bg-pink-600 rounded-lg text-xs font-semibold transition"
+                        title="Unduh File"
+                      >
+                        <i class="fas fa-download"></i>
+                      </a>
+                      <button
+                        type="button"
+                        data-del-type="file"
+                        data-del-cat="${category}"
+                        data-del-key="${encodeURIComponent(titleKey)}"
+                        class="btn-del-attachment px-2 py-1 bg-red-50 text-red-500 hover:bg-red-500 hover:text-white rounded-lg text-xs transition"
+                        title="Hapus Lampiran File"
+                      >
+                        <i class="fas fa-times"></i>
+                      </button>
+                    </div>
+                  `;
+                  wrap.appendChild(fileBox);
+                }
+
+                // 2. Kotak Tautan Opsional (jika ada)
+                if (attData.link && attData.link.url) {
+                  const linkInfo = attData.link;
+                  const linkIcon = getLinkIcon(linkInfo.url);
+                  const displayLabel = linkInfo.label || linkInfo.url.replace(/^https?:\/\//i, "");
+                  const linkBox = document.createElement("div");
+                  linkBox.className =
+                    "flex items-center justify-between gap-2 bg-rose-50/70 px-3 py-2 rounded-xl border border-pink-100";
+                  linkBox.innerHTML = `
+                    <div class="flex items-center gap-2 min-w-0">
+                      <i class="${linkIcon} text-sm shrink-0"></i>
+                      <div class="min-w-0">
+                        <p class="text-xs font-semibold text-gray-800 truncate" title="${linkInfo.url}">${displayLabel}</p>
+                        ${linkInfo.label ? `<p class="text-[10px] text-gray-400 truncate">${linkInfo.url}</p>` : ""}
+                      </div>
+                    </div>
+                    <div class="flex items-center gap-1.5 shrink-0">
+                      <a
+                        href="${linkInfo.url}"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        class="btn-open-external-link px-2.5 py-1 bg-white border border-pink-200 text-primary hover:bg-primary hover:text-white rounded-lg text-xs font-semibold transition inline-flex items-center gap-1"
+                        title="Buka Tautan di Tab Baru"
+                      >
+                        <span>Buka</span> <i class="fas fa-external-link-alt text-[10px]"></i>
+                      </a>
+                      <button
+                        type="button"
+                        data-del-type="link"
+                        data-del-cat="${category}"
+                        data-del-key="${encodeURIComponent(titleKey)}"
+                        class="btn-del-attachment px-2 py-1 bg-red-50 text-red-500 hover:bg-red-500 hover:text-white rounded-lg text-xs transition"
+                        title="Hapus Tautan"
+                      >
+                        <i class="fas fa-times"></i>
+                      </button>
+                    </div>
+                  `;
+                  wrap.appendChild(linkBox);
+                }
+
+                card.appendChild(wrap);
                 break;
               }
             }
           });
         }
 
-        function renderAllFileBadges(forceRefresh = false) {
+        function renderAllBadges(forceRefresh = false) {
           renderBadgesForContainer("taskList", "tugas", forceRefresh);
           renderBadgesForContainer("materiList", "materi", forceRefresh);
         }
 
-        // TANGKAP DI CAPTURE PHASE (true) SEBELUM HANDLER CARD / LINK BISA MEMBUKA TAB BARU (about:blank#blocked)
         document.addEventListener(
           "click",
           function (e) {
+            // 1. Klik tombol Lihat PDF/File
             const viewBtn = e.target.closest(".btn-view-attachment");
             if (viewBtn) {
               e.preventDefault();
@@ -1021,14 +1190,22 @@
               e.stopImmediatePropagation();
               const cat = viewBtn.getAttribute("data-view-cat");
               const key = decodeURIComponent(viewBtn.getAttribute("data-view-key") || "");
-              const filesMap = getMergedFiles(cat);
-              const fileInfo = filesMap[key];
-              if (fileInfo) {
-                openFilePreviewModal(fileInfo);
+              const itemsMap = getMergedAttachments(cat);
+              const attData = itemsMap[key];
+              if (attData && attData.file) {
+                openFilePreviewModal(attData.file);
               }
               return;
             }
 
+            // 2. Pastikan klik tombol Buka Tautan tidak memicu event klik kartu induk
+            const extLink = e.target.closest(".btn-open-external-link");
+            if (extLink) {
+              e.stopPropagation();
+              return;
+            }
+
+            // 3. Klik tutup modal pratinjau
             if (e.target.closest("#closePreviewBtn") || e.target.id === "filePreviewModal") {
               e.preventDefault();
               e.stopPropagation();
@@ -1036,45 +1213,51 @@
               return;
             }
 
+            // 4. Klik hapus lampiran file atau tautan
             const delBtn = e.target.closest(".btn-del-attachment");
             if (delBtn) {
               e.preventDefault();
               e.stopPropagation();
               e.stopImmediatePropagation();
+              const delType = delBtn.getAttribute("data-del-type");
               const cat = delBtn.getAttribute("data-del-cat");
               const key = decodeURIComponent(delBtn.getAttribute("data-del-key") || "");
               if (cat && key) {
-                delete sessionBlobFiles[cat][key];
-                delete savedFiles[cat][key];
-                saveToLocal();
-                const box = delBtn.closest(".portal-file-attachment");
-                if (box) box.remove();
+                if (sessionAttachments[cat] && sessionAttachments[cat][key]) {
+                  sessionAttachments[cat][key][delType] = null;
+                }
+                if (savedAttachments[cat] && savedAttachments[cat][key]) {
+                  savedAttachments[cat][key][delType] = null;
+                  saveToLocal();
+                }
+                renderAllBadges(true);
               }
               return;
             }
 
+            // 5. Pemicu saat tombol Tambah / Edit diklik
             if (e.target.closest('button[onclick*="openTaskForm"], button[onclick*="openMateriForm"], button')) {
-              setTimeout(injectFileInputToActiveForm, 10);
-              setTimeout(injectFileInputToActiveForm, 60);
+              setTimeout(injectFieldsToActiveForm, 10);
+              setTimeout(injectFieldsToActiveForm, 60);
             }
           },
           true
         );
 
         function initAttachmentFeature() {
-          renderAllFileBadges(true);
-          injectFileInputToActiveForm();
+          renderAllBadges(true);
+          injectFieldsToActiveForm();
 
           const formBox = document.getElementById("formBox");
           if (formBox) {
             const formObserver = new MutationObserver(() => {
-              injectFileInputToActiveForm();
+              injectFieldsToActiveForm();
             });
             formObserver.observe(formBox, { childList: true, subtree: true });
           }
 
           const listObserver = new MutationObserver(() => {
-            renderAllFileBadges(false);
+            renderAllBadges(false);
           });
 
           const taskList = document.getElementById("taskList");
