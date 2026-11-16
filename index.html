@@ -59,7 +59,6 @@
         font-weight: 700;
         padding: 2px 9px;
         border-radius: 9999px;
-        margin-left: 6px;
         white-space: nowrap;
       }
       .status-pill-selesai {
@@ -73,7 +72,6 @@
         font-weight: 700;
         padding: 2px 9px;
         border-radius: 9999px;
-        margin-left: 6px;
         white-space: nowrap;
       }
     </style>
@@ -975,8 +973,7 @@
           if (container) container.innerHTML = "";
         }
 
-        // Menampilkan lencana status "Selesai" / "Belum Selesai" tepat di samping badge tenggat ("Hari ini!" / "7 hari lagi")
-        // tanpa mengubah perilaku tombol asli "Tandai selesai" / "Batal selesai" milik app.js
+        // Menampilkan lencana status "Selesai" / "Belum selesai" tepat di samping badge tenggat ("Hari ini!" / "7 hari lagi")
         function updateTaskStatusIndicators() {
           const taskList = document.getElementById("taskList");
           if (!taskList) return;
@@ -984,7 +981,6 @@
           Array.from(taskList.children).forEach((card) => {
             const titleEl = card.querySelector("h3, h4");
 
-            // Cari tombol toggle asli di bagian bawah kartu (dari app.js)
             const toggleBtn = Array.from(card.querySelectorAll("button")).find((btn) => {
               const t = (btn.innerText || "").toLowerCase();
               return (
@@ -994,12 +990,9 @@
               );
             });
 
-            // Jika tombol bertuliskan "Batal selesai", artinya user SUDAH menandainya selesai.
-            // Jika tombol bertuliskan "Tandai selesai" (masih "Hari ini!", "7 hari lagi", dll.), artinya BELUM selesai.
             const btnText = toggleBtn ? (toggleBtn.innerText || "").toLowerCase() : "";
             const isCompleted = btnText.includes("batal");
 
-            // Cari badge tenggat di pojok kanan atas kartu (misal "Hari ini!", "7 hari lagi", "Terlambat", atau "Selesai")
             const topRow = card.firstElementChild;
             let statusPill = card.querySelector(".task-inline-status-pill");
             if (statusPill) statusPill.remove();
@@ -1023,12 +1016,9 @@
               statusPill.innerHTML = `<i class="far fa-clock"></i> Belum selesai`;
             }
 
-            // Tempelkan lencana status tepat di baris header kartu (sebelah badge "Hari ini!" / "7 hari lagi")
             if (topRow) {
-              // Cari elemen terakhir di topRow (badge tenggat) agar lencana status berada rapi di sampingnya
               const rightSide = topRow.lastElementChild;
               if (rightSide && rightSide !== topRow.firstElementChild) {
-                // Bungkus badge tenggat + lencana status dalam flex group jika belum dibungkus
                 if (rightSide.classList.contains("task-badges-group")) {
                   rightSide.appendChild(statusPill);
                 } else {
