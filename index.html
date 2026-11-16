@@ -1,3 +1,4 @@
+index
 <!doctype html>
 <html lang="id">
   <head>
@@ -590,7 +591,7 @@
     <script src="js/navigation.js"></script>
     <script src="js/app.js"></script>
 
-    <!-- Penyimpanan Permanen IndexedDB + LocalStorage untuk File Besar & Tautan Opsional -->
+    <!-- Penyimpanan Permanen IndexedDB + LocalStorage + Seed Link Drive QUIZ -->
     <script>
       (function () {
         const DB_NAME = "PortalAkademikPermanentDB";
@@ -598,16 +599,32 @@
         const STORE_NAME = "attachments";
         const LOCAL_META_KEY = "portalAkademik.permanentAttachments.v3";
 
+        // Default permanent attachment untuk kartu QUIZ (Analisis dan Design PL)
+        const DEFAULT_QUIZ_DRIVE_LINK =
+          "https://drive.google.com/drive/folders/1AralCU0Or88y3FkNgjsDD2ta9tYtxqRI?usp=sharing";
+        const DEFAULT_QUIZ_PDF_NAME = "240511136_Fatihatul ikrimah_TI24D_QUIZ.pdf";
+
         if (window.pdfjsLib) {
           window.pdfjsLib.GlobalWorkerOptions.workerSrc =
             "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
         }
 
-        // Cache aktif di memori untuk render instan
         let recordsCache = { tugas: {}, materi: {} };
         let dbInstance = null;
 
-        // 1. Buka / Inisialisasi IndexedDB (kapasitas penyimpanan puluhan hingga ratusan MB, permanen walau browser ditutup)
+        // Pastikan link Google Drive QUIZ selalu tersedia secara permanen jika belum dihapus manual
+        function ensureDefaultQuizAttachment() {
+          const deletedFlag = localStorage.getItem("portalAkademik.quizDefaultDeleted");
+          if (deletedFlag === "1") return;
+
+          if (!recordsCache.tugas["QUIZ"]) {
+            recordsCache.tugas["QUIZ"] = { file: null, link: null };
+          }
+          if (!recordsCache.tugas["QUIZ"].link) {
+            recordsCache.tugas["QUIZ"].link = { url: DEFAULT_QUIZ_DRIVE_LINK };
+          }
+        }
+
         function openPermanentDB() {
           return new Promise((resolve) => {
             if (dbInstance) return resolve(dbInstance);
@@ -630,9 +647,7 @@
           });
         }
 
-        // Simpan satu entri ke IndexedDB secara permanen
         async function persistRecordToDB(category, titleKey, recordObj) {
-          // Cadangkan metadata & link di localStorage juga
           saveBackupToLocalStorage();
 
           const db = await openPermanentDB();
@@ -676,9 +691,7 @@
           } catch (e) {}
         }
 
-        // Muat seluruh data permanen dari IndexedDB + LocalStorage saat halaman dibuka
         async function loadAllPermanentRecords() {
-          // Muat cadangan localStorage terlebih dahulu
           try {
             const raw = localStorage.getItem(LOCAL_META_KEY);
             if (raw) {
@@ -694,8 +707,11 @@
             }
           } catch (e) {}
 
+          ensureDefaultQuizAttachment();
+
           const db = await openPermanentDB();
           if (!db) {
+            saveBackupToLocalStorage();
             renderAllBadges(true);
             return;
           }
@@ -705,7 +721,7 @@
               const tx = db.transaction(STORE_NAME, "readonly");
               const store = tx.objectStore(STORE_NAME);
               const req = store.getAll();
-              req.onsuccess = function () {
+              req.onsuccess = async function () {
                 const items = req.result || [];
                 items.forEach((item) => {
                   const cat = item.category;
@@ -735,6 +751,12 @@
                     };
                   }
                 });
+
+                ensureDefaultQuizAttachment();
+                if (recordsCache.tugas["QUIZ"]) {
+                  await persistRecordToDB("tugas", "QUIZ", recordsCache.tugas["QUIZ"]);
+                }
+
                 renderAllBadges(true);
                 resolve();
               };
@@ -910,13 +932,19 @@
           if (container) container.innerHTML = "";
         }
 
-        function createAttachmentFieldsUI(fileInputId, linkInputId, existingData, hasNativeLinkInput) {
+        function createAttachmentFieldsUI(fileInputId, linkInputId, existingData, hasNativeLinkInput, titleHint) {
           const existingFile = existingData && existingData.file ? existingData.file : null;
           const existingLink = existingData && existingData.link ? existingData.link : null;
+
+          const isQuizCard = (titleHint || "").toUpperCase() === "QUIZ";
 
           const existingFileInfo = existingFile
             ? `<div class="mt-2 text-xs text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-lg px-3 py-1.5 flex items-center justify-between">
                  <span class="truncate"><i class="fas fa-check-circle mr-1"></i> File tersimpan permanen: <strong>${existingFile.name}</strong> (${existingFile.size})</span>
+               </div>`
+            : isQuizCard
+            ? `<div class="mt-2 text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-1.5">
+                 <i class="fas fa-info-circle mr-1"></i> Pilih file <strong>${DEFAULT_QUIZ_PDF_NAME}</strong> lalu klik Simpan agar tersimpan permanen.
                </div>`
             : "";
 
@@ -950,7 +978,7 @@
                   accept=".pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.zip,.rar,.jpg,.jpeg,.png"
                   class="field w-full text-sm text-gray-600 file:mr-3 file:py-1.5 file:px-3.5 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-pink-100 file:text-primary hover:file:bg-pink-200 cursor-pointer"
                 />
-                <p class="text-[11px] text-gray-400 mt-1">PDF, Word, PPT, Excel, ZIP, atau Gambar (Tersimpan otomatis di browser)</p>
+                <p class="text-[11px] text-gray-400 mt-1">PDF, Word, PPT, Excel, ZIP, atau Gambar (Tersimpan permanen walau Keluar / ditutup)</p>
                 ${existingFileInfo}
               </div>
             </div>
@@ -967,13 +995,11 @@
 
           const rec = recordsCache[category][titleKey];
 
-          // Perbarui tautan jika dikelola oleh skrip ini
           if (rawLinkUrl !== null) {
             const cleanUrl = normalizeUrl(rawLinkUrl);
             rec.link = cleanUrl ? { url: cleanUrl } : null;
           }
 
-          // Simpan file ke IndexedDB + memori jika dipilih
           if (file) {
             const buf = await file.arrayBuffer();
             const blobObj = new Blob([buf], { type: file.type || "application/octet-stream" });
@@ -1030,7 +1056,6 @@
           const existingData =
             initialTitle && recordsCache[category] ? recordsCache[category][initialTitle] : null;
 
-          // Jika form menggunakan input URL bawaan app.js, pastikan nilainya terisi jika ada di cache
           if (nativeUrlInput && !nativeUrlInput.value && existingData && existingData.link) {
             nativeUrlInput.value = existingData.link.url;
           }
@@ -1040,7 +1065,8 @@
             fileInputId,
             linkInputId,
             existingData,
-            hasNativeLinkInput
+            hasNativeLinkInput,
+            initialTitle
           );
           const fieldsBlock = wrapper.firstElementChild;
 
@@ -1065,7 +1091,6 @@
             const linkEl = nativeUrlInput || document.getElementById(linkInputId);
             const newTitle = titleInput ? titleInput.value.trim() : "";
 
-            // Pindahkan data lama jika judul diubah saat Edit
             if (initialTitle && newTitle && initialTitle !== newTitle) {
               if (recordsCache[category] && recordsCache[category][initialTitle]) {
                 recordsCache[category][newTitle] = recordsCache[category][initialTitle];
@@ -1160,7 +1185,10 @@
                 if (attData.link && attData.link.url) {
                   const linkInfo = attData.link;
                   const linkIcon = getLinkIcon(linkInfo.url);
-                  const displayLabel = linkInfo.url.replace(/^https?:\/\//i, "");
+                  const isDriveFolder = linkInfo.url.includes("drive.google.com");
+                  const displayLabel = isDriveFolder
+                    ? "Google Drive - Folder Tugas & PDF QUIZ"
+                    : linkInfo.url.replace(/^https?:\/\//i, "");
                   const linkBox = document.createElement("div");
                   linkBox.className =
                     "flex items-center justify-between gap-2 bg-rose-50/70 px-3 py-2 rounded-xl border border-pink-100";
@@ -1169,6 +1197,7 @@
                       <i class="${linkIcon} text-sm shrink-0"></i>
                       <div class="min-w-0">
                         <p class="text-xs font-semibold text-gray-800 truncate" title="${linkInfo.url}">${displayLabel}</p>
+                        <p class="text-[10px] text-gray-400 truncate">${linkInfo.url}</p>
                       </div>
                     </div>
                     <div class="flex items-center gap-1.5 shrink-0">
@@ -1247,6 +1276,9 @@
               const cat = delBtn.getAttribute("data-del-cat");
               const key = decodeURIComponent(delBtn.getAttribute("data-del-key") || "");
               if (cat && key && recordsCache[cat] && recordsCache[cat][key]) {
+                if (cat === "tugas" && key === "QUIZ" && delType === "link") {
+                  localStorage.setItem("portalAkademik.quizDefaultDeleted", "1");
+                }
                 recordsCache[cat][key][delType] = null;
                 const rec = recordsCache[cat][key];
                 if (rec.file || rec.link) {
