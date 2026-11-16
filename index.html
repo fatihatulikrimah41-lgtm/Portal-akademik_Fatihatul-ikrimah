@@ -548,10 +548,55 @@
       </div>
     </div>
 
+    <!-- Modal Pratinjau File (PDF, Gambar, Dokumen) -->
+    <div
+      id="filePreviewModal"
+      class="fixed inset-0 bg-black/60 z-[150] hidden items-center justify-center p-4 backdrop-blur-sm"
+    >
+      <div
+        class="bg-white rounded-2xl shadow-2xl w-full max-w-4xl h-[85vh] flex flex-col overflow-hidden border border-pink-100"
+      >
+        <div
+          class="px-5 py-3.5 bg-pink-50 border-b border-pink-100 flex items-center justify-between gap-3"
+        >
+          <div class="flex items-center gap-2 min-w-0">
+            <i class="fas fa-file-pdf text-primary text-lg"></i>
+            <h3
+              id="previewFileName"
+              class="font-bold text-gray-900 text-sm sm:text-base truncate"
+            >
+              Pratinjau Dokumen
+            </h3>
+          </div>
+          <div class="flex items-center gap-2 shrink-0">
+            <a
+              id="previewDownloadBtn"
+              href="#"
+              download
+              class="bg-primary hover:bg-pink-600 text-white text-xs sm:text-sm font-semibold px-3.5 py-1.5 rounded-lg transition flex items-center gap-1.5"
+            >
+              <i class="fas fa-download"></i> Unduh
+            </a>
+            <button
+              type="button"
+              id="closePreviewBtn"
+              class="w-8 h-8 rounded-lg bg-white border border-pink-200 text-gray-500 hover:text-red-500 hover:bg-red-50 flex items-center justify-center transition"
+              title="Tutup Pratinjau"
+            >
+              <i class="fas fa-times"></i>
+            </button>
+          </div>
+        </div>
+        <div id="previewContainer" class="flex-1 bg-gray-100 relative overflow-auto flex items-center justify-center">
+          <!-- Konten PDF / Gambar akan dimuat di sini -->
+        </div>
+      </div>
+    </div>
+
     <script src="js/navigation.js"></script>
     <script src="js/app.js"></script>
 
-    <!-- Fitur Tambah, Lihat, Unduh & Simpan File pada Materi dan Daftar Tugas -->
+    <!-- Fitur Tambah, Pratinjau PDF/File, Unduh & Simpan File pada Materi dan Daftar Tugas -->
     <script>
       (function () {
         const STORAGE_KEY_FILES = "portalAkademik.attachedFiles.v1";
@@ -587,6 +632,75 @@
           if (["zip", "rar", "7z"].includes(ext)) return "fa-file-archive text-amber-500";
           if (["jpg", "jpeg", "png", "webp"].includes(ext)) return "fa-file-image text-purple-500";
           return "fa-file-alt text-primary";
+        }
+
+        // Konversi DataURL (base64 dari localStorage) ke Blob URL agar PDF selalu bisa dibuka browser
+        function dataUrlToBlobUrl(dataUrl) {
+          try {
+            if (!dataUrl || !dataUrl.startsWith("data:")) return dataUrl;
+            const parts = dataUrl.split(",");
+            const mimeMatch = parts[0].match(/:(.*?);/);
+            const mime = mimeMatch ? mimeMatch[1] : "application/pdf";
+            const bstr = atob(parts[1]);
+            let n = bstr.length;
+            const u8arr = new Uint8Array(n);
+            while (n--) {
+              u8arr[n] = bstr.charCodeAt(n);
+            }
+            const blob = new Blob([u8arr], { type: mime });
+            return URL.createObjectURL(blob);
+          } catch (e) {
+            return dataUrl;
+          }
+        }
+
+        // Fungsi membuka modal pratinjau PDF / Gambar / Dokumen
+        function openFilePreviewModal(fileName, fileUrl) {
+          const modal = document.getElementById("filePreviewModal");
+          const titleEl = document.getElementById("previewFileName");
+          const downloadBtn = document.getElementById("previewDownloadBtn");
+          const container = document.getElementById("previewContainer");
+
+          if (!modal || !container) return;
+
+          const playableUrl = fileUrl.startsWith("data:") ? dataUrlToBlobUrl(fileUrl) : fileUrl;
+          const ext = (fileName.split(".").pop() || "").toLowerCase();
+
+          titleEl.textContent = fileName;
+          downloadBtn.href = playableUrl;
+          downloadBtn.setAttribute("download", fileName);
+
+          if (ext === "pdf") {
+            container.innerHTML = `<iframe src="${playableUrl}" class="w-full h-full border-0" title="${fileName}"></iframe>`;
+          } else if (["jpg", "jpeg", "png", "webp", "gif"].includes(ext)) {
+            container.innerHTML = `<img src="${playableUrl}" alt="${fileName}" class="max-w-full max-h-full object-contain p-4" />`;
+          } else {
+            container.innerHTML = `
+              <div class="text-center p-8 max-w-md">
+                <div class="w-16 h-16 mx-auto bg-pink-100 text-primary rounded-2xl flex items-center justify-center text-3xl mb-4">
+                  <i class="fas fa-file-alt"></i>
+                </div>
+                <h4 class="font-bold text-gray-900 mb-2">${fileName}</h4>
+                <p class="text-sm text-gray-600 mb-5">Pratinjau langsung di browser hanya tersedia untuk file <strong>PDF</strong> dan <strong>Gambar</strong>. Silakan unduh file ini untuk membukanya.</p>
+                <a href="${playableUrl}" download="${fileName}" class="inline-flex items-center gap-2 bg-primary hover:bg-pink-600 text-white font-semibold px-5 py-2.5 rounded-xl transition">
+                  <i class="fas fa-download"></i> Unduh File Sekarang
+                </a>
+              </div>
+            `;
+          }
+
+          modal.classList.remove("hidden");
+          modal.classList.add("flex");
+        }
+
+        function closeFilePreviewModal() {
+          const modal = document.getElementById("filePreviewModal");
+          const container = document.getElementById("previewContainer");
+          if (modal) {
+            modal.classList.add("hidden");
+            modal.classList.remove("flex");
+          }
+          if (container) container.innerHTML = "";
         }
 
         function createFileInputUI(inputId, labelText, existingFile) {
@@ -650,7 +764,6 @@
           let inputId = null;
           let labelText = null;
 
-          // Deteksi form Tugas atau Materi secara fleksibel (tanpa bergantung pada tag h2/h3 saja)
           if (boxText.includes("tugas")) {
             category = "tugas";
             inputId = "inputFileTugas";
@@ -677,7 +790,6 @@
           wrapper.innerHTML = createFileInputUI(inputId, labelText, existingFile);
           const fileBlock = wrapper.firstElementChild;
 
-          // Cari tombol Simpan / Submit di dalam formBox
           const allButtons = Array.from(form.querySelectorAll("button"));
           const saveBtn =
             form.querySelector('button[type="submit"]') ||
@@ -694,7 +806,6 @@
             form.appendChild(fileBlock);
           }
 
-          // Simpan file saat tombol Simpan diklik atau form di-submit
           const handleSaveAction = function () {
             const fileEl = document.getElementById(inputId);
             const newTitle = titleInput ? titleInput.value.trim() : "";
@@ -729,7 +840,14 @@
         function getMergedFiles(category) {
           const merged = {};
           for (const [k, v] of Object.entries(savedFiles[category] || {})) {
-            merged[k] = { name: v.name, size: v.size, url: v.dataUrl };
+            if (!sessionBlobFiles[category][k] && v.dataUrl) {
+              sessionBlobFiles[category][k] = {
+                name: v.name,
+                size: v.size,
+                url: dataUrlToBlobUrl(v.dataUrl)
+              };
+            }
+            merged[k] = sessionBlobFiles[category][k] || { name: v.name, size: v.size, url: v.dataUrl };
           }
           for (const [k, v] of Object.entries(sessionBlobFiles[category] || {})) {
             merged[k] = { name: v.name, size: v.size, url: v.url };
@@ -762,15 +880,15 @@
                     </div>
                   </div>
                   <div class="flex items-center gap-1.5 shrink-0">
-                    <a
-                      href="${fileInfo.url}"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      class="px-2.5 py-1 bg-white border border-pink-200 text-primary hover:bg-primary hover:text-white rounded-lg text-xs font-semibold transition"
-                      title="Buka File"
+                    <button
+                      type="button"
+                      data-view-cat="${category}"
+                      data-view-key="${encodeURIComponent(titleKey)}"
+                      class="btn-view-attachment px-2.5 py-1 bg-white border border-pink-200 text-primary hover:bg-primary hover:text-white rounded-lg text-xs font-semibold transition cursor-pointer"
+                      title="Lihat File"
                     >
                       <i class="fas fa-eye mr-0.5"></i> Lihat
-                    </a>
+                    </button>
                     <a
                       href="${fileInfo.url}"
                       download="${fileInfo.name}"
@@ -803,21 +921,45 @@
         }
 
         document.addEventListener("click", function (e) {
-          const btn = e.target.closest(".btn-del-attachment");
-          if (btn) {
-            const cat = btn.getAttribute("data-del-cat");
-            const key = decodeURIComponent(btn.getAttribute("data-del-key") || "");
+          // 1. Klik tombol Lihat PDF/File
+          const viewBtn = e.target.closest(".btn-view-attachment");
+          if (viewBtn) {
+            e.preventDefault();
+            e.stopPropagation();
+            const cat = viewBtn.getAttribute("data-view-cat");
+            const key = decodeURIComponent(viewBtn.getAttribute("data-view-key") || "");
+            const filesMap = getMergedFiles(cat);
+            const fileInfo = filesMap[key];
+            if (fileInfo && fileInfo.url) {
+              openFilePreviewModal(fileInfo.name, fileInfo.url);
+            }
+            return;
+          }
+
+          // 2. Klik tombol Tutup Modal Pratinjau atau klik area luar modal
+          if (e.target.closest("#closePreviewBtn") || e.target.id === "filePreviewModal") {
+            closeFilePreviewModal();
+            return;
+          }
+
+          // 3. Klik tombol Hapus Lampiran File
+          const delBtn = e.target.closest(".btn-del-attachment");
+          if (delBtn) {
+            e.preventDefault();
+            e.stopPropagation();
+            const cat = delBtn.getAttribute("data-del-cat");
+            const key = decodeURIComponent(delBtn.getAttribute("data-del-key") || "");
             if (cat && key) {
               delete sessionBlobFiles[cat][key];
               delete savedFiles[cat][key];
               saveToLocal();
-              const box = btn.closest(".portal-file-attachment");
+              const box = delBtn.closest(".portal-file-attachment");
               if (box) box.remove();
             }
             return;
           }
 
-          // Pemicu tambahan saat tombol + Tambah Tugas / + Tambah Materi / Edit diklik
+          // 4. Pemicu saat tombol Tambah / Edit diklik
           if (e.target.closest('button[onclick*="openTaskForm"], button[onclick*="openMateriForm"], button')) {
             setTimeout(injectFileInputToActiveForm, 10);
             setTimeout(injectFileInputToActiveForm, 60);
