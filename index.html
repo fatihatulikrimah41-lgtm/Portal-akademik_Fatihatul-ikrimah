@@ -31,32 +31,6 @@
       } catch (e) {}
     </script>
     <link rel="stylesheet" href="css/style.css" />
-    <style>
-      .task-card-completed {
-        background: linear-gradient(135deg, #f0fdf4 0%, #ffffff 70%) !important;
-        border: 2px solid #86efac !important;
-        box-shadow: 0 10px 25px -5px rgba(16, 185, 129, 0.14) !important;
-      }
-      .task-title-completed {
-        text-decoration: line-through;
-        text-decoration-color: #10b981;
-        text-decoration-thickness: 2px;
-        color: #4b5563 !important;
-      }
-      .status-pill-selesai {
-        display: inline-flex;
-        align-items: center;
-        gap: 4px;
-        background-color: #dcfce7;
-        color: #15803d;
-        border: 1px solid #86efac;
-        font-size: 11px;
-        font-weight: 700;
-        padding: 2px 9px;
-        border-radius: 9999px;
-        white-space: nowrap;
-      }
-    </style>
   </head>
   <body
     class="bg-pink-100 text-gray-800 font-sans antialiased flex flex-col min-h-screen relative overflow-x-hidden"
@@ -631,13 +605,13 @@
     <script src="js/navigation.js"></script>
     <script src="js/app.js"></script>
 
-    <!-- Script Utama: Selalu Memunculkan PDF & Drive di QUIZ + Perbaikan Tombol Hapus -->
+    <!-- Penyimpanan Permanen IndexedDB + LocalStorage + Lampiran PDF & Drive Langsung Muncul -->
     <script>
       (function () {
         const DB_NAME = "PortalAkademikPermanentDB";
         const DB_VERSION = 1;
         const STORE_NAME = "attachments";
-        const LOCAL_META_KEY = "portalAkademik.permanentAttachments.v5";
+        const LOCAL_META_KEY = "portalAkademik.permanentAttachments.v6";
 
         const DEFAULT_QUIZ_DRIVE_LINK =
           "https://drive.google.com/drive/folders/1AralCU0Or88y3FkNgjsDD2ta9tYtxqRI?usp=sharing";
@@ -651,13 +625,10 @@
         let recordsCache = { tugas: {}, materi: {} };
         let dbInstance = null;
 
-        // Pastikan lampiran Google Drive & indikator PDF untuk QUIZ selalu muncul di awal
+        // Pastikan lampiran PDF & Google Drive untuk kartu QUIZ selalu terisi secara bawaan
         function ensureDefaultQuizAttachment() {
           if (!recordsCache.tugas["QUIZ"]) {
             recordsCache.tugas["QUIZ"] = { file: null, link: null };
-          }
-          if (!recordsCache.tugas["QUIZ"].link) {
-            recordsCache.tugas["QUIZ"].link = { url: DEFAULT_QUIZ_DRIVE_LINK };
           }
           if (!recordsCache.tugas["QUIZ"].file) {
             recordsCache.tugas["QUIZ"].file = {
@@ -668,9 +639,11 @@
               url: DEFAULT_QUIZ_DRIVE_LINK
             };
           }
+          if (!recordsCache.tugas["QUIZ"].link) {
+            recordsCache.tugas["QUIZ"].link = { url: DEFAULT_QUIZ_DRIVE_LINK };
+          }
         }
 
-        // Panggil seketika sebelum render pertama
         ensureDefaultQuizAttachment();
 
         function openPermanentDB() {
@@ -881,7 +854,7 @@
                 </div>
                 <h4 class="font-bold text-gray-900 mb-2">${fileInfo.name}</h4>
                 <p class="text-xs text-gray-600 mb-5 leading-relaxed">
-                  File PDF ini tersimpan di folder Google Drive kamu. Klik tombol di bawah untuk membuka atau mengunduhnya langsung, atau unggah file lokal lewat tombol <strong>Edit (✏️)</strong> agar bisa dirender halaman demi halaman di sini.
+                  Dokumen PDF ini terhubung ke folder Google Drive kamu. Klik tombol di bawah untuk membuka atau mengunduhnya langsung, atau unggah file lokal lewat tombol <strong>Edit (✏️)</strong> agar bisa dirender halaman demi halaman di sini.
                 </p>
                 <a href="${fileInfo.url}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-2 bg-primary hover:bg-pink-600 text-white text-xs font-semibold px-5 py-2.5 rounded-xl transition shadow-md">
                   <i class="fas fa-external-link-alt"></i> Buka &amp; Unduh di Google Drive
@@ -1001,35 +974,6 @@
             modal.classList.remove("flex");
           }
           if (container) container.innerHTML = "";
-        }
-
-        function updateTaskStatusIndicators() {
-          const taskList = document.getElementById("taskList");
-          if (!taskList) return;
-
-          Array.from(taskList.children).forEach((card) => {
-            const titleEl = card.querySelector("h3, h4");
-
-            const toggleBtn = Array.from(card.querySelectorAll("button")).find((btn) => {
-              const t = (btn.innerText || "").toLowerCase();
-              return (
-                t.includes("tandai selesai") ||
-                t.includes("tandai belum") ||
-                t.includes("batal selesai")
-              );
-            });
-
-            const btnText = toggleBtn ? (toggleBtn.innerText || "").toLowerCase() : "";
-            const isCompleted = btnText.includes("batal") || btnText.includes("tandai belum");
-
-            if (isCompleted) {
-              card.classList.add("task-card-completed");
-              if (titleEl) titleEl.classList.add("task-title-completed");
-            } else {
-              card.classList.remove("task-card-completed");
-              if (titleEl) titleEl.classList.remove("task-title-completed");
-            }
-          });
         }
 
         function createAttachmentFieldsUI(fileInputId, linkInputId, existingData, hasNativeLinkInput) {
@@ -1335,10 +1279,8 @@
         function renderAllBadges(forceRefresh = false) {
           renderBadgesForContainer("taskList", "tugas", forceRefresh);
           renderBadgesForContainer("materiList", "materi", forceRefresh);
-          updateTaskStatusIndicators();
         }
 
-        // Tangkap klik tombol hapus lampiran (X), tombol Lihat, tombol Lonceng
         window.addEventListener(
           "click",
           async function (e) {
@@ -1405,7 +1347,6 @@
             ) {
               setTimeout(injectFieldsToActiveForm, 10);
               setTimeout(injectFieldsToActiveForm, 60);
-              setTimeout(updateTaskStatusIndicators, 50);
             }
           },
           true
@@ -1415,7 +1356,6 @@
           renderAllBadges(true);
           await loadAllPermanentRecords();
           injectFieldsToActiveForm();
-          updateTaskStatusIndicators();
 
           const formBox = document.getElementById("formBox");
           if (formBox) {
