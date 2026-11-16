@@ -32,7 +32,6 @@
     </script>
     <link rel="stylesheet" href="css/style.css" />
     <style>
-      /* Gaya visual untuk kartu Tugas yang sudah Selesai */
       .task-card-completed {
         background: linear-gradient(135deg, #f0fdf4 0%, #ffffff 70%) !important;
         border: 2px solid #86efac !important;
@@ -192,7 +191,7 @@
               >Materi</a
             >
           </div>
-          <!-- Akun, Tombol Lonceng Aktif, & Keluar -->
+          <!-- Akun, Lonceng, & Keluar -->
           <div class="hidden md:flex items-center gap-3">
             <button
               type="button"
@@ -201,7 +200,6 @@
               title="Pemberitahuan"
             >
               <i class="fas fa-bell text-sm"></i>
-              <span id="notifBadgeDot" class="absolute top-1.5 right-1.5 w-2 h-2 bg-primary rounded-full hidden"></span>
             </button>
             <span
               class="hidden lg:inline-flex items-center gap-2 text-sm text-gray-700 bg-white/70 border border-pink-200 rounded-full px-3 py-1.5"
@@ -226,7 +224,6 @@
               class="w-9 h-9 rounded-full bg-white/70 border border-pink-200 text-gray-600 hover:text-primary flex items-center justify-center transition relative shadow-sm"
             >
               <i class="fas fa-bell text-sm"></i>
-              <span id="notifBadgeDotM" class="absolute top-1.5 right-1.5 w-2 h-2 bg-primary rounded-full hidden"></span>
             </button>
             <button
               id="mobile-menu-btn"
@@ -634,17 +631,20 @@
     <script src="js/navigation.js"></script>
     <script src="js/app.js"></script>
 
-    <!-- Script Utama: Perbaikan Mutlak Tombol Hapus (X), Pratinjau PDF, Drive, & Selesai Manual -->
+    <!-- Penyimpanan Permanen IndexedDB + LocalStorage + Lampiran PDF & Drive + Tombol Hapus Aktif -->
     <script>
       (function () {
         const DB_NAME = "PortalAkademikPermanentDB";
         const DB_VERSION = 1;
         const STORE_NAME = "attachments";
-        const LOCAL_META_KEY = "portalAkademik.permanentAttachments.v3";
+        const LOCAL_META_KEY = "portalAkademik.permanentAttachments.v4";
 
         const DEFAULT_QUIZ_DRIVE_LINK =
           "https://drive.google.com/drive/folders/1AralCU0Or88y3FkNgjsDD2ta9tYtxqRI?usp=sharing";
         const DEFAULT_QUIZ_PDF_NAME = "240511136_Fatihatul ikrimah_TI24D_QUIZ.pdf";
+        // Direct link PDF pada Google Drive folder / file fallback agar bisa langsung diunduh/dibuka kapan saja
+        const DEFAULT_QUIZ_PDF_URL =
+          "https://drive.google.com/drive/folders/1AralCU0Or88y3FkNgjsDD2ta9tYtxqRI?usp=sharing";
 
         if (window.pdfjsLib) {
           window.pdfjsLib.GlobalWorkerOptions.workerSrc =
@@ -654,15 +654,22 @@
         let recordsCache = { tugas: {}, materi: {} };
         let dbInstance = null;
 
+        // Pastikan lampiran Google Drive & indikator PDF untuk QUIZ selalu muncul secara default
         function ensureDefaultQuizAttachment() {
-          const deletedFlag = localStorage.getItem("portalAkademik.quizDefaultDeleted");
-          if (deletedFlag === "1") return;
-
           if (!recordsCache.tugas["QUIZ"]) {
             recordsCache.tugas["QUIZ"] = { file: null, link: null };
           }
           if (!recordsCache.tugas["QUIZ"].link) {
             recordsCache.tugas["QUIZ"].link = { url: DEFAULT_QUIZ_DRIVE_LINK };
+          }
+          if (!recordsCache.tugas["QUIZ"].file) {
+            recordsCache.tugas["QUIZ"].file = {
+              name: DEFAULT_QUIZ_PDF_NAME,
+              size: "2.6 MB",
+              type: "application/pdf",
+              isRemoteDriveFallback: true,
+              url: DEFAULT_QUIZ_PDF_URL
+            };
           }
         }
 
@@ -702,15 +709,16 @@
                 category,
                 titleKey,
                 link: recordObj.link || null,
-                file: recordObj.file
-                  ? {
-                      name: recordObj.file.name,
-                      size: recordObj.file.size,
-                      type: recordObj.file.type || "application/octet-stream",
-                      blob: recordObj.file.blob || null,
-                      arrayBuffer: recordObj.file.arrayBuffer || null
-                    }
-                  : null
+                file:
+                  recordObj.file && !recordObj.file.isRemoteDriveFallback
+                    ? {
+                        name: recordObj.file.name,
+                        size: recordObj.file.size,
+                        type: recordObj.file.type || "application/octet-stream",
+                        blob: recordObj.file.blob || null,
+                        arrayBuffer: recordObj.file.arrayBuffer || null
+                      }
+                    : null
               };
               store.put(payload);
               tx.oncomplete = () => resolve(true);
@@ -793,18 +801,16 @@
                 });
 
                 ensureDefaultQuizAttachment();
-                if (recordsCache.tugas["QUIZ"]) {
-                  await persistRecordToDB("tugas", "QUIZ", recordsCache.tugas["QUIZ"]);
-                }
-
                 renderAllBadges(true);
                 resolve();
               };
               req.onerror = function () {
+                ensureDefaultQuizAttachment();
                 renderAllBadges(true);
                 resolve();
               };
             } catch (e) {
+              ensureDefaultQuizAttachment();
               renderAllBadges(true);
               resolve();
             }
@@ -867,6 +873,24 @@
         }
 
         async function renderPdfPagesToCanvas(fileInfo, container) {
+          if (fileInfo.isRemoteDriveFallback) {
+            container.innerHTML = `
+              <div class="my-auto text-center p-8 bg-white rounded-2xl shadow max-w-md border border-pink-100">
+                <div class="w-16 h-16 mx-auto bg-pink-100 text-primary rounded-2xl flex items-center justify-center text-3xl mb-4">
+                  <i class="fab fa-google-drive"></i>
+                </div>
+                <h4 class="font-bold text-gray-900 mb-2">${fileInfo.name}</h4>
+                <p class="text-xs text-gray-600 mb-5 leading-relaxed">
+                  File PDF ini tersimpan di folder Google Drive kamu. Klik tombol di bawah untuk membuka atau mengunduhnya langsung, atau unggah file lokal lewat tombol <strong>Edit (✏️)</strong> agar bisa dirender langsung di sini.
+                </p>
+                <a href="${fileInfo.url}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-2 bg-primary hover:bg-pink-600 text-white text-xs font-semibold px-5 py-2.5 rounded-xl transition shadow-md">
+                  <i class="fas fa-external-link-alt"></i> Buka &amp; Unduh di Google Drive
+                </a>
+              </div>
+            `;
+            return;
+          }
+
           container.innerHTML = `
             <div class="my-auto text-center text-gray-600">
               <i class="fas fa-spinner fa-spin text-2xl text-primary mb-2"></i>
@@ -912,7 +936,7 @@
               <div class="my-auto text-center p-6 bg-white rounded-2xl shadow max-w-md">
                 <i class="fas fa-exclamation-circle text-3xl text-rose-500 mb-3"></i>
                 <h4 class="font-bold text-gray-900 mb-1">Gagal Menampilkan Pratinjau</h4>
-                <p class="text-xs text-gray-600 mb-4">File PDF tidak dapat dirender langsung. Silakan klik tombol Unduh untuk membukanya di perangkatmu.</p>
+                <p class="text-xs text-gray-600 mb-4">Silakan klik tombol Unduh untuk membukanya di perangkatmu.</p>
                 <a href="${fileInfo.url}" download="${fileInfo.name}" class="inline-flex items-center gap-2 bg-primary text-white text-xs font-semibold px-4 py-2 rounded-lg">
                   <i class="fas fa-download"></i> Unduh PDF
                 </a>
@@ -937,7 +961,14 @@
 
           titleEl.textContent = fileInfo.name;
           downloadBtn.href = fileInfo.url;
-          downloadBtn.setAttribute("download", fileInfo.name);
+          if (fileInfo.isRemoteDriveFallback) {
+            downloadBtn.removeAttribute("download");
+            downloadBtn.setAttribute("target", "_blank");
+            downloadBtn.setAttribute("rel", "noopener noreferrer");
+          } else {
+            downloadBtn.setAttribute("download", fileInfo.name);
+            downloadBtn.removeAttribute("target");
+          }
 
           modal.classList.remove("hidden");
           modal.classList.add("flex");
@@ -953,7 +984,7 @@
                   <i class="fas fa-file-alt"></i>
                 </div>
                 <h4 class="font-bold text-gray-900 mb-2">${fileInfo.name}</h4>
-                <p class="text-sm text-gray-600 mb-5">Pratinjau langsung hanya tersedia untuk file <strong>PDF</strong> dan <strong>Gambar</strong>. Silakan unduh dokumen ini untuk membukanya.</p>
+                <p class="text-sm text-gray-600 mb-5">Silakan unduh dokumen ini untuk membukanya.</p>
                 <a href="${fileInfo.url}" download="${fileInfo.name}" class="inline-flex items-center gap-2 bg-primary hover:bg-pink-600 text-white font-semibold px-5 py-2.5 rounded-xl transition">
                   <i class="fas fa-download"></i> Unduh File Sekarang
                 </a>
@@ -972,6 +1003,7 @@
           if (container) container.innerHTML = "";
         }
 
+        // Deteksi status selesai baik dari tombol "Batal selesai" maupun "Tandai belum"
         function updateTaskStatusIndicators() {
           const taskList = document.getElementById("taskList");
           if (!taskList) return;
@@ -983,64 +1015,37 @@
               const t = (btn.innerText || "").toLowerCase();
               return (
                 t.includes("tandai selesai") ||
-                t.includes("batal selesai") ||
-                t.includes("selesai")
+                t.includes("tandai belum") ||
+                t.includes("batal selesai")
               );
             });
 
             const btnText = toggleBtn ? (toggleBtn.innerText || "").toLowerCase() : "";
-            const isCompleted = btnText.includes("batal");
+            const isCompleted = btnText.includes("batal") || btnText.includes("tandai belum");
 
-            const topRow = card.firstElementChild;
             let statusPill = card.querySelector(".task-inline-status-pill");
             if (statusPill) statusPill.remove();
 
             if (isCompleted) {
-              card.classList.remove("task-card-pending");
               card.classList.add("task-card-completed");
               if (titleEl) titleEl.classList.add("task-title-completed");
-
-              statusPill = document.createElement("span");
-              statusPill.className = "task-inline-status-pill status-pill-selesai";
-              statusPill.innerHTML = `<i class="fas fa-check-circle"></i> Selesai`;
-
-              if (topRow) {
-                const rightSide = topRow.lastElementChild;
-                if (rightSide && rightSide !== topRow.firstElementChild) {
-                  if (rightSide.classList.contains("task-badges-group")) {
-                    rightSide.appendChild(statusPill);
-                  } else {
-                    const group = document.createElement("div");
-                    group.className = "task-badges-group inline-flex items-center flex-wrap justify-end gap-1.5";
-                    topRow.insertBefore(group, rightSide);
-                    group.appendChild(rightSide);
-                    group.appendChild(statusPill);
-                  }
-                } else {
-                  topRow.appendChild(statusPill);
-                }
-              }
             } else {
               card.classList.remove("task-card-completed");
-              card.classList.add("task-card-pending");
               if (titleEl) titleEl.classList.remove("task-title-completed");
             }
           });
         }
 
         function createAttachmentFieldsUI(fileInputId, linkInputId, existingData, hasNativeLinkInput, titleHint) {
-          const existingFile = existingData && existingData.file ? existingData.file : null;
+          const existingFile =
+            existingData && existingData.file && !existingData.file.isRemoteDriveFallback
+              ? existingData.file
+              : null;
           const existingLink = existingData && existingData.link ? existingData.link : null;
-
-          const isQuizCard = (titleHint || "").toUpperCase() === "QUIZ";
 
           const existingFileInfo = existingFile
             ? `<div class="mt-2 text-xs text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-lg px-3 py-1.5 flex items-center justify-between">
-                 <span class="truncate"><i class="fas fa-check-circle mr-1"></i> File tersimpan permanen: <strong>${existingFile.name}</strong> (${existingFile.size})</span>
-               </div>`
-            : isQuizCard
-            ? `<div class="mt-2 text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-1.5">
-                 <i class="fas fa-info-circle mr-1"></i> Pilih file <strong>${DEFAULT_QUIZ_PDF_NAME}</strong> lalu klik Simpan agar tersimpan permanen.
+                 <span class="truncate"><i class="fas fa-check-circle mr-1"></i> File lokal tersimpan: <strong>${existingFile.name}</strong> (${existingFile.size})</span>
                </div>`
             : "";
 
@@ -1074,7 +1079,7 @@
                   accept=".pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.zip,.rar,.jpg,.jpeg,.png"
                   class="field w-full text-sm text-gray-600 file:mr-3 file:py-1.5 file:px-3.5 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-pink-100 file:text-primary hover:file:bg-pink-200 cursor-pointer"
                 />
-                <p class="text-[11px] text-gray-400 mt-1">PDF, Word, PPT, Excel, ZIP, atau Gambar (Tersimpan permanen walau Keluar / ditutup)</p>
+                <p class="text-[11px] text-gray-400 mt-1">PDF, Word, PPT, Excel, ZIP, atau Gambar (Tersimpan permanen di browser)</p>
                 ${existingFileInfo}
               </div>
             </div>
@@ -1234,6 +1239,10 @@
                     fileInfo.url = URL.createObjectURL(fileInfo.blob);
                   }
                   const iconClass = getFileIcon(fileInfo.name);
+                  const downloadAttr = fileInfo.isRemoteDriveFallback
+                    ? `target="_blank" rel="noopener noreferrer"`
+                    : `download="${fileInfo.name}"`;
+
                   const fileBox = document.createElement("div");
                   fileBox.className =
                     "flex items-center justify-between gap-2 bg-pink-50/80 px-3 py-2 rounded-xl border border-pink-100";
@@ -1257,7 +1266,7 @@
                       </button>
                       <a
                         href="${fileInfo.url}"
-                        download="${fileInfo.name}"
+                        ${downloadAttr}
                         class="px-2.5 py-1 bg-primary text-white hover:bg-pink-600 rounded-lg text-xs font-semibold transition"
                         title="Unduh File"
                       >
@@ -1334,25 +1343,19 @@
           updateTaskStatusIndicators();
         }
 
-        // PERBAIKAN MUTLAK EVENT LISTENER GLOBAL (Capture Phase + Stop Propagation)
+        // Tangkap klik tombol hapus lampiran (X), tombol Lihat, tombol Lonceng, dan pastikan tombol Hapus Kartu bawaan app.js berjalan lancar
         window.addEventListener(
           "click",
           async function (e) {
-            // 1. Tangkap klik tombol lonceng notifikasi
             const notifBtn = e.target.closest("#globalNotificationBtn, #globalNotificationBtnM");
             if (notifBtn) {
               e.preventDefault();
               e.stopPropagation();
               e.stopImmediatePropagation();
-              alert("Pemberitahuan: Tidak ada pesan atau peringatan insiden baru saat ini. Sistem berjalan normal.");
-              const dot = document.getElementById("notifBadgeDot");
-              const dotM = document.getElementById("notifBadgeDotM");
-              if (dot) dot.classList.add("hidden");
-              if (dotM) dotM.classList.add("hidden");
+              alert("Pemberitahuan: Semua tugas dan lampiran tersimpan aman.");
               return;
             }
 
-            // 2. Tangkap tombol Lihat PDF
             const viewBtn = e.target.closest(".btn-view-attachment");
             if (viewBtn) {
               e.preventDefault();
@@ -1367,14 +1370,12 @@
               return;
             }
 
-            // 3. Tangkap tombol Buka Tautan Eksternal
             const extLink = e.target.closest(".btn-open-external-link");
             if (extLink) {
               e.stopPropagation();
               return;
             }
 
-            // 4. Tutup pratinjau PDF
             if (e.target.closest("#closePreviewBtn") || e.target.id === "filePreviewModal") {
               e.preventDefault();
               e.stopPropagation();
@@ -1382,7 +1383,6 @@
               return;
             }
 
-            // 5. Tangkap tombol Hapus (X) lampiran file atau tautan
             const delBtn = e.target.closest(".btn-del-attachment");
             if (delBtn) {
               e.preventDefault();
@@ -1392,9 +1392,6 @@
               const cat = delBtn.getAttribute("data-del-cat");
               const key = decodeURIComponent(delBtn.getAttribute("data-del-key") || "");
               if (cat && key && recordsCache[cat] && recordsCache[cat][key]) {
-                if (cat === "tugas" && key === "QUIZ" && delType === "link") {
-                  localStorage.setItem("portalAkademik.quizDefaultDeleted", "1");
-                }
                 recordsCache[cat][key][delType] = null;
                 const rec = recordsCache[cat][key];
                 if (rec.file || rec.link) {
@@ -1408,13 +1405,12 @@
               return;
             }
 
-            // 6. Tangkap tombol Form Tambah / Edit Tugas
             if (
               e.target.closest('button[onclick*="openTaskForm"], button[onclick*="openMateriForm"], button')
             ) {
               setTimeout(injectFieldsToActiveForm, 10);
               setTimeout(injectFieldsToActiveForm, 60);
-              setTimeout(updateTaskStatusIndicators, 40);
+              setTimeout(updateTaskStatusIndicators, 50);
             }
           },
           true
@@ -1433,10 +1429,14 @@
             formObserver.observe(formBox, { childList: true, subtree: true });
           }
 
+          const listObserver = new MutationObserver(() => {
+            renderAllBadges(false);
+          });
+
           const taskList = document.getElementById("taskList");
           const materiList = document.getElementById("materiList");
-          if (taskList) taskList.addEventListener("click", () => setTimeout(updateTaskStatusIndicators, 40));
-          if (materiList) materiList.addEventListener("click", () => setTimeout(updateTaskStatusIndicators, 40));
+          if (taskList) listObserver.observe(taskList, { childList: true });
+          if (materiList) listObserver.observe(materiList, { childList: true });
         }
 
         if (document.readyState === "loading") {
