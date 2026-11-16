@@ -81,25 +81,26 @@
         margin-right: auto !important;
       }
 
-      /* Grid 3 kolom sejajar ukuran compact (~330px) dengan tinggi mengikuti isi */
+      /* Grid kartu ukuran compact (~340px) dengan tinggi SAMA RATA (align-items: stretch) */
       body main section#tugas #taskList {
         display: grid !important;
-        grid-template-columns: repeat(auto-fit, minmax(280px, 330px)) !important;
+        grid-template-columns: repeat(auto-fit, minmax(290px, 340px)) !important;
         justify-content: center !important;
-        align-items: start !important;
-        gap: 1.25rem !important;
+        align-items: stretch !important;
+        gap: 1.5rem !important;
         width: 100% !important;
         margin-left: auto !important;
         margin-right: auto !important;
       }
 
-      /* Kartu Tugas individual ukuran proporsional */
+      /* Kartu Tugas individual ukuran sama tinggi & lebar */
       body main section#tugas #taskList > div {
         width: 100% !important;
-        max-width: 330px !important;
+        max-width: 340px !important;
+        height: 100% !important;
         margin: 0 auto !important;
-        padding: 1.25rem !important;
-        border-radius: 1.4rem !important;
+        padding: 1.35rem !important;
+        border-radius: 1.5rem !important;
         background-color: #ffffff !important;
         box-shadow: 0 10px 26px -6px rgba(236, 72, 153, 0.12) !important;
         border: 1px solid #fce7f3 !important;
@@ -108,15 +109,15 @@
         transition: all 0.25s ease !important;
       }
 
-      /* Jarak antar elemen padat & rapi tanpa ruang kosong berlebih */
       body main section#tugas #taskList > div > p {
-        margin-bottom: 0.85rem !important;
-        font-size: 0.84rem !important;
+        margin-bottom: 1rem !important;
+        font-size: 0.85rem !important;
       }
 
+      /* Footer kartu (Tenggat & tombol aksi) rata sejajar di bawah */
       body main section#tugas #taskList > div .task-footer-push {
-        margin-top: 0 !important;
-        padding-top: 0.2rem !important;
+        margin-top: auto !important;
+        padding-top: 0.5rem !important;
       }
 
       /* Kartu Tugas yang sudah Selesai */
@@ -496,7 +497,7 @@
           </div>
           <div
             id="taskList"
-            class="grid justify-center items-start gap-5"
+            class="grid justify-center items-stretch gap-6"
           ></div>
         </div>
       </section>
@@ -1075,7 +1076,7 @@
               </div>
               <h3 class="text-base font-bold text-gray-900 mb-1.5 ${t.done ? "task-title-completed" : ""}">${t.title}</h3>
               <p class="text-xs text-gray-600 leading-relaxed mb-3">${t.desc}</p>
-              <div class="task-footer-push pt-0.5">
+              <div class="task-footer-push mt-auto pt-2">
                 <div class="flex items-center gap-1.5 text-[11.5px] text-gray-500 mb-2.5">
                   <i class="far fa-calendar-alt"></i>
                   <span>Tenggat: ${t.dueLabel || t.due}</span>
