@@ -587,10 +587,11 @@
       </div>
     </div>
 
+    <!-- Script Asli Anda -->
     <script src="js/navigation.js"></script>
     <script src="js/app.js"></script>
 
-    <!-- Penyimpanan Permanen IndexedDB + LocalStorage + Seed Link Drive QUIZ -->
+    <!-- Penyimpanan Permanen IndexedDB + LocalStorage + Seed Link Drive QUIZ + Tombol Edit & Hapus -->
     <script>
       (function () {
         const DB_NAME = "PortalAkademikPermanentDB";
@@ -598,7 +599,6 @@
         const STORE_NAME = "attachments";
         const LOCAL_META_KEY = "portalAkademik.permanentAttachments.v3";
 
-        // Default permanent attachment untuk kartu QUIZ (Analisis dan Design PL)
         const DEFAULT_QUIZ_DRIVE_LINK =
           "https://drive.google.com/drive/folders/1AralCU0Or88y3FkNgjsDD2ta9tYtxqRI?usp=sharing";
         const DEFAULT_QUIZ_PDF_NAME = "240511136_Fatihatul ikrimah_TI24D_QUIZ.pdf";
@@ -608,10 +608,37 @@
             "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
         }
 
+        // Pastikan daftar Mata Kuliah default kembali 1 (Analisis dan Design PL)
+        function enforceSingleDefaultCourse() {
+          try {
+            if (localStorage.getItem("portalAkademik.singleCourseResetDone") === "1") return;
+            for (let i = 0; i < localStorage.length; i++) {
+              const k = localStorage.key(i);
+              if (!k || k === LOCAL_META_KEY) continue;
+              const raw = localStorage.getItem(k);
+              if (!raw) continue;
+              const parsed = JSON.parse(raw);
+              if (Array.isArray(parsed) && parsed.length > 1) {
+                const adplOnly = parsed.filter(
+                  (item) =>
+                    item &&
+                    typeof item === "object" &&
+                    (item.sks !== undefined || item.lecturer !== undefined || item.dosen !== undefined || item.kode !== undefined || item.code !== undefined) &&
+                    JSON.stringify(item).toLowerCase().includes("analisis")
+                );
+                if (adplOnly.length === 1) {
+                  localStorage.setItem(k, JSON.stringify(adplOnly));
+                }
+              }
+            }
+            localStorage.setItem("portalAkademik.singleCourseResetDone", "1");
+          } catch (e) {}
+        }
+        enforceSingleDefaultCourse();
+
         let recordsCache = { tugas: {}, materi: {} };
         let dbInstance = null;
 
-        // Pastikan link Google Drive QUIZ selalu tersedia secara permanen jika belum dihapus manual
         function ensureDefaultQuizAttachment() {
           const deletedFlag = localStorage.getItem("portalAkademik.quizDefaultDeleted");
           if (deletedFlag === "1") return;
@@ -1112,6 +1139,50 @@
           }
         }
 
+        // Pastikan tombol Edit & Hapus juga muncul pada setiap kartu Mata Kuliah dan Materi jika js/app.js belum menampilkannya
+        function ensureEditDeleteActionButtons(containerId, editFnNames, delFnNames) {
+          const container = document.getElementById(containerId);
+          if (!container) return;
+
+          Array.from(container.children).forEach((card, idx) => {
+            if (card.querySelector(".fa-pen") || card.querySelector(".fa-edit") || card.querySelector(".fa-trash")) {
+              return;
+            }
+            if (card.querySelector(".portal-card-actions")) return;
+
+            const editFn = editFnNames.find((fn) => typeof window[fn] === "function");
+            const delFn = delFnNames.find((fn) => typeof window[fn] === "function");
+            if (!editFn && !delFn) return;
+
+            const actionBar = document.createElement("div");
+            actionBar.className = "portal-card-actions flex items-center justify-end gap-2 mt-4 pt-3 border-t border-pink-100";
+
+            if (editFn) {
+              const btnEdit = document.createElement("button");
+              btnEdit.type = "button";
+              btnEdit.className =
+                "w-9 h-9 rounded-xl bg-gray-100 hover:bg-pink-100 text-gray-600 hover:text-primary flex items-center justify-center transition cursor-pointer";
+              btnEdit.title = "Edit";
+              btnEdit.innerHTML = `<i class="fas fa-pen text-xs"></i>`;
+              btnEdit.onclick = () => window[editFn](idx);
+              actionBar.appendChild(btnEdit);
+            }
+
+            if (delFn) {
+              const btnDel = document.createElement("button");
+              btnDel.type = "button";
+              btnDel.className =
+                "w-9 h-9 rounded-xl bg-gray-100 hover:bg-red-100 text-gray-600 hover:text-red-500 flex items-center justify-center transition cursor-pointer";
+              btnDel.title = "Hapus";
+              btnDel.innerHTML = `<i class="fas fa-trash text-xs"></i>`;
+              btnDel.onclick = () => window[delFn](idx);
+              actionBar.appendChild(btnDel);
+            }
+
+            card.appendChild(actionBar);
+          });
+        }
+
         function renderBadgesForContainer(containerId, category, forceRefresh = false) {
           const container = document.getElementById(containerId);
           if (!container) return;
@@ -1234,6 +1305,8 @@
         function renderAllBadges(forceRefresh = false) {
           renderBadgesForContainer("taskList", "tugas", forceRefresh);
           renderBadgesForContainer("materiList", "materi", forceRefresh);
+          ensureEditDeleteActionButtons("courseList", ["openCourseForm", "editCourse"], ["deleteCourse", "delCourse", "removeCourse"]);
+          ensureEditDeleteActionButtons("materiList", ["openMateriForm", "editMateri"], ["deleteMateri", "delMateri", "removeMateri"]);
         }
 
         document.addEventListener(
@@ -1317,8 +1390,10 @@
 
           const taskList = document.getElementById("taskList");
           const materiList = document.getElementById("materiList");
+          const courseList = document.getElementById("courseList");
           if (taskList) listObserver.observe(taskList, { childList: true });
           if (materiList) listObserver.observe(materiList, { childList: true });
+          if (courseList) listObserver.observe(courseList, { childList: true });
         }
 
         if (document.readyState === "loading") {
