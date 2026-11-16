@@ -634,7 +634,7 @@
     <script src="js/navigation.js"></script>
     <script src="js/app.js"></script>
 
-    <!-- Penyimpanan Permanen IndexedDB + LocalStorage + Tombol Hapus Berfungsi Sempurna + Pratinjau PDF & Drive -->
+    <!-- Script Utama: Perbaikan Mutlak Tombol Hapus (X), Pratinjau PDF, Drive, & Selesai Manual -->
     <script>
       (function () {
         const DB_NAME = "PortalAkademikPermanentDB";
@@ -1268,10 +1268,10 @@
                         data-del-type="file"
                         data-del-cat="${category}"
                         data-del-key="${encodeURIComponent(titleKey)}"
-                        class="btn-del-attachment px-2 py-1 bg-red-50 text-red-500 hover:bg-red-500 hover:text-white rounded-lg text-xs transition"
+                        class="btn-del-attachment px-2 py-1 bg-red-50 text-red-500 hover:bg-red-500 hover:text-white rounded-lg text-xs transition cursor-pointer"
                         title="Hapus Lampiran File"
                       >
-                        <i class="fas fa-times"></i>
+                        <i class="fas fa-times pointer-events-none"></i>
                       </button>
                     </div>
                   `;
@@ -1311,10 +1311,10 @@
                         data-del-type="link"
                         data-del-cat="${category}"
                         data-del-key="${encodeURIComponent(titleKey)}"
-                        class="btn-del-attachment px-2 py-1 bg-red-50 text-red-500 hover:bg-red-500 hover:text-white rounded-lg text-xs transition"
+                        class="btn-del-attachment px-2 py-1 bg-red-50 text-red-500 hover:bg-red-500 hover:text-white rounded-lg text-xs transition cursor-pointer"
                         title="Hapus Tautan"
                       >
-                        <i class="fas fa-times"></i>
+                        <i class="fas fa-times pointer-events-none"></i>
                       </button>
                     </div>
                   `;
@@ -1334,16 +1334,16 @@
           updateTaskStatusIndicators();
         }
 
-        // PERBAIKAN UTAMA: Gunakan Event Delegation pada level document dengan capture & stopImmediatePropagation
-        // untuk memastikan tombol hapus (X) kecil pada file/link, tombol Lihat, tombol Buka, dan tombol ikon sampah kartu utama TIDAK TERBLOKIR.
-        document.addEventListener(
+        // PERBAIKAN MUTLAK EVENT LISTENER GLOBAL (Capture Phase + Stop Propagation)
+        window.addEventListener(
           "click",
           async function (e) {
-            // 1. Tangkap tombol Lonceng Pemberitahuan
+            // 1. Tangkap klik tombol lonceng notifikasi
             const notifBtn = e.target.closest("#globalNotificationBtn, #globalNotificationBtnM");
             if (notifBtn) {
               e.preventDefault();
               e.stopPropagation();
+              e.stopImmediatePropagation();
               alert("Pemberitahuan: Tidak ada pesan atau peringatan insiden baru saat ini. Sistem berjalan normal.");
               const dot = document.getElementById("notifBadgeDot");
               const dotM = document.getElementById("notifBadgeDotM");
@@ -1374,7 +1374,7 @@
               return;
             }
 
-            // 4. Tutup modal pratinjau PDF
+            // 4. Tutup pratinjau PDF
             if (e.target.closest("#closePreviewBtn") || e.target.id === "filePreviewModal") {
               e.preventDefault();
               e.stopPropagation();
@@ -1382,7 +1382,7 @@
               return;
             }
 
-            // 5. Tangkap tombol Hapus (X) pada kotak file atau link yang dilampirkan
+            // 5. Tangkap tombol Hapus (X) lampiran file atau tautan
             const delBtn = e.target.closest(".btn-del-attachment");
             if (delBtn) {
               e.preventDefault();
@@ -1408,7 +1408,7 @@
               return;
             }
 
-            // 6. Tangkap tombol Tambah / Edit Tugas agar form terinjeksi field file & link
+            // 6. Tangkap tombol Form Tambah / Edit Tugas
             if (
               e.target.closest('button[onclick*="openTaskForm"], button[onclick*="openMateriForm"], button')
             ) {
