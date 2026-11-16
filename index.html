@@ -631,20 +631,17 @@
     <script src="js/navigation.js"></script>
     <script src="js/app.js"></script>
 
-    <!-- Penyimpanan Permanen IndexedDB + LocalStorage + Lampiran PDF & Drive + Tombol Hapus Aktif -->
+    <!-- Script Utama: Selalu Memunculkan PDF & Drive di QUIZ + Perbaikan Tombol Hapus -->
     <script>
       (function () {
         const DB_NAME = "PortalAkademikPermanentDB";
         const DB_VERSION = 1;
         const STORE_NAME = "attachments";
-        const LOCAL_META_KEY = "portalAkademik.permanentAttachments.v4";
+        const LOCAL_META_KEY = "portalAkademik.permanentAttachments.v5";
 
         const DEFAULT_QUIZ_DRIVE_LINK =
           "https://drive.google.com/drive/folders/1AralCU0Or88y3FkNgjsDD2ta9tYtxqRI?usp=sharing";
         const DEFAULT_QUIZ_PDF_NAME = "240511136_Fatihatul ikrimah_TI24D_QUIZ.pdf";
-        // Direct link PDF pada Google Drive folder / file fallback agar bisa langsung diunduh/dibuka kapan saja
-        const DEFAULT_QUIZ_PDF_URL =
-          "https://drive.google.com/drive/folders/1AralCU0Or88y3FkNgjsDD2ta9tYtxqRI?usp=sharing";
 
         if (window.pdfjsLib) {
           window.pdfjsLib.GlobalWorkerOptions.workerSrc =
@@ -654,7 +651,7 @@
         let recordsCache = { tugas: {}, materi: {} };
         let dbInstance = null;
 
-        // Pastikan lampiran Google Drive & indikator PDF untuk QUIZ selalu muncul secara default
+        // Pastikan lampiran Google Drive & indikator PDF untuk QUIZ selalu muncul di awal
         function ensureDefaultQuizAttachment() {
           if (!recordsCache.tugas["QUIZ"]) {
             recordsCache.tugas["QUIZ"] = { file: null, link: null };
@@ -668,10 +665,13 @@
               size: "2.6 MB",
               type: "application/pdf",
               isRemoteDriveFallback: true,
-              url: DEFAULT_QUIZ_PDF_URL
+              url: DEFAULT_QUIZ_DRIVE_LINK
             };
           }
         }
+
+        // Panggil seketika sebelum render pertama
+        ensureDefaultQuizAttachment();
 
         function openPermanentDB() {
           return new Promise((resolve) => {
@@ -756,11 +756,11 @@
           } catch (e) {}
 
           ensureDefaultQuizAttachment();
+          renderAllBadges(true);
 
           const db = await openPermanentDB();
           if (!db) {
             saveBackupToLocalStorage();
-            renderAllBadges(true);
             return;
           }
 
@@ -881,7 +881,7 @@
                 </div>
                 <h4 class="font-bold text-gray-900 mb-2">${fileInfo.name}</h4>
                 <p class="text-xs text-gray-600 mb-5 leading-relaxed">
-                  File PDF ini tersimpan di folder Google Drive kamu. Klik tombol di bawah untuk membuka atau mengunduhnya langsung, atau unggah file lokal lewat tombol <strong>Edit (✏️)</strong> agar bisa dirender langsung di sini.
+                  File PDF ini tersimpan di folder Google Drive kamu. Klik tombol di bawah untuk membuka atau mengunduhnya langsung, atau unggah file lokal lewat tombol <strong>Edit (✏️)</strong> agar bisa dirender halaman demi halaman di sini.
                 </p>
                 <a href="${fileInfo.url}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-2 bg-primary hover:bg-pink-600 text-white text-xs font-semibold px-5 py-2.5 rounded-xl transition shadow-md">
                   <i class="fas fa-external-link-alt"></i> Buka &amp; Unduh di Google Drive
@@ -1003,7 +1003,6 @@
           if (container) container.innerHTML = "";
         }
 
-        // Deteksi status selesai baik dari tombol "Batal selesai" maupun "Tandai belum"
         function updateTaskStatusIndicators() {
           const taskList = document.getElementById("taskList");
           if (!taskList) return;
@@ -1023,9 +1022,6 @@
             const btnText = toggleBtn ? (toggleBtn.innerText || "").toLowerCase() : "";
             const isCompleted = btnText.includes("batal") || btnText.includes("tandai belum");
 
-            let statusPill = card.querySelector(".task-inline-status-pill");
-            if (statusPill) statusPill.remove();
-
             if (isCompleted) {
               card.classList.add("task-card-completed");
               if (titleEl) titleEl.classList.add("task-title-completed");
@@ -1036,7 +1032,7 @@
           });
         }
 
-        function createAttachmentFieldsUI(fileInputId, linkInputId, existingData, hasNativeLinkInput, titleHint) {
+        function createAttachmentFieldsUI(fileInputId, linkInputId, existingData, hasNativeLinkInput) {
           const existingFile =
             existingData && existingData.file && !existingData.file.isRemoteDriveFallback
               ? existingData.file
@@ -1045,7 +1041,7 @@
 
           const existingFileInfo = existingFile
             ? `<div class="mt-2 text-xs text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-lg px-3 py-1.5 flex items-center justify-between">
-                 <span class="truncate"><i class="fas fa-check-circle mr-1"></i> File lokal tersimpan: <strong>${existingFile.name}</strong> (${existingFile.size})</span>
+                 <span class="truncate"><i class="fas fa-check-circle mr-1"></i> File tersimpan: <strong>${existingFile.name}</strong> (${existingFile.size})</span>
                </div>`
             : "";
 
@@ -1166,8 +1162,7 @@
             fileInputId,
             linkInputId,
             existingData,
-            hasNativeLinkInput,
-            initialTitle
+            hasNativeLinkInput
           );
           const fieldsBlock = wrapper.firstElementChild;
 
@@ -1343,7 +1338,7 @@
           updateTaskStatusIndicators();
         }
 
-        // Tangkap klik tombol hapus lampiran (X), tombol Lihat, tombol Lonceng, dan pastikan tombol Hapus Kartu bawaan app.js berjalan lancar
+        // Tangkap klik tombol hapus lampiran (X), tombol Lihat, tombol Lonceng
         window.addEventListener(
           "click",
           async function (e) {
@@ -1417,6 +1412,7 @@
         );
 
         async function initAttachmentFeature() {
+          renderAllBadges(true);
           await loadAllPermanentRecords();
           injectFieldsToActiveForm();
           updateTaskStatusIndicators();
