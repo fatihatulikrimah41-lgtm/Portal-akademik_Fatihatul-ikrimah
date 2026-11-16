@@ -32,7 +32,7 @@
     </script>
     <link rel="stylesheet" href="css/style.css" />
     <style>
-      /* Gaya visual jelas untuk kartu Tugas yang sudah ditandai Selesai */
+      /* Gaya visual untuk kartu Tugas yang sudah Selesai */
       .task-card-completed {
         background: linear-gradient(135deg, #f0fdf4 0%, #ffffff 70%) !important;
         border: 2px solid #86efac !important;
@@ -44,22 +44,9 @@
         text-decoration-thickness: 2px;
         color: #4b5563 !important;
       }
-      /* Gaya visual jelas untuk kartu Tugas yang Belum Selesai */
+      /* Gaya visual untuk kartu Tugas Belum Selesai */
       .task-card-pending {
         border: 1.5px solid #fbcfe8 !important;
-      }
-      .status-pill-belum {
-        display: inline-flex;
-        align-items: center;
-        gap: 4px;
-        background-color: #fef3c7;
-        color: #b45309;
-        border: 1px solid #fcd34d;
-        font-size: 11px;
-        font-weight: 700;
-        padding: 2px 9px;
-        border-radius: 9999px;
-        white-space: nowrap;
       }
       .status-pill-selesai {
         display: inline-flex;
@@ -973,8 +960,7 @@
           if (container) container.innerHTML = "";
         }
 
-        // Menampilkan lencana status "Selesai" / "Belum selesai" tepat di samping badge tenggat ("Hari ini!" / "7 hari lagi")
-        // berdasarkan tombol manual Selesai yang kamu klik sendiri
+        // Menampilkan lencana status "Selesai" / "Belum selesai" secara manual berdasarkan klik tombol
         function updateTaskStatusIndicators() {
           const taskList = document.getElementById("taskList");
           if (!taskList) return;
@@ -1397,6 +1383,7 @@
               return;
             }
 
+            // Tangkap klik tombol Tandai selesai / Batal selesai agar lencana status langsung terupdate
             if (
               e.target.closest('button[onclick*="openTaskForm"], button[onclick*="openMateriForm"], button')
             ) {
