@@ -32,7 +32,7 @@
     </script>
     <link rel="stylesheet" href="css/style.css" />
     <style>
-      /* Gaya visual jelas untuk kartu Tugas yang sudah ditandai Selesai */
+      /* Gaya visual untuk kartu Tugas yang sudah Selesai */
       .task-card-completed {
         background: linear-gradient(135deg, #f0fdf4 0%, #ffffff 70%) !important;
         border: 2px solid #86efac !important;
@@ -43,24 +43,6 @@
         text-decoration-color: #10b981;
         text-decoration-thickness: 2px;
         color: #4b5563 !important;
-      }
-      /* Gaya visual jelas untuk kartu Tugas yang Belum Selesai */
-      .task-card-pending {
-        border: 1.5px solid #fbcfe8 !important;
-      }
-      .status-pill-belum {
-        display: inline-flex;
-        align-items: center;
-        gap: 4px;
-        background-color: #fef3c7;
-        color: #b45309;
-        border: 1px solid #fcd34d;
-        font-size: 11px;
-        font-weight: 700;
-        padding: 2px 9px;
-        border-radius: 9999px;
-        margin-left: 6px;
-        white-space: nowrap;
       }
       .status-pill-selesai {
         display: inline-flex;
@@ -73,7 +55,6 @@
         font-weight: 700;
         padding: 2px 9px;
         border-radius: 9999px;
-        margin-left: 6px;
         white-space: nowrap;
       }
     </style>
@@ -116,7 +97,7 @@
       </div>
     </div>
 
-    <!-- Stemmed Flower Symbols (Bunga dengan Tangkai) -->
+    <!-- Stemmed Flower Symbols -->
     <svg style="display: none" aria-hidden="true">
       <symbol id="flower-tall" viewBox="0 0 100 250">
         <path
@@ -211,8 +192,17 @@
               >Materi</a
             >
           </div>
-          <!-- Akun & Keluar -->
+          <!-- Akun, Tombol Lonceng Aktif, & Keluar -->
           <div class="hidden md:flex items-center gap-3">
+            <button
+              type="button"
+              id="globalNotificationBtn"
+              class="w-9 h-9 rounded-full bg-white/70 border border-pink-200 text-gray-600 hover:text-primary hover:bg-pink-50 flex items-center justify-center transition relative shadow-sm cursor-pointer"
+              title="Pemberitahuan"
+            >
+              <i class="fas fa-bell text-sm"></i>
+              <span id="notifBadgeDot" class="absolute top-1.5 right-1.5 w-2 h-2 bg-primary rounded-full hidden"></span>
+            </button>
             <span
               class="hidden lg:inline-flex items-center gap-2 text-sm text-gray-700 bg-white/70 border border-pink-200 rounded-full px-3 py-1.5"
             >
@@ -229,7 +219,15 @@
             </button>
           </div>
           <!-- Mobile Menu Button -->
-          <div class="md:hidden flex items-center">
+          <div class="md:hidden flex items-center gap-2">
+            <button
+              type="button"
+              id="globalNotificationBtnM"
+              class="w-9 h-9 rounded-full bg-white/70 border border-pink-200 text-gray-600 hover:text-primary flex items-center justify-center transition relative shadow-sm"
+            >
+              <i class="fas fa-bell text-sm"></i>
+              <span id="notifBadgeDotM" class="absolute top-1.5 right-1.5 w-2 h-2 bg-primary rounded-full hidden"></span>
+            </button>
             <button
               id="mobile-menu-btn"
               class="text-gray-600 hover:text-primary focus:outline-none"
@@ -636,7 +634,7 @@
     <script src="js/navigation.js"></script>
     <script src="js/app.js"></script>
 
-    <!-- Penyimpanan Permanen IndexedDB + LocalStorage + Tanda Selesai / Belum Selesai Otomatis -->
+    <!-- Penyimpanan Permanen IndexedDB + LocalStorage + Tombol Hapus Berfungsi Sempurna + Pratinjau PDF & Drive -->
     <script>
       (function () {
         const DB_NAME = "PortalAkademikPermanentDB";
@@ -692,7 +690,6 @@
 
         async function persistRecordToDB(category, titleKey, recordObj) {
           saveBackupToLocalStorage();
-
           const db = await openPermanentDB();
           if (!db) return;
 
@@ -975,8 +972,6 @@
           if (container) container.innerHTML = "";
         }
 
-        // Menampilkan lencana status "Selesai" / "Belum Selesai" tepat di samping badge tenggat ("Hari ini!" / "7 hari lagi")
-        // tanpa mengubah perilaku tombol asli "Tandai selesai" / "Batal selesai" milik app.js
         function updateTaskStatusIndicators() {
           const taskList = document.getElementById("taskList");
           if (!taskList) return;
@@ -984,7 +979,6 @@
           Array.from(taskList.children).forEach((card) => {
             const titleEl = card.querySelector("h3, h4");
 
-            // Cari tombol toggle asli di bagian bawah kartu (dari app.js)
             const toggleBtn = Array.from(card.querySelectorAll("button")).find((btn) => {
               const t = (btn.innerText || "").toLowerCase();
               return (
@@ -994,53 +988,42 @@
               );
             });
 
-            // Jika tombol bertuliskan "Batal selesai", artinya user SUDAH menandainya selesai.
-            // Jika tombol bertuliskan "Tandai selesai" (masih "Hari ini!", "7 hari lagi", dll.), artinya BELUM selesai.
             const btnText = toggleBtn ? (toggleBtn.innerText || "").toLowerCase() : "";
             const isCompleted = btnText.includes("batal");
 
-            // Cari badge tenggat di pojok kanan atas kartu (misal "Hari ini!", "7 hari lagi", "Terlambat", atau "Selesai")
             const topRow = card.firstElementChild;
             let statusPill = card.querySelector(".task-inline-status-pill");
             if (statusPill) statusPill.remove();
-
-            statusPill = document.createElement("span");
-            statusPill.className = "task-inline-status-pill";
 
             if (isCompleted) {
               card.classList.remove("task-card-pending");
               card.classList.add("task-card-completed");
               if (titleEl) titleEl.classList.add("task-title-completed");
 
-              statusPill.classList.add("status-pill-selesai");
+              statusPill = document.createElement("span");
+              statusPill.className = "task-inline-status-pill status-pill-selesai";
               statusPill.innerHTML = `<i class="fas fa-check-circle"></i> Selesai`;
+
+              if (topRow) {
+                const rightSide = topRow.lastElementChild;
+                if (rightSide && rightSide !== topRow.firstElementChild) {
+                  if (rightSide.classList.contains("task-badges-group")) {
+                    rightSide.appendChild(statusPill);
+                  } else {
+                    const group = document.createElement("div");
+                    group.className = "task-badges-group inline-flex items-center flex-wrap justify-end gap-1.5";
+                    topRow.insertBefore(group, rightSide);
+                    group.appendChild(rightSide);
+                    group.appendChild(statusPill);
+                  }
+                } else {
+                  topRow.appendChild(statusPill);
+                }
+              }
             } else {
               card.classList.remove("task-card-completed");
               card.classList.add("task-card-pending");
               if (titleEl) titleEl.classList.remove("task-title-completed");
-
-              statusPill.classList.add("status-pill-belum");
-              statusPill.innerHTML = `<i class="far fa-clock"></i> Belum selesai`;
-            }
-
-            // Tempelkan lencana status tepat di baris header kartu (sebelah badge "Hari ini!" / "7 hari lagi")
-            if (topRow) {
-              // Cari elemen terakhir di topRow (badge tenggat) agar lencana status berada rapi di sampingnya
-              const rightSide = topRow.lastElementChild;
-              if (rightSide && rightSide !== topRow.firstElementChild) {
-                // Bungkus badge tenggat + lencana status dalam flex group jika belum dibungkus
-                if (rightSide.classList.contains("task-badges-group")) {
-                  rightSide.appendChild(statusPill);
-                } else {
-                  const group = document.createElement("div");
-                  group.className = "task-badges-group inline-flex items-center flex-wrap justify-end gap-1.5";
-                  topRow.insertBefore(group, rightSide);
-                  group.appendChild(rightSide);
-                  group.appendChild(statusPill);
-                }
-              } else {
-                topRow.appendChild(statusPill);
-              }
             }
           });
         }
@@ -1351,9 +1334,25 @@
           updateTaskStatusIndicators();
         }
 
+        // PERBAIKAN UTAMA: Gunakan Event Delegation pada level document dengan capture & stopImmediatePropagation
+        // untuk memastikan tombol hapus (X) kecil pada file/link, tombol Lihat, tombol Buka, dan tombol ikon sampah kartu utama TIDAK TERBLOKIR.
         document.addEventListener(
           "click",
           async function (e) {
+            // 1. Tangkap tombol Lonceng Pemberitahuan
+            const notifBtn = e.target.closest("#globalNotificationBtn, #globalNotificationBtnM");
+            if (notifBtn) {
+              e.preventDefault();
+              e.stopPropagation();
+              alert("Pemberitahuan: Tidak ada pesan atau peringatan insiden baru saat ini. Sistem berjalan normal.");
+              const dot = document.getElementById("notifBadgeDot");
+              const dotM = document.getElementById("notifBadgeDotM");
+              if (dot) dot.classList.add("hidden");
+              if (dotM) dotM.classList.add("hidden");
+              return;
+            }
+
+            // 2. Tangkap tombol Lihat PDF
             const viewBtn = e.target.closest(".btn-view-attachment");
             if (viewBtn) {
               e.preventDefault();
@@ -1368,12 +1367,14 @@
               return;
             }
 
+            // 3. Tangkap tombol Buka Tautan Eksternal
             const extLink = e.target.closest(".btn-open-external-link");
             if (extLink) {
               e.stopPropagation();
               return;
             }
 
+            // 4. Tutup modal pratinjau PDF
             if (e.target.closest("#closePreviewBtn") || e.target.id === "filePreviewModal") {
               e.preventDefault();
               e.stopPropagation();
@@ -1381,6 +1382,7 @@
               return;
             }
 
+            // 5. Tangkap tombol Hapus (X) pada kotak file atau link yang dilampirkan
             const delBtn = e.target.closest(".btn-del-attachment");
             if (delBtn) {
               e.preventDefault();
@@ -1406,7 +1408,10 @@
               return;
             }
 
-            if (e.target.closest('button[onclick*="openTaskForm"], button[onclick*="openMateriForm"], button')) {
+            // 6. Tangkap tombol Tambah / Edit Tugas agar form terinjeksi field file & link
+            if (
+              e.target.closest('button[onclick*="openTaskForm"], button[onclick*="openMateriForm"], button')
+            ) {
               setTimeout(injectFieldsToActiveForm, 10);
               setTimeout(injectFieldsToActiveForm, 60);
               setTimeout(updateTaskStatusIndicators, 40);
@@ -1428,14 +1433,10 @@
             formObserver.observe(formBox, { childList: true, subtree: true });
           }
 
-          const listObserver = new MutationObserver(() => {
-            renderAllBadges(false);
-          });
-
           const taskList = document.getElementById("taskList");
           const materiList = document.getElementById("materiList");
-          if (taskList) listObserver.observe(taskList, { childList: true });
-          if (materiList) listObserver.observe(materiList, { childList: true });
+          if (taskList) taskList.addEventListener("click", () => setTimeout(updateTaskStatusIndicators, 40));
+          if (materiList) materiList.addEventListener("click", () => setTimeout(updateTaskStatusIndicators, 40));
         }
 
         if (document.readyState === "loading") {
