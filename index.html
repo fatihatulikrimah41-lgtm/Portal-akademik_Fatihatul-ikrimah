@@ -587,11 +587,28 @@
       </div>
     </div>
 
-    <!-- Script Asli Anda -->
+    <script>
+      // Bersihkan sisa flag pemotongan mata kuliah agar seluruh mata kuliah asli di js/app.js kembali utuh
+      try {
+        localStorage.removeItem("portalAkademik.singleCourseResetDone");
+        localStorage.removeItem("portalAkademik.courses.v3");
+        localStorage.removeItem("portalAkademik.materi.v3");
+        for (let i = localStorage.length - 1; i >= 0; i--) {
+          const k = localStorage.key(i);
+          if (k && (k.toLowerCase().includes("course") || k.toLowerCase().includes("mk"))) {
+            const val = JSON.parse(localStorage.getItem(k) || "null");
+            if (Array.isArray(val) && val.length <= 2) {
+              localStorage.removeItem(k);
+            }
+          }
+        }
+      } catch (e) {}
+    </script>
+
     <script src="js/navigation.js"></script>
     <script src="js/app.js"></script>
 
-    <!-- Penyimpanan Permanen IndexedDB + LocalStorage + Seed Link Drive QUIZ + Tombol Edit & Hapus -->
+    <!-- Penyimpanan Permanen IndexedDB + LocalStorage + Seed Link Drive QUIZ -->
     <script>
       (function () {
         const DB_NAME = "PortalAkademikPermanentDB";
@@ -607,34 +624,6 @@
           window.pdfjsLib.GlobalWorkerOptions.workerSrc =
             "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
         }
-
-        // Pastikan daftar Mata Kuliah default kembali 1 (Analisis dan Design PL)
-        function enforceSingleDefaultCourse() {
-          try {
-            if (localStorage.getItem("portalAkademik.singleCourseResetDone") === "1") return;
-            for (let i = 0; i < localStorage.length; i++) {
-              const k = localStorage.key(i);
-              if (!k || k === LOCAL_META_KEY) continue;
-              const raw = localStorage.getItem(k);
-              if (!raw) continue;
-              const parsed = JSON.parse(raw);
-              if (Array.isArray(parsed) && parsed.length > 1) {
-                const adplOnly = parsed.filter(
-                  (item) =>
-                    item &&
-                    typeof item === "object" &&
-                    (item.sks !== undefined || item.lecturer !== undefined || item.dosen !== undefined || item.kode !== undefined || item.code !== undefined) &&
-                    JSON.stringify(item).toLowerCase().includes("analisis")
-                );
-                if (adplOnly.length === 1) {
-                  localStorage.setItem(k, JSON.stringify(adplOnly));
-                }
-              }
-            }
-            localStorage.setItem("portalAkademik.singleCourseResetDone", "1");
-          } catch (e) {}
-        }
-        enforceSingleDefaultCourse();
 
         let recordsCache = { tugas: {}, materi: {} };
         let dbInstance = null;
@@ -1139,7 +1128,6 @@
           }
         }
 
-        // Pastikan tombol Edit & Hapus juga muncul pada setiap kartu Mata Kuliah dan Materi jika js/app.js belum menampilkannya
         function ensureEditDeleteActionButtons(containerId, editFnNames, delFnNames) {
           const container = document.getElementById(containerId);
           if (!container) return;
@@ -1348,7 +1336,7 @@
               const cat = delBtn.getAttribute("data-del-cat");
               const key = decodeURIComponent(delBtn.getAttribute("data-del-key") || "");
               if (cat && key && recordsCache[cat] && recordsCache[cat][key]) {
-                if (cat === "tugas" && key === "QUIZ" && delType === "link") {
+                if (cat === "tugas" && key === "QUIZ" && type === "link") {
                   localStorage.setItem("portalAkademik.quizDefaultDeleted", "1");
                 }
                 recordsCache[cat][key][delType] = null;
