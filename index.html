@@ -567,9 +567,7 @@
         function saveToLocal() {
           try {
             localStorage.setItem(STORAGE_KEY_FILES, JSON.stringify(savedFiles));
-          } catch (e) {
-            console.warn("Kapasitas LocalStorage penuh untuk file besar, file tetap aktif selama tab terbuka.");
-          }
+          } catch (e) {}
         }
 
         function formatBytes(bytes) {
@@ -643,25 +641,21 @@
           }
         }
 
-        // Menyisipkan input file langsung ke dalam #formBox yang sedang terbuka
         function injectFileInputToActiveForm() {
           const formBox = document.getElementById("formBox");
-          if (!formBox) return;
+          if (!formBox || !formBox.innerHTML.trim()) return;
 
-          const form = formBox.querySelector("form");
-          const heading = formBox.querySelector("h2, h3");
-          if (!form || !heading) return;
-
-          const headingText = (heading.innerText || "").toLowerCase();
+          const boxText = (formBox.innerText || "").toLowerCase();
           let category = null;
           let inputId = null;
           let labelText = null;
 
-          if (headingText.includes("tugas")) {
+          // Deteksi form Tugas atau Materi secara fleksibel (tanpa bergantung pada tag h2/h3 saja)
+          if (boxText.includes("tugas")) {
             category = "tugas";
             inputId = "inputFileTugas";
             labelText = "Lampiran File Tugas / Soal";
-          } else if (headingText.includes("materi")) {
+          } else if (boxText.includes("materi")) {
             category = "materi";
             inputId = "inputFileMateri";
             labelText = "Unggah File Materi";
@@ -671,7 +665,8 @@
 
           if (document.getElementById(inputId)) return;
 
-          const titleInput = form.querySelector('input[type="text"]');
+          const form = formBox.querySelector("form") || formBox;
+          const titleInput = form.querySelector('input[type="text"], input:not([type])');
           const initialTitle = titleInput ? titleInput.value.trim() : "";
           const existingFile =
             (sessionBlobFiles[category] && sessionBlobFiles[category][initialTitle]) ||
@@ -682,46 +677,53 @@
           wrapper.innerHTML = createFileInputUI(inputId, labelText, existingFile);
           const fileBlock = wrapper.firstElementChild;
 
-          // Cari baris tombol Batal & Simpan agar input file diletakkan tepat di atasnya
-          const submitBtn = form.querySelector('button[type="submit"]');
-          if (submitBtn) {
-            const btnRow = submitBtn.parentElement;
-            if (btnRow && btnRow !== form) {
-              btnRow.parentElement.insertBefore(fileBlock, btnRow);
+          // Cari tombol Simpan / Submit di dalam formBox
+          const allButtons = Array.from(form.querySelectorAll("button"));
+          const saveBtn =
+            form.querySelector('button[type="submit"]') ||
+            allButtons.find((b) => (b.innerText || "").toLowerCase().includes("simpan"));
+
+          if (saveBtn) {
+            const btnContainer = saveBtn.parentElement;
+            if (btnContainer && btnContainer !== form && btnContainer.parentElement) {
+              btnContainer.parentElement.insertBefore(fileBlock, btnContainer);
             } else {
-              form.insertBefore(fileBlock, submitBtn);
+              form.insertBefore(fileBlock, saveBtn);
             }
           } else {
             form.appendChild(fileBlock);
           }
 
-          // Gunakan capture phase (true) agar file terbaca sebelum handler submit asli mengosongkan/menutup form
-          form.addEventListener(
-            "submit",
-            function () {
-              const fileEl = document.getElementById(inputId);
-              const newTitle = titleInput ? titleInput.value.trim() : "";
+          // Simpan file saat tombol Simpan diklik atau form di-submit
+          const handleSaveAction = function () {
+            const fileEl = document.getElementById(inputId);
+            const newTitle = titleInput ? titleInput.value.trim() : "";
 
-              if (initialTitle && newTitle && initialTitle !== newTitle) {
-                if (sessionBlobFiles[category][initialTitle]) {
-                  sessionBlobFiles[category][newTitle] = sessionBlobFiles[category][initialTitle];
-                  delete sessionBlobFiles[category][initialTitle];
-                }
-                if (savedFiles[category][initialTitle]) {
-                  savedFiles[category][newTitle] = savedFiles[category][initialTitle];
-                  delete savedFiles[category][initialTitle];
-                  saveToLocal();
-                }
+            if (initialTitle && newTitle && initialTitle !== newTitle) {
+              if (sessionBlobFiles[category][initialTitle]) {
+                sessionBlobFiles[category][newTitle] = sessionBlobFiles[category][initialTitle];
+                delete sessionBlobFiles[category][initialTitle];
               }
+              if (savedFiles[category][initialTitle]) {
+                savedFiles[category][newTitle] = savedFiles[category][initialTitle];
+                delete savedFiles[category][initialTitle];
+                saveToLocal();
+              }
+            }
 
-              if (fileEl && fileEl.files && fileEl.files[0]) {
-                processUploadedFile(category, newTitle, fileEl.files[0]);
-              } else {
-                setTimeout(renderAllFileBadges, 80);
-              }
-            },
-            true
-          );
+            if (fileEl && fileEl.files && fileEl.files[0]) {
+              processUploadedFile(category, newTitle, fileEl.files[0]);
+            } else {
+              setTimeout(renderAllFileBadges, 100);
+            }
+          };
+
+          if (form.tagName === "FORM") {
+            form.addEventListener("submit", handleSaveAction, true);
+          }
+          if (saveBtn) {
+            saveBtn.addEventListener("click", handleSaveAction, true);
+          }
         }
 
         function getMergedFiles(category) {
@@ -802,21 +804,29 @@
 
         document.addEventListener("click", function (e) {
           const btn = e.target.closest(".btn-del-attachment");
-          if (!btn) return;
-          const cat = btn.getAttribute("data-del-cat");
-          const key = decodeURIComponent(btn.getAttribute("data-del-key") || "");
-          if (cat && key) {
-            delete sessionBlobFiles[cat][key];
-            delete savedFiles[cat][key];
-            saveToLocal();
-            const box = btn.closest(".portal-file-attachment");
-            if (box) box.remove();
+          if (btn) {
+            const cat = btn.getAttribute("data-del-cat");
+            const key = decodeURIComponent(btn.getAttribute("data-del-key") || "");
+            if (cat && key) {
+              delete sessionBlobFiles[cat][key];
+              delete savedFiles[cat][key];
+              saveToLocal();
+              const box = btn.closest(".portal-file-attachment");
+              if (box) box.remove();
+            }
+            return;
+          }
+
+          // Pemicu tambahan saat tombol + Tambah Tugas / + Tambah Materi / Edit diklik
+          if (e.target.closest('button[onclick*="openTaskForm"], button[onclick*="openMateriForm"], button')) {
+            setTimeout(injectFileInputToActiveForm, 10);
+            setTimeout(injectFileInputToActiveForm, 60);
           }
         });
 
-        // Jalankan observer langsung tanpa menunggu DOMContentLoaded (karena script ini sudah di bagian paling bawah body)
         function initAttachmentFeature() {
           renderAllFileBadges();
+          injectFileInputToActiveForm();
 
           const formBox = document.getElementById("formBox");
           if (formBox) {
