@@ -73,7 +73,6 @@
     <!-- Stemmed Flower Symbols (Bunga dengan Tangkai) -->
     <svg style="display: none" aria-hidden="true">
       <symbol id="flower-tall" viewBox="0 0 100 250">
-        <!-- Tangkai -->
         <path
           d="M50 250 Q30 150 50 50"
           stroke="#4ade80"
@@ -81,10 +80,8 @@
           fill="none"
           stroke-linecap="round"
         />
-        <!-- Daun -->
         <path d="M47 180 Q80 150 95 120 Q60 120 45 160" fill="#4ade80" />
         <path d="M52 130 Q20 100 5 70 Q40 70 55 110" fill="#4ade80" />
-        <!-- Kelopak Bunga -->
         <path
           d="M50 60 C10 60 0 -10 50 20 C100 -10 90 60 50 60 Z"
           fill="currentColor"
@@ -95,7 +92,6 @@
         />
       </symbol>
       <symbol id="flower-short" viewBox="0 0 100 200">
-        <!-- Tangkai -->
         <path
           d="M50 200 Q70 120 50 40"
           stroke="#4ade80"
@@ -103,9 +99,7 @@
           fill="none"
           stroke-linecap="round"
         />
-        <!-- Daun -->
         <path d="M53 140 Q20 120 5 90 Q40 90 55 120" fill="#4ade80" />
-        <!-- Kelopak Bunga -->
         <path
           d="M50 50 C10 50 0 -20 50 10 C100 -20 90 50 50 50 Z"
           fill="currentColor"
@@ -171,7 +165,7 @@
               >Materi</a
             >
           </div>
-          <!-- Akun & Keluar (terpisah dari menu) -->
+          <!-- Akun & Keluar -->
           <div class="hidden md:flex items-center gap-3">
             <span
               class="hidden lg:inline-flex items-center gap-2 text-sm text-gray-700 bg-white/70 border border-pink-200 rounded-full px-3 py-1.5"
@@ -199,7 +193,7 @@
           </div>
         </div>
       </div>
-      <!-- Mobile Menu Panel (Hidden by default) -->
+      <!-- Mobile Menu Panel -->
       <div
         id="mobile-menu"
         class="hidden md:hidden bg-white/90 backdrop-blur-md border-t border-pink-100 absolute w-full z-[60] shadow-lg"
@@ -392,11 +386,10 @@
         </div>
       </section>
 
-      <!-- Global Decorations (Constant position across all pages) -->
+      <!-- Global Decorations -->
       <div
         class="w-full flex justify-center items-end mt-auto pt-16 pb-4 relative z-0 pointer-events-none"
       >
-        <!-- Stemmed Flowers (Left & Right) -->
         <div
           class="absolute bottom-0 left-0 md:left-8 z-0 opacity-80 animate-sway"
         >
@@ -405,7 +398,6 @@
           </svg>
         </div>
 
-        <!-- Love Decorations -->
         <div class="flex justify-center items-end gap-6 relative z-10 mb-2">
           <i
             class="fas fa-heart text-2xl text-pink-300 animate-float-love delay-1"
@@ -424,7 +416,6 @@
           ></i>
         </div>
 
-        <!-- Stemmed Flowers Right -->
         <div
           class="absolute bottom-0 right-0 md:right-8 z-0 opacity-80 animate-sway-delayed"
         >
@@ -465,7 +456,7 @@
       </div>
     </footer>
 
-    <!-- Custom Modal for Alerts (Replacing standard alert()) -->
+    <!-- Custom Modal for Alerts -->
     <div
       id="customModal"
       class="fixed inset-0 bg-black/50 z-[100] hidden items-center justify-center opacity-0 transition-opacity duration-300 backdrop-blur-sm"
@@ -599,41 +590,179 @@
     <script src="js/navigation.js"></script>
     <script src="js/app.js"></script>
 
-    <!-- Fitur Tambah File & Tautan Opsional Seragam pada Daftar Tugas dan Materi -->
+    <!-- Penyimpanan Permanen IndexedDB + LocalStorage untuk File Besar & Tautan Opsional -->
     <script>
       (function () {
-        const STORAGE_KEY_FILES = "portalAkademik.attachedFiles.v2";
+        const DB_NAME = "PortalAkademikPermanentDB";
+        const DB_VERSION = 1;
+        const STORE_NAME = "attachments";
+        const LOCAL_META_KEY = "portalAkademik.permanentAttachments.v3";
 
         if (window.pdfjsLib) {
           window.pdfjsLib.GlobalWorkerOptions.workerSrc =
             "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
         }
 
-        let savedAttachments = { tugas: {}, materi: {} };
-        try {
-          const raw = localStorage.getItem(STORAGE_KEY_FILES);
-          if (raw) {
-            savedAttachments = JSON.parse(raw);
-          } else {
-            const oldRaw = localStorage.getItem("portalAkademik.attachedFiles.v1");
-            if (oldRaw) {
-              const oldData = JSON.parse(oldRaw);
+        // Cache aktif di memori untuk render instan
+        let recordsCache = { tugas: {}, materi: {} };
+        let dbInstance = null;
+
+        // 1. Buka / Inisialisasi IndexedDB (kapasitas penyimpanan puluhan hingga ratusan MB, permanen walau browser ditutup)
+        function openPermanentDB() {
+          return new Promise((resolve) => {
+            if (dbInstance) return resolve(dbInstance);
+            if (!window.indexedDB) return resolve(null);
+
+            const req = indexedDB.open(DB_NAME, DB_VERSION);
+            req.onupgradeneeded = function (e) {
+              const db = e.target.result;
+              if (!db.objectStoreNames.contains(STORE_NAME)) {
+                db.createObjectStore(STORE_NAME, { keyPath: "id" });
+              }
+            };
+            req.onsuccess = function (e) {
+              dbInstance = e.target.result;
+              resolve(dbInstance);
+            };
+            req.onerror = function () {
+              resolve(null);
+            };
+          });
+        }
+
+        // Simpan satu entri ke IndexedDB secara permanen
+        async function persistRecordToDB(category, titleKey, recordObj) {
+          // Cadangkan metadata & link di localStorage juga
+          saveBackupToLocalStorage();
+
+          const db = await openPermanentDB();
+          if (!db) return;
+
+          return new Promise((resolve) => {
+            try {
+              const tx = db.transaction(STORE_NAME, "readwrite");
+              const store = tx.objectStore(STORE_NAME);
+              const payload = {
+                id: `${category}::${titleKey}`,
+                category,
+                titleKey,
+                link: recordObj.link || null,
+                file: recordObj.file
+                  ? {
+                      name: recordObj.file.name,
+                      size: recordObj.file.size,
+                      type: recordObj.file.type || "application/octet-stream",
+                      blob: recordObj.file.blob || null,
+                      arrayBuffer: recordObj.file.arrayBuffer || null
+                    }
+                  : null
+              };
+              store.put(payload);
+              tx.oncomplete = () => resolve(true);
+              tx.onerror = () => resolve(false);
+            } catch (err) {
+              resolve(false);
+            }
+          });
+        }
+
+        async function deleteRecordFromDB(category, titleKey) {
+          saveBackupToLocalStorage();
+          const db = await openPermanentDB();
+          if (!db) return;
+          try {
+            const tx = db.transaction(STORE_NAME, "readwrite");
+            tx.objectStore(STORE_NAME).delete(`${category}::${titleKey}`);
+          } catch (e) {}
+        }
+
+        // Muat seluruh data permanen dari IndexedDB + LocalStorage saat halaman dibuka
+        async function loadAllPermanentRecords() {
+          // Muat cadangan localStorage terlebih dahulu
+          try {
+            const raw = localStorage.getItem(LOCAL_META_KEY);
+            if (raw) {
+              const parsed = JSON.parse(raw);
               ["tugas", "materi"].forEach((cat) => {
-                if (oldData[cat]) {
-                  for (const [k, v] of Object.entries(oldData[cat])) {
-                    savedAttachments[cat][k] = { file: v, link: null };
+                if (parsed[cat]) {
+                  for (const [k, v] of Object.entries(parsed[cat])) {
+                    if (!recordsCache[cat][k]) recordsCache[cat][k] = { file: null, link: null };
+                    if (v.link) recordsCache[cat][k].link = v.link;
                   }
                 }
               });
             }
+          } catch (e) {}
+
+          const db = await openPermanentDB();
+          if (!db) {
+            renderAllBadges(true);
+            return;
           }
-        } catch (e) {}
 
-        const sessionAttachments = { tugas: {}, materi: {} };
+          return new Promise((resolve) => {
+            try {
+              const tx = db.transaction(STORE_NAME, "readonly");
+              const store = tx.objectStore(STORE_NAME);
+              const req = store.getAll();
+              req.onsuccess = function () {
+                const items = req.result || [];
+                items.forEach((item) => {
+                  const cat = item.category;
+                  const key = item.titleKey;
+                  if (!recordsCache[cat]) recordsCache[cat] = {};
+                  if (!recordsCache[cat][key]) recordsCache[cat][key] = { file: null, link: null };
 
-        function saveToLocal() {
+                  if (item.link) {
+                    recordsCache[cat][key].link = item.link;
+                  }
+
+                  if (item.file) {
+                    let blobObj = item.file.blob;
+                    if (!blobObj && item.file.arrayBuffer) {
+                      blobObj = new Blob([item.file.arrayBuffer], {
+                        type: item.file.type || "application/octet-stream"
+                      });
+                    }
+                    const objectUrl = blobObj ? URL.createObjectURL(blobObj) : "";
+                    recordsCache[cat][key].file = {
+                      name: item.file.name,
+                      size: item.file.size,
+                      type: item.file.type,
+                      blob: blobObj,
+                      arrayBuffer: item.file.arrayBuffer || null,
+                      url: objectUrl
+                    };
+                  }
+                });
+                renderAllBadges(true);
+                resolve();
+              };
+              req.onerror = function () {
+                renderAllBadges(true);
+                resolve();
+              };
+            } catch (e) {
+              renderAllBadges(true);
+              resolve();
+            }
+          });
+        }
+
+        function saveBackupToLocalStorage() {
           try {
-            localStorage.setItem(STORAGE_KEY_FILES, JSON.stringify(savedAttachments));
+            const lightCopy = { tugas: {}, materi: {} };
+            ["tugas", "materi"].forEach((cat) => {
+              for (const [k, v] of Object.entries(recordsCache[cat] || {})) {
+                if (v.link || v.file) {
+                  lightCopy[cat][k] = {
+                    link: v.link || null,
+                    fileMeta: v.file ? { name: v.file.name, size: v.file.size } : null
+                  };
+                }
+              }
+            });
+            localStorage.setItem(LOCAL_META_KEY, JSON.stringify(lightCopy));
           } catch (e) {}
         }
 
@@ -675,31 +804,6 @@
           return "fas fa-link text-primary";
         }
 
-        function dataUrlToUint8Array(dataUrl) {
-          const parts = dataUrl.split(",");
-          const bstr = atob(parts[1]);
-          let n = bstr.length;
-          const u8arr = new Uint8Array(n);
-          while (n--) {
-            u8arr[n] = bstr.charCodeAt(n);
-          }
-          return u8arr;
-        }
-
-        function dataUrlToBlobUrl(dataUrl) {
-          try {
-            if (!dataUrl || !dataUrl.startsWith("data:")) return dataUrl;
-            const parts = dataUrl.split(",");
-            const mimeMatch = parts[0].match(/:(.*?);/);
-            const mime = mimeMatch ? mimeMatch[1] : "application/octet-stream";
-            const u8arr = dataUrlToUint8Array(dataUrl);
-            const blob = new Blob([u8arr], { type: mime });
-            return URL.createObjectURL(blob);
-          } catch (e) {
-            return dataUrl;
-          }
-        }
-
         async function renderPdfPagesToCanvas(fileInfo, container) {
           container.innerHTML = `
             <div class="my-auto text-center text-gray-600">
@@ -709,18 +813,17 @@
           `;
 
           try {
-            let pdfSource;
+            let buf;
             if (fileInfo.arrayBuffer) {
-              pdfSource = { data: new Uint8Array(fileInfo.arrayBuffer.slice(0)) };
-            } else if (fileInfo.dataUrl) {
-              pdfSource = { data: dataUrlToUint8Array(fileInfo.dataUrl) };
+              buf = fileInfo.arrayBuffer.slice(0);
+            } else if (fileInfo.blob) {
+              buf = await fileInfo.blob.arrayBuffer();
             } else {
               const resp = await fetch(fileInfo.url);
-              const buf = await resp.arrayBuffer();
-              pdfSource = { data: new Uint8Array(buf) };
+              buf = await resp.arrayBuffer();
             }
 
-            const pdfDoc = await window.pdfjsLib.getDocument(pdfSource).promise;
+            const pdfDoc = await window.pdfjsLib.getDocument({ data: new Uint8Array(buf) }).promise;
             container.innerHTML = "";
 
             const infoBar = document.createElement("div");
@@ -764,24 +867,23 @@
 
           if (!modal || !container) return;
 
-          const playableUrl =
-            fileInfo.url && !fileInfo.url.startsWith("data:")
-              ? fileInfo.url
-              : dataUrlToBlobUrl(fileInfo.dataUrl || fileInfo.url);
+          if (!fileInfo.url && fileInfo.blob) {
+            fileInfo.url = URL.createObjectURL(fileInfo.blob);
+          }
 
           const ext = (fileInfo.name.split(".").pop() || "").toLowerCase();
 
           titleEl.textContent = fileInfo.name;
-          downloadBtn.href = playableUrl;
+          downloadBtn.href = fileInfo.url;
           downloadBtn.setAttribute("download", fileInfo.name);
 
           modal.classList.remove("hidden");
           modal.classList.add("flex");
 
           if (ext === "pdf" && window.pdfjsLib) {
-            renderPdfPagesToCanvas({ ...fileInfo, url: playableUrl }, container);
+            renderPdfPagesToCanvas(fileInfo, container);
           } else if (["jpg", "jpeg", "png", "webp", "gif"].includes(ext)) {
-            container.innerHTML = `<img src="${playableUrl}" alt="${fileInfo.name}" class="my-auto max-w-full max-h-full object-contain rounded-lg shadow bg-white p-2" />`;
+            container.innerHTML = `<img src="${fileInfo.url}" alt="${fileInfo.name}" class="my-auto max-w-full max-h-full object-contain rounded-lg shadow bg-white p-2" />`;
           } else {
             container.innerHTML = `
               <div class="my-auto text-center p-8 max-w-md bg-white rounded-2xl shadow-sm">
@@ -790,7 +892,7 @@
                 </div>
                 <h4 class="font-bold text-gray-900 mb-2">${fileInfo.name}</h4>
                 <p class="text-sm text-gray-600 mb-5">Pratinjau langsung hanya tersedia untuk file <strong>PDF</strong> dan <strong>Gambar</strong>. Silakan unduh dokumen ini untuk membukanya.</p>
-                <a href="${playableUrl}" download="${fileInfo.name}" class="inline-flex items-center gap-2 bg-primary hover:bg-pink-600 text-white font-semibold px-5 py-2.5 rounded-xl transition">
+                <a href="${fileInfo.url}" download="${fileInfo.name}" class="inline-flex items-center gap-2 bg-primary hover:bg-pink-600 text-white font-semibold px-5 py-2.5 rounded-xl transition">
                   <i class="fas fa-download"></i> Unduh File Sekarang
                 </a>
               </div>
@@ -808,18 +910,16 @@
           if (container) container.innerHTML = "";
         }
 
-        // Membuat field Tautan (opsional) dan File (opsional) dengan gaya identik dengan form bawaan app.js
-        function createAttachmentFieldsUI(fileInputId, linkInputId, linkLabelId, existingData, hasNativeLinkInput) {
+        function createAttachmentFieldsUI(fileInputId, linkInputId, existingData, hasNativeLinkInput) {
           const existingFile = existingData && existingData.file ? existingData.file : null;
           const existingLink = existingData && existingData.link ? existingData.link : null;
 
           const existingFileInfo = existingFile
             ? `<div class="mt-2 text-xs text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-lg px-3 py-1.5 flex items-center justify-between">
-                 <span class="truncate"><i class="fas fa-check-circle mr-1"></i> File tersimpan: <strong>${existingFile.name}</strong> (${existingFile.size})</span>
+                 <span class="truncate"><i class="fas fa-check-circle mr-1"></i> File tersimpan permanen: <strong>${existingFile.name}</strong> (${existingFile.size})</span>
                </div>`
             : "";
 
-          // Jika form bawaan (seperti Materi) belum punya kolom "Tautan (opsional)", kita tampilkan dengan label & gaya yang sama persis
           const linkSectionHTML = !hasNativeLinkInput
             ? `
               <div>
@@ -850,74 +950,51 @@
                   accept=".pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.zip,.rar,.jpg,.jpeg,.png"
                   class="field w-full text-sm text-gray-600 file:mr-3 file:py-1.5 file:px-3.5 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-pink-100 file:text-primary hover:file:bg-pink-200 cursor-pointer"
                 />
-                <p class="text-[11px] text-gray-400 mt-1">PDF, Word, PPT, Excel, ZIP, atau Gambar</p>
+                <p class="text-[11px] text-gray-400 mt-1">PDF, Word, PPT, Excel, ZIP, atau Gambar (Tersimpan otomatis di browser)</p>
                 ${existingFileInfo}
               </div>
             </div>
           `;
         }
 
-        function ensureRecord(targetObj, category, titleKey) {
-          if (!targetObj[category]) targetObj[category] = {};
-          if (!targetObj[category][titleKey]) {
-            targetObj[category][titleKey] = { file: null, link: null };
-          }
-          return targetObj[category][titleKey];
-        }
-
-        function processAttachments(category, titleKey, file, rawLinkUrl) {
+        async function processAndSaveAttachments(category, titleKey, file, rawLinkUrl) {
           if (!titleKey) return;
 
-          const cleanUrl = normalizeUrl(rawLinkUrl);
-          const sessRec = ensureRecord(sessionAttachments, category, titleKey);
-          const saveRec = ensureRecord(savedAttachments, category, titleKey);
-
-          if (rawLinkUrl !== null) {
-            if (cleanUrl) {
-              const linkObj = { url: cleanUrl, label: "" };
-              sessRec.link = linkObj;
-              saveRec.link = linkObj;
-            } else {
-              sessRec.link = null;
-              saveRec.link = null;
-            }
-            saveToLocal();
+          if (!recordsCache[category]) recordsCache[category] = {};
+          if (!recordsCache[category][titleKey]) {
+            recordsCache[category][titleKey] = { file: null, link: null };
           }
 
+          const rec = recordsCache[category][titleKey];
+
+          // Perbarui tautan jika dikelola oleh skrip ini
+          if (rawLinkUrl !== null) {
+            const cleanUrl = normalizeUrl(rawLinkUrl);
+            rec.link = cleanUrl ? { url: cleanUrl } : null;
+          }
+
+          // Simpan file ke IndexedDB + memori jika dipilih
           if (file) {
-            const fileMeta = {
+            const buf = await file.arrayBuffer();
+            const blobObj = new Blob([buf], { type: file.type || "application/octet-stream" });
+            rec.file = {
               name: file.name,
               size: formatBytes(file.size),
-              url: URL.createObjectURL(file),
-              arrayBuffer: null,
-              dataUrl: null
+              type: file.type || "application/octet-stream",
+              blob: blobObj,
+              arrayBuffer: buf,
+              url: URL.createObjectURL(blobObj)
             };
-
-            sessRec.file = fileMeta;
-
-            file.arrayBuffer().then((buf) => {
-              fileMeta.arrayBuffer = buf;
-            });
-
-            if (file.size <= 2 * 1024 * 1024) {
-              const reader = new FileReader();
-              reader.onload = function (evt) {
-                fileMeta.dataUrl = evt.target.result;
-                saveRec.file = {
-                  name: file.name,
-                  size: formatBytes(file.size),
-                  dataUrl: evt.target.result
-                };
-                saveToLocal();
-                renderAllBadges(true);
-              };
-              reader.readAsDataURL(file);
-            } else {
-              renderAllBadges(true);
-            }
-          } else {
-            setTimeout(() => renderAllBadges(true), 90);
           }
+
+          if (rec.file || rec.link) {
+            await persistRecordToDB(category, titleKey, rec);
+          } else {
+            delete recordsCache[category][titleKey];
+            await deleteRecordFromDB(category, titleKey);
+          }
+
+          renderAllBadges(true);
         }
 
         function injectFieldsToActiveForm() {
@@ -947,24 +1024,26 @@
           const titleInput = form.querySelector('input[type="text"], input:not([type])');
           const initialTitle = titleInput ? titleInput.value.trim() : "";
 
-          // Cek apakah form bawaan dari js/app.js sudah memiliki input URL / label "Tautan (opsional)"
           const nativeUrlInput = form.querySelector('input[type="url"]');
           const hasNativeLinkInput = Boolean(nativeUrlInput) || boxText.includes("tautan (opsional)");
 
-          const mergedMap = getMergedAttachments(category);
-          const existingData = initialTitle ? mergedMap[initialTitle] : null;
+          const existingData =
+            initialTitle && recordsCache[category] ? recordsCache[category][initialTitle] : null;
+
+          // Jika form menggunakan input URL bawaan app.js, pastikan nilainya terisi jika ada di cache
+          if (nativeUrlInput && !nativeUrlInput.value && existingData && existingData.link) {
+            nativeUrlInput.value = existingData.link.url;
+          }
 
           const wrapper = document.createElement("div");
           wrapper.innerHTML = createAttachmentFieldsUI(
             fileInputId,
             linkInputId,
-            null,
             existingData,
             hasNativeLinkInput
           );
           const fieldsBlock = wrapper.firstElementChild;
 
-          // Tempatkan tepat di bawah Tautan (opsional) jika sudah ada di form bawaan, atau di atas tombol Batal & Simpan
           const allButtons = Array.from(form.querySelectorAll("button"));
           const saveBtn =
             form.querySelector('button[type="submit"]') ||
@@ -981,28 +1060,24 @@
             form.appendChild(fieldsBlock);
           }
 
-          const handleSaveAction = function () {
+          const handleSaveAction = async function () {
             const fileEl = document.getElementById(fileInputId);
             const linkEl = nativeUrlInput || document.getElementById(linkInputId);
             const newTitle = titleInput ? titleInput.value.trim() : "";
 
+            // Pindahkan data lama jika judul diubah saat Edit
             if (initialTitle && newTitle && initialTitle !== newTitle) {
-              if (sessionAttachments[category][initialTitle]) {
-                sessionAttachments[category][newTitle] = sessionAttachments[category][initialTitle];
-                delete sessionAttachments[category][initialTitle];
-              }
-              if (savedAttachments[category][initialTitle]) {
-                savedAttachments[category][newTitle] = savedAttachments[category][initialTitle];
-                delete savedAttachments[category][initialTitle];
-                saveToLocal();
+              if (recordsCache[category] && recordsCache[category][initialTitle]) {
+                recordsCache[category][newTitle] = recordsCache[category][initialTitle];
+                delete recordsCache[category][initialTitle];
+                await deleteRecordFromDB(category, initialTitle);
               }
             }
 
             const selectedFile = fileEl && fileEl.files && fileEl.files[0] ? fileEl.files[0] : null;
-            // Jika menggunakan nativeUrlInput bawaan app.js, biarkan app.js yang merender link bawaannya agar tidak dobel
             const linkUrlVal = !hasNativeLinkInput && linkEl ? linkEl.value : null;
 
-            processAttachments(category, newTitle, selectedFile, linkUrlVal);
+            await processAndSaveAttachments(category, newTitle, selectedFile, linkUrlVal);
           };
 
           if (form.tagName === "FORM") {
@@ -1013,43 +1088,11 @@
           }
         }
 
-        function getMergedAttachments(category) {
-          const merged = {};
-          const savedCat = savedAttachments[category] || {};
-          const sessCat = sessionAttachments[category] || {};
-
-          const allKeys = new Set([...Object.keys(savedCat), ...Object.keys(sessCat)]);
-          allKeys.forEach((key) => {
-            const sItem = savedCat[key] || {};
-            const mItem = sessCat[key] || {};
-
-            let fileObj = mItem.file || null;
-            if (!fileObj && sItem.file) {
-              fileObj = {
-                name: sItem.file.name,
-                size: sItem.file.size,
-                url: dataUrlToBlobUrl(sItem.file.dataUrl),
-                dataUrl: sItem.file.dataUrl,
-                arrayBuffer: null
-              };
-              ensureRecord(sessionAttachments, category, key).file = fileObj;
-            }
-
-            const linkObj = mItem.link !== undefined ? mItem.link : sItem.link || null;
-
-            if (fileObj || linkObj) {
-              merged[key] = { file: fileObj, link: linkObj };
-            }
-          });
-
-          return merged;
-        }
-
         function renderBadgesForContainer(containerId, category, forceRefresh = false) {
           const container = document.getElementById(containerId);
           if (!container) return;
 
-          const itemsMap = getMergedAttachments(category);
+          const itemsMap = recordsCache[category] || {};
 
           Array.from(container.children).forEach((card) => {
             const oldWrap = card.querySelector(".portal-attachments-wrapper");
@@ -1066,6 +1109,9 @@
 
                 if (attData.file) {
                   const fileInfo = attData.file;
+                  if (!fileInfo.url && fileInfo.blob) {
+                    fileInfo.url = URL.createObjectURL(fileInfo.blob);
+                  }
                   const iconClass = getFileIcon(fileInfo.name);
                   const fileBox = document.createElement("div");
                   fileBox.className =
@@ -1164,7 +1210,7 @@
 
         document.addEventListener(
           "click",
-          function (e) {
+          async function (e) {
             const viewBtn = e.target.closest(".btn-view-attachment");
             if (viewBtn) {
               e.preventDefault();
@@ -1172,8 +1218,7 @@
               e.stopImmediatePropagation();
               const cat = viewBtn.getAttribute("data-view-cat");
               const key = decodeURIComponent(viewBtn.getAttribute("data-view-key") || "");
-              const itemsMap = getMergedAttachments(cat);
-              const attData = itemsMap[key];
+              const attData = recordsCache[cat] ? recordsCache[cat][key] : null;
               if (attData && attData.file) {
                 openFilePreviewModal(attData.file);
               }
@@ -1201,13 +1246,14 @@
               const delType = delBtn.getAttribute("data-del-type");
               const cat = delBtn.getAttribute("data-del-cat");
               const key = decodeURIComponent(delBtn.getAttribute("data-del-key") || "");
-              if (cat && key) {
-                if (sessionAttachments[cat] && sessionAttachments[cat][key]) {
-                  sessionAttachments[cat][key][delType] = null;
-                }
-                if (savedAttachments[cat] && savedAttachments[cat][key]) {
-                  savedAttachments[cat][key][delType] = null;
-                  saveToLocal();
+              if (cat && key && recordsCache[cat] && recordsCache[cat][key]) {
+                recordsCache[cat][key][delType] = null;
+                const rec = recordsCache[cat][key];
+                if (rec.file || rec.link) {
+                  await persistRecordToDB(cat, key, rec);
+                } else {
+                  delete recordsCache[cat][key];
+                  await deleteRecordFromDB(cat, key);
                 }
                 renderAllBadges(true);
               }
@@ -1222,8 +1268,8 @@
           true
         );
 
-        function initAttachmentFeature() {
-          renderAllBadges(true);
+        async function initAttachmentFeature() {
+          await loadAllPermanentRecords();
           injectFieldsToActiveForm();
 
           const formBox = document.getElementById("formBox");
