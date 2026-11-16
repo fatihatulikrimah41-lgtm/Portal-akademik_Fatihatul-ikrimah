@@ -66,9 +66,9 @@
         box-shadow: 0 0 0 3px rgba(236, 72, 153, 0.15);
       }
 
-      /* Tata letak Daftar Tugas & Laporan agar persis seperti gambar referensi */
+      /* Kontainer Daftar Tugas & Laporan */
       body main section#tugas > div {
-        max-width: 900px !important;
+        max-width: 1160px !important;
         margin-left: auto !important;
         margin-right: auto !important;
       }
@@ -81,39 +81,48 @@
         margin-right: auto !important;
       }
 
+      /* Grid kartu ukuran compact (~360px) dengan tinggi menyesuaikan isi */
       body main section#tugas #taskList {
         display: grid !important;
-        grid-template-columns: repeat(auto-fit, minmax(320px, 385px)) !important;
+        grid-template-columns: repeat(auto-fit, minmax(310px, 360px)) !important;
         justify-content: center !important;
-        align-items: stretch !important;
-        gap: 1.75rem !important;
+        align-items: start !important;
+        gap: 1.5rem !important;
         width: 100% !important;
         margin-left: auto !important;
         margin-right: auto !important;
       }
 
+      /* Kartu Tugas individual ukuran proporsional */
       body main section#tugas #taskList > div {
         width: 100% !important;
-        max-width: 385px !important;
+        max-width: 360px !important;
         margin: 0 auto !important;
-        padding: 1.5rem !important;
+        padding: 1.35rem !important;
         border-radius: 1.5rem !important;
         background-color: #ffffff !important;
-        box-shadow: 0 12px 30px -8px rgba(236, 72, 153, 0.12) !important;
+        box-shadow: 0 10px 26px -6px rgba(236, 72, 153, 0.12) !important;
         border: 1px solid #fce7f3 !important;
         display: flex !important;
         flex-direction: column !important;
         transition: all 0.25s ease !important;
       }
 
-      body main section#tugas #taskList > div .task-footer-push {
-        margin-top: auto !important;
+      /* Jarak antar elemen padat & rapi tanpa ruang kosong berlebih */
+      body main section#tugas #taskList > div > p {
+        margin-bottom: 0.9rem !important;
       }
 
+      body main section#tugas #taskList > div .task-footer-push {
+        margin-top: 0 !important;
+        padding-top: 0.25rem !important;
+      }
+
+      /* Kartu Tugas yang sudah Selesai */
       body main section#tugas #taskList > div.task-card-completed {
         background: linear-gradient(180deg, #ffffff 0%, #f0fdf4 100%) !important;
         border: 1.5px solid #bbf7d0 !important;
-        box-shadow: 0 12px 28px -6px rgba(16, 185, 129, 0.12) !important;
+        box-shadow: 0 10px 26px -6px rgba(16, 185, 129, 0.12) !important;
       }
 
       .task-title-completed {
@@ -136,8 +145,9 @@
         white-space: nowrap !important;
       }
 
+      /* Lampiran file & Google Drive di dalam kartu */
       .portal-attachments-wrapper {
-        margin-top: 1rem !important;
+        margin-top: 0.9rem !important;
         padding-top: 0.85rem !important;
       }
 
@@ -159,7 +169,7 @@
   <body
     class="bg-pink-100 text-gray-800 font-sans antialiased flex flex-col min-h-screen relative overflow-x-hidden"
   >
-    <!-- Layar Login / Daftar (Langsung Terisi Penuh & Siap Pakai) -->
+    <!-- Layar Login / Daftar -->
     <div
       id="authScreen"
       class="fixed inset-0 z-[200] bg-pink-100 overflow-y-auto flex items-center justify-center p-4"
@@ -463,7 +473,7 @@
         class="page-section hidden w-full py-14 bg-white/40 backdrop-blur-md border-t border-white/50 relative z-10 page-transition min-h-[70vh]"
       >
         <div
-          style="max-width: 900px; margin: 0 auto;"
+          style="max-width: 1160px; margin: 0 auto;"
           class="px-4 sm:px-6 lg:px-8 relative z-10"
         >
           <div style="text-align: center;" class="mb-8">
@@ -485,7 +495,7 @@
           </div>
           <div
             id="taskList"
-            class="grid justify-center items-stretch gap-7"
+            class="grid justify-center items-start gap-6"
           ></div>
         </div>
       </section>
@@ -678,7 +688,7 @@
       </div>
     </div>
 
-    <!-- Aplikasi Lengkap & Mandiri (Tanpa ketergantungan js/app.js eksternal yang rusak) -->
+    <!-- Aplikasi Lengkap & Mandiri -->
     <script>
       (function () {
         const SESSION_KEY = "portalAkademik.session";
@@ -979,7 +989,7 @@
           const attData = recordsCache[category] ? recordsCache[category][titleKey] : null;
           if (!attData || (!attData.file && !attData.link)) return "";
 
-          let html = `<div class="portal-attachments-wrapper mt-4 pt-3 border-t border-pink-100 space-y-2">`;
+          let html = `<div class="portal-attachments-wrapper mt-3.5 pt-3 border-t border-pink-100 space-y-2">`;
 
           if (attData.file) {
             const f = attData.file;
@@ -1053,7 +1063,7 @@
           taskList.innerHTML = tasks
             .map(
               (t, idx) => `
-            <div class="${t.done ? "task-card-completed" : ""} bg-white rounded-3xl p-6 shadow-sm border border-pink-100 flex flex-col">
+            <div class="${t.done ? "task-card-completed" : ""} bg-white rounded-3xl p-5 shadow-sm border border-pink-100 flex flex-col">
               <div class="flex items-center justify-between gap-2 mb-3">
                 <span class="px-3 py-1 rounded-full bg-purple-100 text-purple-700 text-xs font-semibold">${t.course}</span>
                 ${
@@ -1062,9 +1072,9 @@
                     : `<span class="px-3 py-1 rounded-full bg-pink-100 text-primary text-xs font-semibold">${t.daysLeft || "6 hari lagi"}</span>`
                 }
               </div>
-              <h3 class="text-lg font-bold text-gray-900 mb-2 ${t.done ? "task-title-completed" : ""}">${t.title}</h3>
-              <p class="text-sm text-gray-600 leading-relaxed mb-6">${t.desc}</p>
-              <div class="task-footer-push mt-auto pt-3">
+              <h3 class="text-lg font-bold text-gray-900 mb-1.5 ${t.done ? "task-title-completed" : ""}">${t.title}</h3>
+              <p class="text-sm text-gray-600 leading-relaxed mb-3.5">${t.desc}</p>
+              <div class="task-footer-push pt-1">
                 <div class="flex items-center gap-2 text-xs text-gray-500 mb-3">
                   <i class="far fa-calendar-alt"></i>
                   <span>Tenggat: ${t.dueLabel || t.due}</span>
