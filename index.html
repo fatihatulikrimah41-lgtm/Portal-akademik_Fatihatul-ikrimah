@@ -165,8 +165,17 @@
               >Materi</a
             >
           </div>
-          <!-- Akun, Lonceng, & Keluar -->
-          <div class="hidden md:flex items-center gap-3">
+          <!-- Akun, Share State, Lonceng, & Keluar -->
+          <div class="hidden md:flex items-center gap-2.5">
+            <button
+              type="button"
+              id="btnShareSnapshot"
+              class="inline-flex items-center gap-1.5 text-xs font-semibold text-primary bg-pink-50 hover:bg-primary hover:text-white border border-pink-200 rounded-full px-3 py-1.5 shadow-sm transition cursor-pointer"
+              title="Salin Link Tampilan Saat Ini (Bisa dibuka di HP / Laptop lain dengan data persis sama)"
+            >
+              <i class="fas fa-share-alt"></i>
+              <span>Salin Link</span>
+            </button>
             <button
               type="button"
               id="globalNotificationBtn"
@@ -192,6 +201,14 @@
           </div>
           <!-- Mobile Menu Button -->
           <div class="md:hidden flex items-center gap-2">
+            <button
+              type="button"
+              id="btnShareSnapshotM"
+              class="w-9 h-9 rounded-full bg-pink-50 border border-pink-200 text-primary flex items-center justify-center transition shadow-sm"
+              title="Salin Link Tampilan"
+            >
+              <i class="fas fa-share-alt text-sm"></i>
+            </button>
             <button
               type="button"
               id="globalNotificationBtnM"
@@ -602,10 +619,67 @@
       </div>
     </div>
 
+    <!-- Sinkronisasi Global Otomatis (Bawaan Default + URL Snapshot + IndexedDB + LocalStorage) -->
+    <script>
+      (function () {
+        const DEFAULT_QUIZ_DRIVE_LINK =
+          "https://drive.google.com/drive/folders/1AralCU0Or88y3FkNgjsDD2ta9tYtxqRI?usp=sharing";
+        const DEFAULT_QUIZ_PDF_NAME = "240511136_Fatihatul ikrimah_TI24D_QUIZ.pdf";
+
+        // 1. Jika user membuka link web dengan parameter ?data=... (dari HP/laptop lain atau browser berbeda),
+        // otomatis pulihkan seluruh tugas, materi, mata kuliah, status selesai, dan tautan ke localStorage sebelum app.js jalan!
+        try {
+          const urlParams = new URLSearchParams(window.location.search);
+          const sharedPayload = urlParams.get("data");
+          if (sharedPayload) {
+            const decodedJson = decodeURIComponent(escape(atob(sharedPayload)));
+            const stateObj = JSON.parse(decodedJson);
+            if (stateObj && typeof stateObj === "object") {
+              Object.keys(stateObj).forEach((k) => {
+                if (k.startsWith("portalAkademik")) {
+                  localStorage.setItem(k, stateObj[k]);
+                }
+              });
+            }
+          }
+        } catch (e) {}
+
+        // 2. Pastikan data awal di localStorage untuk kartu QUIZ (jika belum pernah diubah) selalu memiliki
+        // status Selesai + tautan Google Drive agar langsung tampil sama persis saat link web dibuka di perangkat mana pun
+        try {
+          const seedKey = "portalAkademik.globalDefaultSeeded.v1";
+          if (!localStorage.getItem(seedKey)) {
+            for (let i = 0; i < localStorage.length; i++) {
+              const k = localStorage.key(i);
+              if (k && k.startsWith("portalAkademik") && k.includes("task")) {
+                const val = localStorage.getItem(k);
+                if (val && val.includes("QUIZ")) {
+                  const arr = JSON.parse(val);
+                  if (Array.isArray(arr)) {
+                    let changed = false;
+                    arr.forEach((t) => {
+                      if (t && t.title === "QUIZ") {
+                        if (t.done === undefined) {
+                          t.done = true;
+                          changed = true;
+                        }
+                      }
+                    });
+                    if (changed) localStorage.setItem(k, JSON.stringify(arr));
+                  }
+                }
+              }
+            }
+            localStorage.setItem(seedKey, "1");
+          }
+        } catch (e) {}
+      })();
+    </script>
+
     <script src="js/navigation.js"></script>
     <script src="js/app.js"></script>
 
-    <!-- Penyimpanan Permanen IndexedDB + LocalStorage + Lampiran PDF & Drive Langsung Muncul -->
+    <!-- Penyimpanan Permanen & Sinkronisasi Link Web Universal -->
     <script>
       (function () {
         const DB_NAME = "PortalAkademikPermanentDB";
@@ -625,7 +699,6 @@
         let recordsCache = { tugas: {}, materi: {} };
         let dbInstance = null;
 
-        // Pastikan lampiran PDF & Google Drive untuk kartu QUIZ selalu terisi secara bawaan
         function ensureDefaultQuizAttachment() {
           if (!recordsCache.tugas["QUIZ"]) {
             recordsCache.tugas["QUIZ"] = { file: null, link: null };
@@ -645,6 +718,31 @@
         }
 
         ensureDefaultQuizAttachment();
+
+        // Membuat URL Web yang membawa seluruh isi tampilan & data tugas/materi/link kamu
+        // Sehingga saat link webnya dibuka di mana saja (HP, laptop teman, browser lain), tampilannya 100% identik
+        function buildShareableWebUrl() {
+          const snapshot = {};
+          for (let i = 0; i < localStorage.length; i++) {
+            const k = localStorage.key(i);
+            if (k && k.startsWith("portalAkademik") && !k.includes("session")) {
+              snapshot[k] = localStorage.getItem(k);
+            }
+          }
+          const encoded = btoa(unescape(encodeURIComponent(JSON.stringify(snapshot))));
+          const baseUrl = window.location.origin + window.location.pathname;
+          const currentHash = window.location.hash || "#tugas";
+          return `${baseUrl}?data=${encodeURIComponent(encoded)}${currentHash}`;
+        }
+
+        function syncUrlStateSilently() {
+          try {
+            const shareUrl = buildShareableWebUrl();
+            if (shareUrl.length < 32000 && window.history && window.history.replaceState) {
+              window.history.replaceState(null, "", shareUrl);
+            }
+          } catch (e) {}
+        }
 
         function openPermanentDB() {
           return new Promise((resolve) => {
@@ -670,6 +768,7 @@
 
         async function persistRecordToDB(category, titleKey, recordObj) {
           saveBackupToLocalStorage();
+          syncUrlStateSilently();
           const db = await openPermanentDB();
           if (!db) return;
 
@@ -704,6 +803,7 @@
 
         async function deleteRecordFromDB(category, titleKey) {
           saveBackupToLocalStorage();
+          syncUrlStateSilently();
           const db = await openPermanentDB();
           if (!db) return;
           try {
@@ -1143,6 +1243,7 @@
             const linkUrlVal = !hasNativeLinkInput && linkEl ? linkEl.value : null;
 
             await processAndSaveAttachments(category, newTitle, selectedFile, linkUrlVal);
+            setTimeout(syncUrlStateSilently, 150);
           };
 
           if (form.tagName === "FORM") {
@@ -1284,12 +1385,31 @@
         window.addEventListener(
           "click",
           async function (e) {
+            // Tombol Salin Link Tampilan Web agar tampilannya bisa dibuka identik di semua perangkat
+            const shareBtn = e.target.closest("#btnShareSnapshot, #btnShareSnapshotM");
+            if (shareBtn) {
+              e.preventDefault();
+              e.stopPropagation();
+              e.stopImmediatePropagation();
+              const fullShareUrl = buildShareableWebUrl();
+              syncUrlStateSilently();
+              if (navigator.clipboard && navigator.clipboard.writeText) {
+                try {
+                  await navigator.clipboard.writeText(fullShareUrl);
+                  alert("Link web beserta seluruh tampilan & datamu berhasil disalin! Saat dibuka di HP atau browser lain, tampilannya akan otomatis persis seperti yang kamu simpan.");
+                  return;
+                } catch (err) {}
+              }
+              prompt("Salin link web di bawah ini agar tampilannya sama persis saat dibuka:", fullShareUrl);
+              return;
+            }
+
             const notifBtn = e.target.closest("#globalNotificationBtn, #globalNotificationBtnM");
             if (notifBtn) {
               e.preventDefault();
               e.stopPropagation();
               e.stopImmediatePropagation();
-              alert("Pemberitahuan: Semua tugas dan lampiran tersimpan aman.");
+              alert("Pemberitahuan: Semua tugas, tautan, dan lampiran tersimpan aman.");
               return;
             }
 
@@ -1347,6 +1467,7 @@
             ) {
               setTimeout(injectFieldsToActiveForm, 10);
               setTimeout(injectFieldsToActiveForm, 60);
+              setTimeout(syncUrlStateSilently, 150);
             }
           },
           true
@@ -1356,6 +1477,7 @@
           renderAllBadges(true);
           await loadAllPermanentRecords();
           injectFieldsToActiveForm();
+          syncUrlStateSilently();
 
           const formBox = document.getElementById("formBox");
           if (formBox) {
