@@ -672,7 +672,6 @@
           }
         }
 
-        // Paksa agar di perangkat baru (HP/Laptop lain), task "QUIZ" otomatis dibuat berstatus Selesai & ada di list
         window.__ensureHardcodedDefaultTasks = function () {
           try {
             let foundKey = null;
@@ -700,7 +699,7 @@
               foundTasks.forEach((t) => {
                 if (t && t.title === "QUIZ") {
                   hasQuiz = true;
-                  t.done = true; // Set Selesai
+                  t.done = true;
                 }
               });
             }
