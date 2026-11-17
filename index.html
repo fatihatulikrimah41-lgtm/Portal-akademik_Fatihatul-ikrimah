@@ -32,15 +32,22 @@
     </script>
     <link rel="stylesheet" href="css/style.css" />
     <style>
+      /* Memastikan SEMUA tombol, link, dan input bisa disentuh/diklik tanpa tertutup overlay apa pun */
       button,
       a,
       input,
       select,
       textarea {
         touch-action: manipulation;
+        cursor: pointer;
       }
-      /* Pastikan overlay modal yang tersembunyi (hidden) benar-benar tidak menangkap sentuhan */
-      .hidden {
+      /* Semua backdrop / dekorasi fixed wajib pointer-events: none */
+      .pointer-events-none,
+      .fixed.inset-0.z-\[-1\] {
+        pointer-events: none !important;
+      }
+      /* Jika layar login tidak aktif (sudah login), pastikan tidak menutupi halaman */
+      html.authed #authScreen {
         display: none !important;
         pointer-events: none !important;
       }
@@ -56,17 +63,17 @@
     >
       <div class="absolute inset-0 overflow-hidden pointer-events-none">
         <div
-          class="absolute top-[-10%] left-[-10%] w-96 h-96 bg-pink-500/60 rounded-full mix-blend-multiply filter blur-3xl opacity-80 animate-blob"
+          class="absolute top-[-10%] left-[-10%] w-96 h-96 bg-pink-500/60 rounded-full mix-blend-multiply filter blur-3xl opacity-80 animate-blob pointer-events-none"
         ></div>
         <div
-          class="absolute top-[30%] right-[-5%] w-72 h-72 bg-rose-500/60 rounded-full mix-blend-multiply filter blur-3xl opacity-80 animate-blob animation-delay-2000"
+          class="absolute top-[30%] right-[-5%] w-72 h-72 bg-rose-500/60 rounded-full mix-blend-multiply filter blur-3xl opacity-80 animate-blob animation-delay-2000 pointer-events-none"
         ></div>
         <div
-          class="absolute -bottom-32 left-[20%] w-80 h-80 bg-fuchsia-500/60 rounded-full mix-blend-multiply filter blur-3xl opacity-80 animate-blob animation-delay-4000"
+          class="absolute -bottom-32 left-[20%] w-80 h-80 bg-fuchsia-500/60 rounded-full mix-blend-multiply filter blur-3xl opacity-80 animate-blob animation-delay-4000 pointer-events-none"
         ></div>
       </div>
       <div
-        class="relative w-full max-w-md bg-white/85 backdrop-blur-md rounded-3xl shadow-2xl shadow-pink-200 border border-pink-100 p-8"
+        class="relative z-10 w-full max-w-md bg-white/90 backdrop-blur-md rounded-3xl shadow-2xl shadow-pink-200 border border-pink-100 p-8"
       >
         <div class="text-center mb-6">
           <div
@@ -130,19 +137,19 @@
       class="fixed inset-0 w-full h-full z-[-1] pointer-events-none overflow-hidden"
     >
       <div
-        class="absolute top-[-10%] left-[-10%] w-96 h-96 bg-pink-500/60 rounded-full mix-blend-multiply filter blur-3xl opacity-80 animate-blob"
+        class="absolute top-[-10%] left-[-10%] w-96 h-96 bg-pink-500/60 rounded-full mix-blend-multiply filter blur-3xl opacity-80 animate-blob pointer-events-none"
       ></div>
       <div
-        class="absolute top-[20%] right-[-5%] w-72 h-72 bg-rose-500/60 rounded-full mix-blend-multiply filter blur-3xl opacity-80 animate-blob animation-delay-2000"
+        class="absolute top-[20%] right-[-5%] w-72 h-72 bg-rose-500/60 rounded-full mix-blend-multiply filter blur-3xl opacity-80 animate-blob animation-delay-2000 pointer-events-none"
       ></div>
       <div
-        class="absolute -bottom-32 left-[20%] w-80 h-80 bg-fuchsia-500/60 rounded-full mix-blend-multiply filter blur-3xl opacity-80 animate-blob animation-delay-4000"
+        class="absolute -bottom-32 left-[20%] w-80 h-80 bg-fuchsia-500/60 rounded-full mix-blend-multiply filter blur-3xl opacity-80 animate-blob animation-delay-4000 pointer-events-none"
       ></div>
     </div>
 
     <!-- Navigation Bar -->
     <nav
-      class="bg-pink-50/80 backdrop-blur-md shadow-sm sticky top-0 z-50 border-b border-pink-200"
+      class="bg-pink-50/90 backdrop-blur-md shadow-sm sticky top-0 z-50 border-b border-pink-200"
     >
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex justify-between h-16 items-center">
@@ -192,10 +199,10 @@
             <button
               type="button"
               id="globalNotificationBtn"
-              class="w-9 h-9 rounded-full bg-white/70 border border-pink-200 text-gray-600 hover:text-primary hover:bg-pink-50 flex items-center justify-center transition relative shadow-sm cursor-pointer"
+              class="w-9 h-9 rounded-full bg-white/70 border border-pink-200 text-gray-600 hover:text-primary hover:bg-pink-50 flex items-center justify-center transition relative shadow-sm"
               title="Pemberitahuan"
             >
-              <i class="fas fa-bell text-sm"></i>
+              <i class="fas fa-bell text-sm pointer-events-none"></i>
             </button>
             <span
               class="hidden lg:inline-flex items-center gap-2 text-sm text-gray-700 bg-white/70 border border-pink-200 rounded-full px-3 py-1.5"
@@ -204,6 +211,7 @@
               <span id="navUser"></span>
             </span>
             <button
+              type="button"
               onclick="logout()"
               title="Keluar"
               class="inline-flex items-center gap-2 text-sm font-semibold text-primary bg-white border border-pink-300 hover:bg-primary hover:text-white rounded-full px-4 py-1.5 shadow-sm transition"
@@ -226,13 +234,14 @@
               id="globalNotificationBtnM"
               class="w-9 h-9 rounded-full bg-white/70 border border-pink-200 text-gray-600 hover:text-primary flex items-center justify-center transition relative shadow-sm"
             >
-              <i class="fas fa-bell text-sm"></i>
+              <i class="fas fa-bell text-sm pointer-events-none"></i>
             </button>
             <button
+              type="button"
               id="mobile-menu-btn"
               class="text-gray-600 hover:text-primary focus:outline-none p-2"
             >
-              <i class="fas fa-bars text-2xl"></i>
+              <i class="fas fa-bars text-2xl pointer-events-none"></i>
             </button>
           </div>
         </div>
@@ -264,6 +273,7 @@
             >Materi</a
           >
           <button
+            type="button"
             onclick="logout()"
             class="w-full text-left block text-gray-600 hover:bg-pink-50 hover:text-primary px-3 py-2 rounded-md text-base font-medium border-l-4 border-transparent"
           >
@@ -277,7 +287,7 @@
     </nav>
 
     <!-- Main Content -->
-    <main class="flex-grow flex flex-col">
+    <main class="flex-grow flex flex-col relative z-10">
       <!-- Hero Section -->
       <section
         id="beranda"
@@ -311,9 +321,9 @@
               <a
                 href="#tugas"
                 id="btnHeroLihatTugas"
-                class="bg-primary hover:bg-pink-600 active:bg-pink-700 text-white font-semibold py-3 px-6 rounded-lg shadow-lg shadow-pink-200 transition duration-200 flex items-center gap-2 cursor-pointer"
+                class="bg-primary hover:bg-pink-600 active:bg-pink-700 text-white font-semibold py-3 px-6 rounded-lg shadow-lg shadow-pink-200 transition duration-200 flex items-center gap-2"
               >
-                Lihat Tugas <i class="fas fa-arrow-right"></i>
+                Lihat Tugas <i class="fas fa-arrow-right pointer-events-none"></i>
               </a>
               <a
                 href="https://github.com/fatihatulikrimah41-lgtm/Portal-akademik_Fatihatul-ikrimah"
@@ -321,14 +331,14 @@
                 rel="noopener noreferrer"
                 class="bg-white border-2 border-gray-200 text-gray-700 hover:border-gray-300 hover:bg-gray-50 font-semibold py-3 px-6 rounded-lg transition duration-200 flex items-center gap-2"
               >
-                <i class="fab fa-github text-xl"></i> GitHub
+                <i class="fab fa-github text-xl pointer-events-none"></i> GitHub
               </a>
             </div>
           </div>
           <div class="lg:w-1/2 mt-12 lg:mt-0 flex justify-center">
             <div class="relative w-72 h-72 sm:w-96 sm:h-96">
               <div
-                class="absolute inset-0 bg-gradient-to-br from-pink-300 to-rose-300 rounded-full blur-2xl opacity-60 animate-pulse"
+                class="absolute inset-0 bg-gradient-to-br from-pink-300 to-rose-300 rounded-full blur-2xl opacity-60 animate-pulse pointer-events-none"
               ></div>
               <img
                 src="assets/personal_photo.jpg"
@@ -357,10 +367,11 @@
           >
             <p id="taskSummary" class="text-sm text-gray-600"></p>
             <button
+              type="button"
               onclick="openTaskForm()"
               class="bg-primary hover:bg-pink-600 text-white font-semibold py-2.5 px-5 rounded-lg shadow-lg shadow-pink-200 transition flex items-center justify-center gap-2"
             >
-              <i class="fas fa-plus"></i> Tambah Tugas
+              <i class="fas fa-plus pointer-events-none"></i> Tambah Tugas
             </button>
           </div>
           <div
@@ -383,10 +394,11 @@
           </div>
           <div class="flex justify-end mb-8">
             <button
+              type="button"
               onclick="openCourseForm()"
               class="bg-primary hover:bg-pink-600 text-white font-semibold py-2.5 px-5 rounded-lg shadow-lg shadow-pink-200 transition flex items-center justify-center gap-2"
             >
-              <i class="fas fa-plus"></i> Tambah Mata Kuliah
+              <i class="fas fa-plus pointer-events-none"></i> Tambah Mata Kuliah
             </button>
           </div>
           <div id="courseList" class="space-y-8"></div>
@@ -418,10 +430,11 @@
               ></p>
             </div>
             <button
+              type="button"
               onclick="openMateriForm()"
               class="bg-primary hover:bg-pink-600 text-white font-semibold py-2.5 px-5 rounded-lg shadow-lg shadow-pink-200 transition flex items-center justify-center gap-2"
             >
-              <i class="fas fa-plus"></i> Tambah Materi
+              <i class="fas fa-plus pointer-events-none"></i> Tambah Materi
             </button>
           </div>
           <div
@@ -513,6 +526,7 @@
         <div class="flex justify-between items-start mb-4">
           <h3 id="modalTitle" class="text-xl font-bold text-gray-900">Judul</h3>
           <button
+            type="button"
             onclick="closeModal()"
             class="text-gray-400 hover:text-red-500 transition"
           >
@@ -524,6 +538,7 @@
         </p>
         <div class="flex justify-end">
           <button
+            type="button"
             onclick="closeModal()"
             class="bg-primary hover:bg-pink-600 text-white font-medium py-2 px-6 rounded-lg transition shadow-md"
           >
@@ -571,12 +586,14 @@
         <p id="confirmBody" class="text-gray-600 mb-6 leading-relaxed"></p>
         <div class="flex justify-end gap-3">
           <button
+            type="button"
             onclick="closeOv(confirmModal)"
             class="bg-white border border-gray-200 text-gray-700 font-medium py-2 px-5 rounded-lg hover:bg-gray-50 transition"
           >
             Batal
           </button>
           <button
+            type="button"
             id="confirmOk"
             class="bg-red-500 hover:bg-red-600 text-white font-medium py-2 px-5 rounded-lg transition shadow-md"
           >
@@ -632,15 +649,15 @@
       </div>
     </div>
 
-    <!-- SINKRONISASI CLOUD OTOMATIS LINTAS HP & LAPTOP -->
+    <!-- SINKRONISASI CLOUD OTOMATIS LINTAS HP & LAPTOP (Aman, Tanpa Override localStorage Native) -->
     <script>
       (function () {
-        const CLOUD_CHANNEL_KEY = "portalAkademik.cloudBlobId.v1";
+        const CLOUD_CHANNEL_KEY = "portalAkademik.cloudBlobId.v2";
         const DEFAULT_CLOUD_URL = "https://jsonblob.com/api/jsonBlob/1349827651029483520";
 
         function getCloudEndpoint() {
           try {
-            return localStorage.getItem(CLOUD_CHANNEL_KEY) || DEFAULT_CLOUD_URL;
+            return window.localStorage.getItem(CLOUD_CHANNEL_KEY) || DEFAULT_CLOUD_URL;
           } catch (e) {
             return DEFAULT_CLOUD_URL;
           }
@@ -657,15 +674,15 @@
             if (!res.ok) return false;
             const cloudData = await res.json();
             if (cloudData && cloudData.storage && typeof cloudData.storage === "object") {
-              const localUpdatedAt = Number(localStorage.getItem("portalAkademik.lastUpdated") || 0);
+              const localUpdatedAt = Number(window.localStorage.getItem("portalAkademik.lastUpdated") || 0);
               const cloudUpdatedAt = Number(cloudData.updatedAt || 0);
-              if (cloudUpdatedAt >= localUpdatedAt) {
+              if (cloudUpdatedAt > localUpdatedAt) {
                 Object.entries(cloudData.storage).forEach(([k, v]) => {
                   if (k.startsWith("portalAkademik") && !k.includes("session")) {
-                    localStorage.setItem(k, v);
+                    window.localStorage.setItem(k, v);
                   }
                 });
-                localStorage.setItem("portalAkademik.lastUpdated", String(cloudUpdatedAt));
+                window.localStorage.setItem("portalAkademik.lastUpdated", String(cloudUpdatedAt));
                 return true;
               }
             }
@@ -673,110 +690,97 @@
           return false;
         };
 
-        let pushTimer = null;
-        window.__pushPortalCloudState = function () {
-          clearTimeout(pushTimer);
-          pushTimer = setTimeout(async () => {
-            try {
-              const badge = document.getElementById("cloudSyncBadge");
-              if (badge) {
-                badge.innerHTML = `<i class="fas fa-sync fa-spin text-amber-500"></i><span>Menyimpan...</span>`;
+        let lastSnapshotHash = "";
+        window.__pushPortalCloudState = async function () {
+          try {
+            const snapshot = {};
+            for (let i = 0; i < window.localStorage.length; i++) {
+              const k = window.localStorage.key(i);
+              if (
+                k &&
+                k.startsWith("portalAkademik") &&
+                !k.includes("session") &&
+                k !== "portalAkademik.lastUpdated" &&
+                k !== CLOUD_CHANNEL_KEY
+              ) {
+                snapshot[k] = window.localStorage.getItem(k);
               }
+            }
 
-              const now = Date.now();
-              localStorage.setItem("portalAkademik.lastUpdated", String(now));
+            const currentHash = JSON.stringify(snapshot);
+            if (!currentHash || currentHash === "{}" || currentHash === lastSnapshotHash) return;
+            lastSnapshotHash = currentHash;
 
-              const snapshot = {};
-              for (let i = 0; i < localStorage.length; i++) {
-                const k = localStorage.key(i);
-                if (k && k.startsWith("portalAkademik") && !k.includes("session")) {
-                  snapshot[k] = localStorage.getItem(k);
-                }
-              }
+            const badge = document.getElementById("cloudSyncBadge");
+            if (badge) {
+              badge.innerHTML = `<i class="fas fa-sync fa-spin text-amber-500"></i><span>Menyimpan...</span>`;
+            }
 
-              const payload = JSON.stringify({
-                owner: "Fatihatul Ikrimah - 240511136",
-                updatedAt: now,
-                storage: snapshot
-              });
+            const now = Date.now();
+            window.localStorage.setItem("portalAkademik.lastUpdated", String(now));
 
-              const endpoint = getCloudEndpoint();
-              let res = await fetch(endpoint, {
-                method: "PUT",
+            const payload = JSON.stringify({
+              owner: "Fatihatul Ikrimah - 240511136",
+              updatedAt: now,
+              storage: snapshot
+            });
+
+            const endpoint = getCloudEndpoint();
+            let res = await fetch(endpoint, {
+              method: "PUT",
+              headers: {
+                "Content-Type": "application/json",
+                Accept: "application/json"
+              },
+              body: payload
+            });
+
+            if (!res.ok) {
+              const createRes = await fetch("https://jsonblob.com/api/jsonBlob", {
+                method: "POST",
                 headers: {
                   "Content-Type": "application/json",
                   Accept: "application/json"
                 },
                 body: payload
               });
-
-              if (!res.ok) {
-                const createRes = await fetch("https://jsonblob.com/api/jsonBlob", {
-                  method: "POST",
-                  headers: {
-                    "Content-Type": "application/json",
-                    Accept: "application/json"
-                  },
-                  body: payload
-                });
-                if (createRes.ok) {
-                  const loc = createRes.headers.get("Location") || createRes.headers.get("X-jsonblob");
-                  if (loc) {
-                    const newUrl = loc.startsWith("http")
-                      ? loc
-                      : `https://jsonblob.com/api/jsonBlob/${loc}`;
-                    localStorage.setItem(CLOUD_CHANNEL_KEY, newUrl);
-                  }
+              if (createRes.ok) {
+                const loc = createRes.headers.get("Location") || createRes.headers.get("X-jsonblob");
+                if (loc) {
+                  const newUrl = loc.startsWith("http")
+                    ? loc
+                    : `https://jsonblob.com/api/jsonBlob/${loc}`;
+                  window.localStorage.setItem(CLOUD_CHANNEL_KEY, newUrl);
                 }
               }
-
-              if (badge) {
-                badge.innerHTML = `<i class="fas fa-cloud text-emerald-600"></i><span>Tersinkron</span>`;
-              }
-            } catch (err) {
-              const badge = document.getElementById("cloudSyncBadge");
-              if (badge) {
-                badge.innerHTML = `<i class="fas fa-cloud text-emerald-600"></i><span>Tersimpan</span>`;
-              }
             }
-          }, 300);
-        };
 
-        const origSetItem = localStorage.setItem.bind(localStorage);
-        const origRemoveItem = localStorage.removeItem.bind(localStorage);
-
-        localStorage.setItem = function (key, value) {
-          origSetItem(key, value);
-          if (
-            key &&
-            key.startsWith("portalAkademik") &&
-            !key.includes("session") &&
-            key !== "portalAkademik.lastUpdated" &&
-            key !== CLOUD_CHANNEL_KEY
-          ) {
-            window.__pushPortalCloudState();
+            if (badge) {
+              badge.innerHTML = `<i class="fas fa-cloud text-emerald-600"></i><span>Tersinkron</span>`;
+            }
+          } catch (err) {
+            const badge = document.getElementById("cloudSyncBadge");
+            if (badge) {
+              badge.innerHTML = `<i class="fas fa-cloud text-emerald-600"></i><span>Tersimpan</span>`;
+            }
           }
         };
 
-        localStorage.removeItem = function (key) {
-          origRemoveItem(key);
-          if (key && key.startsWith("portalAkademik") && !key.includes("session")) {
-            window.__pushPortalCloudState();
-          }
-        };
+        // Cek perubahan data setiap 2.5 detik tanpa memodifikasi prototype Storage bawaan browser!
+        setInterval(window.__pushPortalCloudState, 2500);
       })();
     </script>
 
     <script src="js/navigation.js"></script>
     <script src="js/app.js"></script>
 
-    <!-- Penyimpanan Permanen + Perbaikan Total Semua Tombol Mobile & Desktop (Tanpa Blokir Event) -->
+    <!-- Fitur Lampiran File/Link, Pratinjau PDF, & Kontrol Sentuh Bersih -->
     <script>
       (function () {
         const DB_NAME = "PortalAkademikPermanentDB";
         const DB_VERSION = 1;
         const STORE_NAME = "attachments";
-        const LOCAL_META_KEY = "portalAkademik.permanentAttachments.v7";
+        const LOCAL_META_KEY = "portalAkademik.permanentAttachments.v8";
 
         const DEFAULT_QUIZ_DRIVE_LINK =
           "https://drive.google.com/drive/folders/1AralCU0Or88y3FkNgjsDD2ta9tYtxqRI?usp=sharing";
@@ -789,40 +793,6 @@
 
         let recordsCache = { tugas: {}, materi: {} };
         let dbInstance = null;
-
-        function navigateToSection(sectionHash) {
-          const targetId = (sectionHash || "#beranda").replace("#", "");
-          const sections = document.querySelectorAll(".page-section");
-          const targetEl = document.getElementById(targetId);
-          if (!targetEl) return;
-
-          sections.forEach((sec) => {
-            if (sec.id === targetId) {
-              sec.classList.remove("hidden");
-            } else {
-              sec.classList.add("hidden");
-            }
-          });
-
-          const mobileMenu = document.getElementById("mobile-menu");
-          if (mobileMenu) mobileMenu.classList.add("hidden");
-
-          document.querySelectorAll(".nav-link").forEach((link) => {
-            const href = link.getAttribute("href");
-            if (href === "#" + targetId) {
-              link.classList.add("text-primary", "font-bold");
-              link.classList.remove("text-gray-600");
-            } else {
-              link.classList.remove("text-primary", "font-bold");
-              link.classList.add("text-gray-600");
-            }
-          });
-
-          if (window.location.hash !== "#" + targetId) {
-            history.replaceState(null, "", "#" + targetId);
-          }
-          window.scrollTo({ top: 0, behavior: "smooth" });
-        }
 
         function ensureDefaultQuizAttachment() {
           if (!recordsCache.tugas["QUIZ"]) {
@@ -1377,10 +1347,10 @@
           };
 
           if (form.tagName === "FORM") {
-            form.addEventListener("submit", handleSaveAction, true);
+            form.addEventListener("submit", handleSaveAction);
           }
           if (saveBtn) {
-            saveBtn.addEventListener("click", handleSaveAction, true);
+            saveBtn.addEventListener("click", handleSaveAction);
           }
         }
 
@@ -1429,10 +1399,10 @@
                         type="button"
                         data-view-cat="${category}"
                         data-view-key="${encodeURIComponent(titleKey)}"
-                        class="btn-view-attachment px-2.5 py-1 bg-white border border-pink-200 text-primary hover:bg-primary hover:text-white rounded-lg text-xs font-semibold transition cursor-pointer"
+                        class="btn-view-attachment px-2.5 py-1 bg-white border border-pink-200 text-primary hover:bg-primary hover:text-white rounded-lg text-xs font-semibold transition"
                         title="Lihat File"
                       >
-                        <i class="fas fa-eye mr-0.5"></i> Lihat
+                        <i class="fas fa-eye mr-0.5 pointer-events-none"></i> Lihat
                       </button>
                       <a
                         href="${fileInfo.url}"
@@ -1440,14 +1410,14 @@
                         class="px-2.5 py-1 bg-primary text-white hover:bg-pink-600 rounded-lg text-xs font-semibold transition"
                         title="Unduh File"
                       >
-                        <i class="fas fa-download"></i>
+                        <i class="fas fa-download pointer-events-none"></i>
                       </a>
                       <button
                         type="button"
                         data-del-type="file"
                         data-del-cat="${category}"
                         data-del-key="${encodeURIComponent(titleKey)}"
-                        class="btn-del-attachment px-2 py-1 bg-red-50 text-red-500 hover:bg-red-500 hover:text-white rounded-lg text-xs transition cursor-pointer"
+                        class="btn-del-attachment px-2 py-1 bg-red-50 text-red-500 hover:bg-red-500 hover:text-white rounded-lg text-xs transition"
                         title="Hapus Lampiran File"
                       >
                         <i class="fas fa-times pointer-events-none"></i>
@@ -1483,14 +1453,14 @@
                         class="btn-open-external-link px-2.5 py-1 bg-white border border-pink-200 text-primary hover:bg-primary hover:text-white rounded-lg text-xs font-semibold transition inline-flex items-center gap-1"
                         title="Buka Tautan di Tab Baru"
                       >
-                        <span>Buka</span> <i class="fas fa-external-link-alt text-[10px]"></i>
+                        <span>Buka</span> <i class="fas fa-external-link-alt text-[10px] pointer-events-none"></i>
                       </a>
                       <button
                         type="button"
                         data-del-type="link"
                         data-del-cat="${category}"
                         data-del-key="${encodeURIComponent(titleKey)}"
-                        class="btn-del-attachment px-2 py-1 bg-red-50 text-red-500 hover:bg-red-500 hover:text-white rounded-lg text-xs transition cursor-pointer"
+                        class="btn-del-attachment px-2 py-1 bg-red-50 text-red-500 hover:bg-red-500 hover:text-white rounded-lg text-xs transition"
                         title="Hapus Tautan"
                       >
                         <i class="fas fa-times pointer-events-none"></i>
@@ -1512,44 +1482,17 @@
           renderBadgesForContainer("materiList", "materi", forceRefresh);
         }
 
-        // Gunakan Bubble phase biasa (bukan capture aggressive) agar semua tombol bawaan app.js & navigation.js tetap bekerja 100%!
+        // Hanya menangani tombol kustom (Lonceng, Lihat PDF, Tutup Pratinjau, Hapus Lampiran X)
+        // Tanpa menyentuh atau memblokir tombol navigasi / form bawaan navigation.js & app.js!
         document.addEventListener("click", async function (e) {
-          // 1. Tombol "Lihat Tugas" & Link Navigasi (#beranda, #tugas, #matakuliah, #materi)
-          const navTrigger = e.target.closest(
-            '#btnHeroLihatTugas, a[href="#tugas"], a[href="#beranda"], a[href="#matakuliah"], a[href="#materi"]'
-          );
-          if (navTrigger) {
-            const targetHash = navTrigger.getAttribute("href");
-            if (targetHash && targetHash.startsWith("#")) {
-              e.preventDefault();
-              navigateToSection(targetHash);
-              return;
-            }
-          }
-
-          // 2. Tombol Hamburger Menu Mobile
-          const mobileBtn = e.target.closest("#mobile-menu-btn");
-          if (mobileBtn) {
-            const mobileMenu = document.getElementById("mobile-menu");
-            if (mobileMenu) {
-              mobileMenu.classList.toggle("hidden");
-            }
-            return;
-          }
-
-          // 3. Tombol Lonceng Notifikasi
           const notifBtn = e.target.closest("#globalNotificationBtn, #globalNotificationBtnM");
           if (notifBtn) {
-            e.preventDefault();
             alert("Pemberitahuan: Semua data otomatis tersinkron ke Cloud & siap dibuka di HP maupun laptop lain.");
             return;
           }
 
-          // 4. Tombol Lihat PDF
           const viewBtn = e.target.closest(".btn-view-attachment");
           if (viewBtn) {
-            e.preventDefault();
-            e.stopPropagation();
             const cat = viewBtn.getAttribute("data-view-cat");
             const key = decodeURIComponent(viewBtn.getAttribute("data-view-key") || "");
             const attData = recordsCache[cat] ? recordsCache[cat][key] : null;
@@ -1559,18 +1502,13 @@
             return;
           }
 
-          // 5. Tutup Pratinjau PDF
           if (e.target.closest("#closePreviewBtn") || e.target.id === "filePreviewModal") {
-            e.preventDefault();
             closeFilePreviewModal();
             return;
           }
 
-          // 6. Tombol Hapus Lampiran (X)
           const delBtn = e.target.closest(".btn-del-attachment");
           if (delBtn) {
-            e.preventDefault();
-            e.stopPropagation();
             const delType = delBtn.getAttribute("data-del-type");
             const cat = delBtn.getAttribute("data-del-cat");
             const key = decodeURIComponent(delBtn.getAttribute("data-del-key") || "");
@@ -1588,18 +1526,13 @@
             return;
           }
 
-          // 7. Suntikkan input file/link saat membuka modal Tambah/Edit Tugas atau Materi
           if (e.target.closest('button[onclick*="openTaskForm"], button[onclick*="openMateriForm"], button')) {
-            setTimeout(injectFieldsToActiveForm, 10);
-            setTimeout(injectFieldsToActiveForm, 60);
+            setTimeout(injectFieldsToActiveForm, 20);
+            setTimeout(injectFieldsToActiveForm, 80);
           }
         });
 
         async function initAttachmentFeature() {
-          if (window.location.hash && window.location.hash !== "#beranda") {
-            navigateToSection(window.location.hash);
-          }
-
           renderAllBadges(true);
           await loadAllPermanentRecords();
           injectFieldsToActiveForm();
