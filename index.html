@@ -32,7 +32,6 @@
     </script>
     <link rel="stylesheet" href="css/style.css" />
     <style>
-      /* Memastikan semua tombol & link di layar sentuh HP langsung merespons tanpa delay / terhalang dekorasi */
       button,
       a,
       input,
@@ -40,14 +39,10 @@
       textarea {
         touch-action: manipulation;
       }
-      nav,
-      main,
-      section,
-      #beranda a,
-      #tugas button,
-      #tugas a {
-        position: relative;
-        z-index: 20;
+      /* Pastikan overlay modal yang tersembunyi (hidden) benar-benar tidak menangkap sentuhan */
+      .hidden {
+        display: none !important;
+        pointer-events: none !important;
       }
     </style>
   </head>
@@ -775,7 +770,7 @@
     <script src="js/navigation.js"></script>
     <script src="js/app.js"></script>
 
-    <!-- Penyimpanan Permanen + Navigasi Mobile Responsif ("Lihat Tugas") + Cloud Sync -->
+    <!-- Penyimpanan Permanen + Perbaikan Total Semua Tombol Mobile & Desktop (Tanpa Blokir Event) -->
     <script>
       (function () {
         const DB_NAME = "PortalAkademikPermanentDB";
@@ -795,7 +790,6 @@
         let recordsCache = { tugas: {}, materi: {} };
         let dbInstance = null;
 
-        // Fungsi pindah tab/section langsung (berfungsi 100% di HP maupun Desktop)
         function navigateToSection(sectionHash) {
           const targetId = (sectionHash || "#beranda").replace("#", "");
           const sections = document.querySelectorAll(".page-section");
@@ -810,11 +804,9 @@
             }
           });
 
-          // Tutup menu mobile jika sedang terbuka
           const mobileMenu = document.getElementById("mobile-menu");
           if (mobileMenu) mobileMenu.classList.add("hidden");
 
-          // Update style aktif pada nav-link
           document.querySelectorAll(".nav-link").forEach((link) => {
             const href = link.getAttribute("href");
             if (href === "#" + targetId) {
@@ -1520,92 +1512,90 @@
           renderBadgesForContainer("materiList", "materi", forceRefresh);
         }
 
-        window.addEventListener(
-          "click",
-          async function (e) {
-            // Tangkap klik tombol "Lihat Tugas" di beranda maupun link menu navigasi agar langsung pindah di layar HP
-            const navTrigger = e.target.closest(
-              '#btnHeroLihatTugas, a[href="#tugas"], a[href="#beranda"], a[href="#matakuliah"], a[href="#materi"]'
-            );
-            if (navTrigger) {
-              const targetHash = navTrigger.getAttribute("href");
-              if (targetHash && targetHash.startsWith("#")) {
-                e.preventDefault();
-                navigateToSection(targetHash);
-                return;
+        // Gunakan Bubble phase biasa (bukan capture aggressive) agar semua tombol bawaan app.js & navigation.js tetap bekerja 100%!
+        document.addEventListener("click", async function (e) {
+          // 1. Tombol "Lihat Tugas" & Link Navigasi (#beranda, #tugas, #matakuliah, #materi)
+          const navTrigger = e.target.closest(
+            '#btnHeroLihatTugas, a[href="#tugas"], a[href="#beranda"], a[href="#matakuliah"], a[href="#materi"]'
+          );
+          if (navTrigger) {
+            const targetHash = navTrigger.getAttribute("href");
+            if (targetHash && targetHash.startsWith("#")) {
+              e.preventDefault();
+              navigateToSection(targetHash);
+              return;
+            }
+          }
+
+          // 2. Tombol Hamburger Menu Mobile
+          const mobileBtn = e.target.closest("#mobile-menu-btn");
+          if (mobileBtn) {
+            const mobileMenu = document.getElementById("mobile-menu");
+            if (mobileMenu) {
+              mobileMenu.classList.toggle("hidden");
+            }
+            return;
+          }
+
+          // 3. Tombol Lonceng Notifikasi
+          const notifBtn = e.target.closest("#globalNotificationBtn, #globalNotificationBtnM");
+          if (notifBtn) {
+            e.preventDefault();
+            alert("Pemberitahuan: Semua data otomatis tersinkron ke Cloud & siap dibuka di HP maupun laptop lain.");
+            return;
+          }
+
+          // 4. Tombol Lihat PDF
+          const viewBtn = e.target.closest(".btn-view-attachment");
+          if (viewBtn) {
+            e.preventDefault();
+            e.stopPropagation();
+            const cat = viewBtn.getAttribute("data-view-cat");
+            const key = decodeURIComponent(viewBtn.getAttribute("data-view-key") || "");
+            const attData = recordsCache[cat] ? recordsCache[cat][key] : null;
+            if (attData && attData.file) {
+              openFilePreviewModal(attData.file);
+            }
+            return;
+          }
+
+          // 5. Tutup Pratinjau PDF
+          if (e.target.closest("#closePreviewBtn") || e.target.id === "filePreviewModal") {
+            e.preventDefault();
+            closeFilePreviewModal();
+            return;
+          }
+
+          // 6. Tombol Hapus Lampiran (X)
+          const delBtn = e.target.closest(".btn-del-attachment");
+          if (delBtn) {
+            e.preventDefault();
+            e.stopPropagation();
+            const delType = delBtn.getAttribute("data-del-type");
+            const cat = delBtn.getAttribute("data-del-cat");
+            const key = decodeURIComponent(delBtn.getAttribute("data-del-key") || "");
+            if (cat && key && recordsCache[cat] && recordsCache[cat][key]) {
+              recordsCache[cat][key][delType] = null;
+              const rec = recordsCache[cat][key];
+              if (rec.file || rec.link) {
+                await persistRecordToDB(cat, key, rec);
+              } else {
+                delete recordsCache[cat][key];
+                await deleteRecordFromDB(cat, key);
               }
+              renderAllBadges(true);
             }
+            return;
+          }
 
-            const notifBtn = e.target.closest("#globalNotificationBtn, #globalNotificationBtnM");
-            if (notifBtn) {
-              e.preventDefault();
-              e.stopPropagation();
-              e.stopImmediatePropagation();
-              alert("Pemberitahuan: Semua data otomatis tersinkron ke Cloud & siap dibuka di HP maupun laptop lain.");
-              return;
-            }
-
-            const viewBtn = e.target.closest(".btn-view-attachment");
-            if (viewBtn) {
-              e.preventDefault();
-              e.stopPropagation();
-              e.stopImmediatePropagation();
-              const cat = viewBtn.getAttribute("data-view-cat");
-              const key = decodeURIComponent(viewBtn.getAttribute("data-view-key") || "");
-              const attData = recordsCache[cat] ? recordsCache[cat][key] : null;
-              if (attData && attData.file) {
-                openFilePreviewModal(attData.file);
-              }
-              return;
-            }
-
-            const extLink = e.target.closest(".btn-open-external-link");
-            if (extLink) {
-              e.stopPropagation();
-              return;
-            }
-
-            if (e.target.closest("#closePreviewBtn") || e.target.id === "filePreviewModal") {
-              e.preventDefault();
-              e.stopPropagation();
-              closeFilePreviewModal();
-              return;
-            }
-
-            const delBtn = e.target.closest(".btn-del-attachment");
-            if (delBtn) {
-              e.preventDefault();
-              e.stopPropagation();
-              e.stopImmediatePropagation();
-              const delType = delBtn.getAttribute("data-del-type");
-              const cat = delBtn.getAttribute("data-del-cat");
-              const key = decodeURIComponent(delBtn.getAttribute("data-del-key") || "");
-              if (cat && key && recordsCache[cat] && recordsCache[cat][key]) {
-                recordsCache[cat][key][delType] = null;
-                const rec = recordsCache[cat][key];
-                if (rec.file || rec.link) {
-                  await persistRecordToDB(cat, key, rec);
-                } else {
-                  delete recordsCache[cat][key];
-                  await deleteRecordFromDB(cat, key);
-                }
-                renderAllBadges(true);
-              }
-              return;
-            }
-
-            if (
-              e.target.closest('button[onclick*="openTaskForm"], button[onclick*="openMateriForm"], button')
-            ) {
-              setTimeout(injectFieldsToActiveForm, 10);
-              setTimeout(injectFieldsToActiveForm, 60);
-            }
-          },
-          true
-        );
+          // 7. Suntikkan input file/link saat membuka modal Tambah/Edit Tugas atau Materi
+          if (e.target.closest('button[onclick*="openTaskForm"], button[onclick*="openMateriForm"], button')) {
+            setTimeout(injectFieldsToActiveForm, 10);
+            setTimeout(injectFieldsToActiveForm, 60);
+          }
+        });
 
         async function initAttachmentFeature() {
-          // Jika URL dibuka langsung dengan #tugas, otomatis tampilkan bagian tugas
           if (window.location.hash && window.location.hash !== "#beranda") {
             navigateToSection(window.location.hash);
           }
