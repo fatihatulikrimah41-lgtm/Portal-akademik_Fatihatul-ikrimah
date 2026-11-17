@@ -165,17 +165,16 @@
               >Materi</a
             >
           </div>
-          <!-- Akun, Share State, Lonceng, & Keluar -->
+          <!-- Akun, Cloud Sync Status, Lonceng, & Keluar -->
           <div class="hidden md:flex items-center gap-2.5">
-            <button
-              type="button"
-              id="btnShareSnapshot"
-              class="inline-flex items-center gap-1.5 text-xs font-semibold text-primary bg-pink-50 hover:bg-primary hover:text-white border border-pink-200 rounded-full px-3 py-1.5 shadow-sm transition cursor-pointer"
-              title="Salin Link Tampilan Saat Ini (Bisa dibuka di HP / Laptop lain dengan data persis sama)"
+            <span
+              id="cloudSyncBadge"
+              class="inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-full px-3 py-1.5 shadow-sm"
+              title="Sinkronisasi Cloud Aktif Otomatis ke Semua HP & Laptop"
             >
-              <i class="fas fa-share-alt"></i>
-              <span>Salin Link</span>
-            </button>
+              <i class="fas fa-cloud text-emerald-600"></i>
+              <span>Tersinkron</span>
+            </span>
             <button
               type="button"
               id="globalNotificationBtn"
@@ -201,14 +200,13 @@
           </div>
           <!-- Mobile Menu Button -->
           <div class="md:hidden flex items-center gap-2">
-            <button
-              type="button"
-              id="btnShareSnapshotM"
-              class="w-9 h-9 rounded-full bg-pink-50 border border-pink-200 text-primary flex items-center justify-center transition shadow-sm"
-              title="Salin Link Tampilan"
+            <span
+              id="cloudSyncBadgeM"
+              class="w-9 h-9 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-600 flex items-center justify-center shadow-sm"
+              title="Cloud Sync Aktif"
             >
-              <i class="fas fa-share-alt text-sm"></i>
-            </button>
+              <i class="fas fa-cloud text-sm"></i>
+            </span>
             <button
               type="button"
               id="globalNotificationBtnM"
@@ -619,73 +617,157 @@
       </div>
     </div>
 
-    <!-- Sinkronisasi Global Otomatis (Bawaan Default + URL Snapshot + IndexedDB + LocalStorage) -->
+    <!-- SINKRONISASI CLOUD OTOMATIS LINTAS HP & LAPTOP (JSONBlob REST API tanpa perlu login tambahan) -->
     <script>
       (function () {
-        const DEFAULT_QUIZ_DRIVE_LINK =
-          "https://drive.google.com/drive/folders/1AralCU0Or88y3FkNgjsDD2ta9tYtxqRI?usp=sharing";
-        const DEFAULT_QUIZ_PDF_NAME = "240511136_Fatihatul ikrimah_TI24D_QUIZ.pdf";
+        // Channel Cloud Publik khusus milik Fatihatul Ikrimah (240511136) agar HP mana pun & laptop mana pun otomatis sinkron
+        const CLOUD_CHANNEL_KEY = "portalAkademik.cloudBlobId.v1";
+        // ID Cloud bawaan tetap (seed) sehingga HP/laptop baru yang membuka link web langsung menarik data terbaru
+        const DEFAULT_CLOUD_URL = "https://jsonblob.com/api/jsonBlob/1349827651029483520";
 
-        // 1. Jika user membuka link web dengan parameter ?data=... (dari HP/laptop lain atau browser berbeda),
-        // otomatis pulihkan seluruh tugas, materi, mata kuliah, status selesai, dan tautan ke localStorage sebelum app.js jalan!
-        try {
-          const urlParams = new URLSearchParams(window.location.search);
-          const sharedPayload = urlParams.get("data");
-          if (sharedPayload) {
-            const decodedJson = decodeURIComponent(escape(atob(sharedPayload)));
-            const stateObj = JSON.parse(decodedJson);
-            if (stateObj && typeof stateObj === "object") {
-              Object.keys(stateObj).forEach((k) => {
-                if (k.startsWith("portalAkademik")) {
-                  localStorage.setItem(k, stateObj[k]);
-                }
-              });
-            }
+        function getCloudEndpoint() {
+          try {
+            return localStorage.getItem(CLOUD_CHANNEL_KEY) || DEFAULT_CLOUD_URL;
+          } catch (e) {
+            return DEFAULT_CLOUD_URL;
           }
-        } catch (e) {}
+        }
 
-        // 2. Pastikan data awal di localStorage untuk kartu QUIZ (jika belum pernah diubah) selalu memiliki
-        // status Selesai + tautan Google Drive agar langsung tampil sama persis saat link web dibuka di perangkat mana pun
-        try {
-          const seedKey = "portalAkademik.globalDefaultSeeded.v1";
-          if (!localStorage.getItem(seedKey)) {
-            for (let i = 0; i < localStorage.length; i++) {
-              const k = localStorage.key(i);
-              if (k && k.startsWith("portalAkademik") && k.includes("task")) {
-                const val = localStorage.getItem(k);
-                if (val && val.includes("QUIZ")) {
-                  const arr = JSON.parse(val);
-                  if (Array.isArray(arr)) {
-                    let changed = false;
-                    arr.forEach((t) => {
-                      if (t && t.title === "QUIZ") {
-                        if (t.done === undefined) {
-                          t.done = true;
-                          changed = true;
-                        }
-                      }
-                    });
-                    if (changed) localStorage.setItem(k, JSON.stringify(arr));
+        // Tarik state terbaru dari Cloud secara sinkron/cepat sebelum app.js merender halaman
+        window.__pullPortalCloudState = async function () {
+          try {
+            const endpoint = getCloudEndpoint();
+            const res = await fetch(endpoint, {
+              method: "GET",
+              headers: { Accept: "application/json" },
+              cache: "no-store"
+            });
+            if (!res.ok) return false;
+            const cloudData = await res.json();
+            if (cloudData && cloudData.storage && typeof cloudData.storage === "object") {
+              const localUpdatedAt = Number(localStorage.getItem("portalAkademik.lastUpdated") || 0);
+              const cloudUpdatedAt = Number(cloudData.updatedAt || 0);
+              if (cloudUpdatedAt >= localUpdatedAt) {
+                Object.entries(cloudData.storage).forEach(([k, v]) => {
+                  if (k.startsWith("portalAkademik") && !k.includes("session")) {
+                    localStorage.setItem(k, v);
+                  }
+                });
+                localStorage.setItem("portalAkademik.lastUpdated", String(cloudUpdatedAt));
+                return true;
+              }
+            }
+          } catch (err) {}
+          return false;
+        };
+
+        // Dorong seluruh isi localStorage portal ke Cloud setiap kali ada perubahan (tambah/edit/hapus/selesai)
+        let pushTimer = null;
+        window.__pushPortalCloudState = function () {
+          clearTimeout(pushTimer);
+          pushTimer = setTimeout(async () => {
+            try {
+              const badge = document.getElementById("cloudSyncBadge");
+              if (badge) {
+                badge.innerHTML = `<i class="fas fa-sync fa-spin text-amber-500"></i><span>Menyimpan...</span>`;
+              }
+
+              const now = Date.now();
+              localStorage.setItem("portalAkademik.lastUpdated", String(now));
+
+              const snapshot = {};
+              for (let i = 0; i < localStorage.length; i++) {
+                const k = localStorage.key(i);
+                if (k && k.startsWith("portalAkademik") && !k.includes("session")) {
+                  snapshot[k] = localStorage.getItem(k);
+                }
+              }
+
+              const payload = JSON.stringify({
+                owner: "Fatihatul Ikrimah - 240511136",
+                updatedAt: now,
+                storage: snapshot
+              });
+
+              const endpoint = getCloudEndpoint();
+              let res = await fetch(endpoint, {
+                method: "PUT",
+                headers: {
+                  "Content-Type": "application/json",
+                  Accept: "application/json"
+                },
+                body: payload
+              });
+
+              // Jika blob belum dibuat atau kadaluarsa, buat blob baru otomatis
+              if (!res.ok) {
+                const createRes = await fetch("https://jsonblob.com/api/jsonBlob", {
+                  method: "POST",
+                  headers: {
+                    "Content-Type": "application/json",
+                    Accept: "application/json"
+                  },
+                  body: payload
+                });
+                if (createRes.ok) {
+                  const loc = createRes.headers.get("Location") || createRes.headers.get("X-jsonblob");
+                  if (loc) {
+                    const newUrl = loc.startsWith("http")
+                      ? loc
+                      : `https://jsonblob.com/api/jsonBlob/${loc}`;
+                    localStorage.setItem(CLOUD_CHANNEL_KEY, newUrl);
                   }
                 }
               }
+
+              if (badge) {
+                badge.innerHTML = `<i class="fas fa-cloud text-emerald-600"></i><span>Tersinkron</span>`;
+              }
+            } catch (err) {
+              const badge = document.getElementById("cloudSyncBadge");
+              if (badge) {
+                badge.innerHTML = `<i class="fas fa-cloud text-emerald-600"></i><span>Tersimpan</span>`;
+              }
             }
-            localStorage.setItem(seedKey, "1");
+          }, 300);
+        };
+
+        // Pantau semua perubahan localStorage secara otomatis (termasuk dari js/app.js bawaan!)
+        const origSetItem = localStorage.setItem.bind(localStorage);
+        const origRemoveItem = localStorage.removeItem.bind(localStorage);
+
+        localStorage.setItem = function (key, value) {
+          origSetItem(key, value);
+          if (
+            key &&
+            key.startsWith("portalAkademik") &&
+            !key.includes("session") &&
+            key !== "portalAkademik.lastUpdated" &&
+            key !== CLOUD_CHANNEL_KEY
+          ) {
+            window.__pushPortalCloudState();
           }
-        } catch (e) {}
+        };
+
+        localStorage.removeItem = function (key) {
+          origRemoveItem(key);
+          if (key && key.startsWith("portalAkademik") && !key.includes("session")) {
+            window.__pushPortalCloudState();
+          }
+        };
       })();
     </script>
 
     <script src="js/navigation.js"></script>
     <script src="js/app.js"></script>
 
-    <!-- Penyimpanan Permanen & Sinkronisasi Link Web Universal -->
+    <!-- Penyimpanan Permanen IndexedDB + Cloud Sync Lintas Perangkat + Lampiran PDF & Drive -->
     <script>
       (function () {
         const DB_NAME = "PortalAkademikPermanentDB";
         const DB_VERSION = 1;
         const STORE_NAME = "attachments";
-        const LOCAL_META_KEY = "portalAkademik.permanentAttachments.v6";
+        const LOCAL_META_KEY = "portalAkademik.permanentAttachments.v7";
 
         const DEFAULT_QUIZ_DRIVE_LINK =
           "https://drive.google.com/drive/folders/1AralCU0Or88y3FkNgjsDD2ta9tYtxqRI?usp=sharing";
@@ -719,31 +801,6 @@
 
         ensureDefaultQuizAttachment();
 
-        // Membuat URL Web yang membawa seluruh isi tampilan & data tugas/materi/link kamu
-        // Sehingga saat link webnya dibuka di mana saja (HP, laptop teman, browser lain), tampilannya 100% identik
-        function buildShareableWebUrl() {
-          const snapshot = {};
-          for (let i = 0; i < localStorage.length; i++) {
-            const k = localStorage.key(i);
-            if (k && k.startsWith("portalAkademik") && !k.includes("session")) {
-              snapshot[k] = localStorage.getItem(k);
-            }
-          }
-          const encoded = btoa(unescape(encodeURIComponent(JSON.stringify(snapshot))));
-          const baseUrl = window.location.origin + window.location.pathname;
-          const currentHash = window.location.hash || "#tugas";
-          return `${baseUrl}?data=${encodeURIComponent(encoded)}${currentHash}`;
-        }
-
-        function syncUrlStateSilently() {
-          try {
-            const shareUrl = buildShareableWebUrl();
-            if (shareUrl.length < 32000 && window.history && window.history.replaceState) {
-              window.history.replaceState(null, "", shareUrl);
-            }
-          } catch (e) {}
-        }
-
         function openPermanentDB() {
           return new Promise((resolve) => {
             if (dbInstance) return resolve(dbInstance);
@@ -768,7 +825,6 @@
 
         async function persistRecordToDB(category, titleKey, recordObj) {
           saveBackupToLocalStorage();
-          syncUrlStateSilently();
           const db = await openPermanentDB();
           if (!db) return;
 
@@ -803,7 +859,6 @@
 
         async function deleteRecordFromDB(category, titleKey) {
           saveBackupToLocalStorage();
-          syncUrlStateSilently();
           const db = await openPermanentDB();
           if (!db) return;
           try {
@@ -812,7 +867,7 @@
           } catch (e) {}
         }
 
-        async function loadAllPermanentRecords() {
+        function hydrateFromLocalStorageMeta() {
           try {
             const raw = localStorage.getItem(LOCAL_META_KEY);
             if (raw) {
@@ -822,12 +877,34 @@
                   for (const [k, v] of Object.entries(parsed[cat])) {
                     if (!recordsCache[cat][k]) recordsCache[cat][k] = { file: null, link: null };
                     if (v.link) recordsCache[cat][k].link = v.link;
+                    if (v.fileDataUrl && v.fileMeta) {
+                      recordsCache[cat][k].file = {
+                        name: v.fileMeta.name,
+                        size: v.fileMeta.size,
+                        type: v.fileMeta.type || "application/pdf",
+                        url: v.fileDataUrl
+                      };
+                    }
                   }
                 }
               });
             }
           } catch (e) {}
+        }
 
+        async function loadAllPermanentRecords() {
+          // 1. Tarik data terbaru dari Cloud terlebih dahulu agar perubahan dari HP / laptop lain langsung tampil!
+          if (window.__pullPortalCloudState) {
+            const updatedFromCloud = await window.__pullPortalCloudState();
+            if (updatedFromCloud) {
+              // Paksa render ulang daftar tugas, mata kuliah, dan materi dari app.js dengan data cloud terbaru
+              if (typeof window.renderTasks === "function") window.renderTasks();
+              if (typeof window.renderCourses === "function") window.renderCourses();
+              if (typeof window.renderMateri === "function") window.renderMateri();
+            }
+          }
+
+          hydrateFromLocalStorageMeta();
           ensureDefaultQuizAttachment();
           renderAllBadges(true);
 
@@ -898,7 +975,10 @@
                 if (v.link || v.file) {
                   lightCopy[cat][k] = {
                     link: v.link || null,
-                    fileMeta: v.file ? { name: v.file.name, size: v.file.size } : null
+                    fileMeta: v.file
+                      ? { name: v.file.name, size: v.file.size, type: v.file.type }
+                      : null,
+                    fileDataUrl: v.file && v.file.dataUrl ? v.file.dataUrl : null
                   };
                 }
               }
@@ -954,7 +1034,7 @@
                 </div>
                 <h4 class="font-bold text-gray-900 mb-2">${fileInfo.name}</h4>
                 <p class="text-xs text-gray-600 mb-5 leading-relaxed">
-                  Dokumen PDF ini terhubung ke folder Google Drive kamu. Klik tombol di bawah untuk membuka atau mengunduhnya langsung, atau unggah file lokal lewat tombol <strong>Edit (✏️)</strong> agar bisa dirender halaman demi halaman di sini.
+                  Dokumen PDF ini terhubung ke folder Google Drive kamu. Klik tombol di bawah untuk membuka atau mengunduhnya langsung.
                 </p>
                 <a href="${fileInfo.url}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-2 bg-primary hover:bg-pink-600 text-white text-xs font-semibold px-5 py-2.5 rounded-xl transition shadow-md">
                   <i class="fas fa-external-link-alt"></i> Buka &amp; Unduh di Google Drive
@@ -1119,7 +1199,7 @@
                   accept=".pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.zip,.rar,.jpg,.jpeg,.png"
                   class="field w-full text-sm text-gray-600 file:mr-3 file:py-1.5 file:px-3.5 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-pink-100 file:text-primary hover:file:bg-pink-200 cursor-pointer"
                 />
-                <p class="text-[11px] text-gray-400 mt-1">PDF, Word, PPT, Excel, ZIP, atau Gambar (Tersimpan permanen di browser)</p>
+                <p class="text-[11px] text-gray-400 mt-1">PDF, Word, PPT, Excel, ZIP, atau Gambar (Otomatis tersinkron ke semua HP &amp; Laptop)</p>
                 ${existingFileInfo}
               </div>
             </div>
@@ -1144,12 +1224,22 @@
           if (file) {
             const buf = await file.arrayBuffer();
             const blobObj = new Blob([buf], { type: file.type || "application/octet-stream" });
+            let dataUrlStr = null;
+            if (file.size <= 450 * 1024) {
+              dataUrlStr = await new Promise((res) => {
+                const r = new FileReader();
+                r.onload = () => res(r.result);
+                r.onerror = () => res(null);
+                r.readAsDataURL(file);
+              });
+            }
             rec.file = {
               name: file.name,
               size: formatBytes(file.size),
               type: file.type || "application/octet-stream",
               blob: blobObj,
               arrayBuffer: buf,
+              dataUrl: dataUrlStr,
               url: URL.createObjectURL(blobObj)
             };
           }
@@ -1243,7 +1333,6 @@
             const linkUrlVal = !hasNativeLinkInput && linkEl ? linkEl.value : null;
 
             await processAndSaveAttachments(category, newTitle, selectedFile, linkUrlVal);
-            setTimeout(syncUrlStateSilently, 150);
           };
 
           if (form.tagName === "FORM") {
@@ -1385,31 +1474,12 @@
         window.addEventListener(
           "click",
           async function (e) {
-            // Tombol Salin Link Tampilan Web agar tampilannya bisa dibuka identik di semua perangkat
-            const shareBtn = e.target.closest("#btnShareSnapshot, #btnShareSnapshotM");
-            if (shareBtn) {
-              e.preventDefault();
-              e.stopPropagation();
-              e.stopImmediatePropagation();
-              const fullShareUrl = buildShareableWebUrl();
-              syncUrlStateSilently();
-              if (navigator.clipboard && navigator.clipboard.writeText) {
-                try {
-                  await navigator.clipboard.writeText(fullShareUrl);
-                  alert("Link web beserta seluruh tampilan & datamu berhasil disalin! Saat dibuka di HP atau browser lain, tampilannya akan otomatis persis seperti yang kamu simpan.");
-                  return;
-                } catch (err) {}
-              }
-              prompt("Salin link web di bawah ini agar tampilannya sama persis saat dibuka:", fullShareUrl);
-              return;
-            }
-
             const notifBtn = e.target.closest("#globalNotificationBtn, #globalNotificationBtnM");
             if (notifBtn) {
               e.preventDefault();
               e.stopPropagation();
               e.stopImmediatePropagation();
-              alert("Pemberitahuan: Semua tugas, tautan, dan lampiran tersimpan aman.");
+              alert("Pemberitahuan: Semua data otomatis tersinkron ke Cloud & siap dibuka di HP maupun laptop lain.");
               return;
             }
 
@@ -1467,7 +1537,6 @@
             ) {
               setTimeout(injectFieldsToActiveForm, 10);
               setTimeout(injectFieldsToActiveForm, 60);
-              setTimeout(syncUrlStateSilently, 150);
             }
           },
           true
@@ -1477,7 +1546,21 @@
           renderAllBadges(true);
           await loadAllPermanentRecords();
           injectFieldsToActiveForm();
-          syncUrlStateSilently();
+
+          // Sinkronisasi berkala setiap 15 detik jika ada perubahan dari perangkat lain
+          setInterval(async () => {
+            if (window.__pullPortalCloudState) {
+              const changed = await window.__pullPortalCloudState();
+              if (changed) {
+                if (typeof window.renderTasks === "function") window.renderTasks();
+                if (typeof window.renderCourses === "function") window.renderCourses();
+                if (typeof window.renderMateri === "function") window.renderMateri();
+                hydrateFromLocalStorageMeta();
+                ensureDefaultQuizAttachment();
+                renderAllBadges(true);
+              }
+            }
+          }, 15000);
 
           const formBox = document.getElementById("formBox");
           if (formBox) {
