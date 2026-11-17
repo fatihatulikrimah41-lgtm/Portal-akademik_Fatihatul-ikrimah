@@ -32,7 +32,6 @@
     </script>
     <link rel="stylesheet" href="css/style.css" />
     <style>
-      /* Memastikan SEMUA tombol, link, dan input bisa disentuh/diklik tanpa tertutup overlay apa pun */
       button,
       a,
       input,
@@ -41,12 +40,10 @@
         touch-action: manipulation;
         cursor: pointer;
       }
-      /* Semua backdrop / dekorasi fixed wajib pointer-events: none */
       .pointer-events-none,
       .fixed.inset-0.z-\[-1\] {
         pointer-events: none !important;
       }
-      /* Jika layar login tidak aktif (sudah login), pastikan tidak menutupi halaman */
       html.authed #authScreen {
         display: none !important;
         pointer-events: none !important;
@@ -649,10 +646,11 @@
       </div>
     </div>
 
-    <!-- SINKRONISASI CLOUD OTOMATIS LINTAS HP & LAPTOP (Aman, Tanpa Override localStorage Native) -->
+    <!-- SINKRONISASI CLOUD OTOMATIS & SEED DEFAULT LINTAS HP & LAPTOP -->
     <script>
       (function () {
-        const CLOUD_CHANNEL_KEY = "portalAkademik.cloudBlobId.v2";
+        // Endpoint KVDB / JSONBlob tetap untuk sinkronisasi real-time antar HP & laptop
+        const CLOUD_CHANNEL_KEY = "portalAkademik.cloudBlobId.v3";
         const DEFAULT_CLOUD_URL = "https://jsonblob.com/api/jsonBlob/1349827651029483520";
 
         function getCloudEndpoint() {
@@ -662,6 +660,35 @@
             return DEFAULT_CLOUD_URL;
           }
         }
+
+        // Pastikan status default QUIZ di localStorage langsung Selesai (agar di HP & laptop baru tampil persis sama seperti di gambar)
+        window.__ensureSeededDefaultTasks = function () {
+          try {
+            let foundTaskKey = null;
+            for (let i = 0; i < window.localStorage.length; i++) {
+              const k = window.localStorage.key(i);
+              if (k && k.startsWith("portalAkademik") && k.toLowerCase().includes("task")) {
+                foundTaskKey = k;
+                const raw = window.localStorage.getItem(k);
+                if (raw) {
+                  const arr = JSON.parse(raw);
+                  if (Array.isArray(arr)) {
+                    let changed = false;
+                    arr.forEach((item) => {
+                      if (item && item.title === "QUIZ" && !item.done && !item._userMarkedPending) {
+                        item.done = true;
+                        changed = true;
+                      }
+                    });
+                    if (changed) {
+                      window.localStorage.setItem(k, JSON.stringify(arr));
+                    }
+                  }
+                }
+              }
+            }
+          } catch (e) {}
+        };
 
         window.__pullPortalCloudState = async function () {
           try {
@@ -766,7 +793,6 @@
           }
         };
 
-        // Cek perubahan data setiap 2.5 detik tanpa memodifikasi prototype Storage bawaan browser!
         setInterval(window.__pushPortalCloudState, 2500);
       })();
     </script>
@@ -774,13 +800,13 @@
     <script src="js/navigation.js"></script>
     <script src="js/app.js"></script>
 
-    <!-- Fitur Lampiran File/Link, Pratinjau PDF, & Kontrol Sentuh Bersih -->
+    <!-- Fitur Lampiran File/Link (Permanen di Semua HP & Laptop) + Pratinjau PDF -->
     <script>
       (function () {
         const DB_NAME = "PortalAkademikPermanentDB";
         const DB_VERSION = 1;
         const STORE_NAME = "attachments";
-        const LOCAL_META_KEY = "portalAkademik.permanentAttachments.v8";
+        const LOCAL_META_KEY = "portalAkademik.permanentAttachments.v9";
 
         const DEFAULT_QUIZ_DRIVE_LINK =
           "https://drive.google.com/drive/folders/1AralCU0Or88y3FkNgjsDD2ta9tYtxqRI?usp=sharing";
@@ -794,6 +820,7 @@
         let recordsCache = { tugas: {}, materi: {} };
         let dbInstance = null;
 
+        // Selalu siapkan lampiran PDF & Google Drive untuk kartu QUIZ di semua HP & Laptop baru
         function ensureDefaultQuizAttachment() {
           if (!recordsCache.tugas["QUIZ"]) {
             recordsCache.tugas["QUIZ"] = { file: null, link: null };
@@ -906,6 +933,10 @@
         }
 
         async function loadAllPermanentRecords() {
+          if (window.__ensureSeededDefaultTasks) {
+            window.__ensureSeededDefaultTasks();
+          }
+
           if (window.__pullPortalCloudState) {
             const updatedFromCloud = await window.__pullPortalCloudState();
             if (updatedFromCloud) {
@@ -1482,8 +1513,6 @@
           renderBadgesForContainer("materiList", "materi", forceRefresh);
         }
 
-        // Hanya menangani tombol kustom (Lonceng, Lihat PDF, Tutup Pratinjau, Hapus Lampiran X)
-        // Tanpa menyentuh atau memblokir tombol navigasi / form bawaan navigation.js & app.js!
         document.addEventListener("click", async function (e) {
           const notifBtn = e.target.closest("#globalNotificationBtn, #globalNotificationBtnM");
           if (notifBtn) {
@@ -1533,6 +1562,9 @@
         });
 
         async function initAttachmentFeature() {
+          if (window.__ensureSeededDefaultTasks) {
+            window.__ensureSeededDefaultTasks();
+          }
           renderAllBadges(true);
           await loadAllPermanentRecords();
           injectFieldsToActiveForm();
