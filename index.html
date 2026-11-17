@@ -31,6 +31,25 @@
       } catch (e) {}
     </script>
     <link rel="stylesheet" href="css/style.css" />
+    <style>
+      /* Memastikan semua tombol & link di layar sentuh HP langsung merespons tanpa delay / terhalang dekorasi */
+      button,
+      a,
+      input,
+      select,
+      textarea {
+        touch-action: manipulation;
+      }
+      nav,
+      main,
+      section,
+      #beranda a,
+      #tugas button,
+      #tugas a {
+        position: relative;
+        z-index: 20;
+      }
+    </style>
   </head>
   <body
     class="bg-pink-100 text-gray-800 font-sans antialiased flex flex-col min-h-screen relative overflow-x-hidden"
@@ -216,7 +235,7 @@
             </button>
             <button
               id="mobile-menu-btn"
-              class="text-gray-600 hover:text-primary focus:outline-none"
+              class="text-gray-600 hover:text-primary focus:outline-none p-2"
             >
               <i class="fas fa-bars text-2xl"></i>
             </button>
@@ -226,7 +245,7 @@
       <!-- Mobile Menu Panel -->
       <div
         id="mobile-menu"
-        class="hidden md:hidden bg-white/90 backdrop-blur-md border-t border-pink-100 absolute w-full z-[60] shadow-lg"
+        class="hidden md:hidden bg-white/95 backdrop-blur-md border-t border-pink-100 absolute w-full z-[60] shadow-lg"
       >
         <div class="px-4 pt-2 pb-4 space-y-2 sm:px-3">
           <a
@@ -293,10 +312,11 @@
               khususnya pada mata kuliah
               <strong>Analisis &amp; Desain Perangkat Lunak (ADPL)</strong>.
             </p>
-            <div class="flex flex-wrap gap-4">
+            <div class="flex flex-wrap gap-4 relative z-30">
               <a
                 href="#tugas"
-                class="bg-primary hover:bg-pink-600 text-white font-semibold py-3 px-6 rounded-lg shadow-lg shadow-pink-200 transition duration-300 ease-in-out transform hover:-translate-y-1 flex items-center gap-2"
+                id="btnHeroLihatTugas"
+                class="bg-primary hover:bg-pink-600 active:bg-pink-700 text-white font-semibold py-3 px-6 rounded-lg shadow-lg shadow-pink-200 transition duration-200 flex items-center gap-2 cursor-pointer"
               >
                 Lihat Tugas <i class="fas fa-arrow-right"></i>
               </a>
@@ -304,7 +324,7 @@
                 href="https://github.com/fatihatulikrimah41-lgtm/Portal-akademik_Fatihatul-ikrimah"
                 target="_blank"
                 rel="noopener noreferrer"
-                class="bg-white border-2 border-gray-200 text-gray-700 hover:border-gray-300 hover:bg-gray-50 font-semibold py-3 px-6 rounded-lg transition duration-300 flex items-center gap-2"
+                class="bg-white border-2 border-gray-200 text-gray-700 hover:border-gray-300 hover:bg-gray-50 font-semibold py-3 px-6 rounded-lg transition duration-200 flex items-center gap-2"
               >
                 <i class="fab fa-github text-xl"></i> GitHub
               </a>
@@ -421,14 +441,14 @@
         class="w-full flex justify-center items-end mt-auto pt-16 pb-4 relative z-0 pointer-events-none"
       >
         <div
-          class="absolute bottom-0 left-0 md:left-8 z-0 opacity-80 animate-sway"
+          class="absolute bottom-0 left-0 md:left-8 z-0 opacity-80 animate-sway pointer-events-none"
         >
           <svg class="w-20 h-56 md:w-28 md:h-72 text-pink-400 drop-shadow-md">
             <use href="#flower-tall"></use>
           </svg>
         </div>
 
-        <div class="flex justify-center items-end gap-6 relative z-10 mb-2">
+        <div class="flex justify-center items-end gap-6 relative z-10 mb-2 pointer-events-none">
           <i
             class="fas fa-heart text-2xl text-pink-300 animate-float-love delay-1"
           ></i>
@@ -447,7 +467,7 @@
         </div>
 
         <div
-          class="absolute bottom-0 right-0 md:right-8 z-0 opacity-80 animate-sway-delayed"
+          class="absolute bottom-0 right-0 md:right-8 z-0 opacity-80 animate-sway-delayed pointer-events-none"
         >
           <svg class="w-16 h-44 md:w-24 md:h-56 text-rose-400 drop-shadow-md">
             <use href="#flower-short"></use>
@@ -617,12 +637,10 @@
       </div>
     </div>
 
-    <!-- SINKRONISASI CLOUD OTOMATIS LINTAS HP & LAPTOP (JSONBlob REST API tanpa perlu login tambahan) -->
+    <!-- SINKRONISASI CLOUD OTOMATIS LINTAS HP & LAPTOP -->
     <script>
       (function () {
-        // Channel Cloud Publik khusus milik Fatihatul Ikrimah (240511136) agar HP mana pun & laptop mana pun otomatis sinkron
         const CLOUD_CHANNEL_KEY = "portalAkademik.cloudBlobId.v1";
-        // ID Cloud bawaan tetap (seed) sehingga HP/laptop baru yang membuka link web langsung menarik data terbaru
         const DEFAULT_CLOUD_URL = "https://jsonblob.com/api/jsonBlob/1349827651029483520";
 
         function getCloudEndpoint() {
@@ -633,7 +651,6 @@
           }
         }
 
-        // Tarik state terbaru dari Cloud secara sinkron/cepat sebelum app.js merender halaman
         window.__pullPortalCloudState = async function () {
           try {
             const endpoint = getCloudEndpoint();
@@ -661,7 +678,6 @@
           return false;
         };
 
-        // Dorong seluruh isi localStorage portal ke Cloud setiap kali ada perubahan (tambah/edit/hapus/selesai)
         let pushTimer = null;
         window.__pushPortalCloudState = function () {
           clearTimeout(pushTimer);
@@ -699,7 +715,6 @@
                 body: payload
               });
 
-              // Jika blob belum dibuat atau kadaluarsa, buat blob baru otomatis
               if (!res.ok) {
                 const createRes = await fetch("https://jsonblob.com/api/jsonBlob", {
                   method: "POST",
@@ -732,7 +747,6 @@
           }, 300);
         };
 
-        // Pantau semua perubahan localStorage secara otomatis (termasuk dari js/app.js bawaan!)
         const origSetItem = localStorage.setItem.bind(localStorage);
         const origRemoveItem = localStorage.removeItem.bind(localStorage);
 
@@ -761,7 +775,7 @@
     <script src="js/navigation.js"></script>
     <script src="js/app.js"></script>
 
-    <!-- Penyimpanan Permanen IndexedDB + Cloud Sync Lintas Perangkat + Lampiran PDF & Drive -->
+    <!-- Penyimpanan Permanen + Navigasi Mobile Responsif ("Lihat Tugas") + Cloud Sync -->
     <script>
       (function () {
         const DB_NAME = "PortalAkademikPermanentDB";
@@ -780,6 +794,43 @@
 
         let recordsCache = { tugas: {}, materi: {} };
         let dbInstance = null;
+
+        // Fungsi pindah tab/section langsung (berfungsi 100% di HP maupun Desktop)
+        function navigateToSection(sectionHash) {
+          const targetId = (sectionHash || "#beranda").replace("#", "");
+          const sections = document.querySelectorAll(".page-section");
+          const targetEl = document.getElementById(targetId);
+          if (!targetEl) return;
+
+          sections.forEach((sec) => {
+            if (sec.id === targetId) {
+              sec.classList.remove("hidden");
+            } else {
+              sec.classList.add("hidden");
+            }
+          });
+
+          // Tutup menu mobile jika sedang terbuka
+          const mobileMenu = document.getElementById("mobile-menu");
+          if (mobileMenu) mobileMenu.classList.add("hidden");
+
+          // Update style aktif pada nav-link
+          document.querySelectorAll(".nav-link").forEach((link) => {
+            const href = link.getAttribute("href");
+            if (href === "#" + targetId) {
+              link.classList.add("text-primary", "font-bold");
+              link.classList.remove("text-gray-600");
+            } else {
+              link.classList.remove("text-primary", "font-bold");
+              link.classList.add("text-gray-600");
+            }
+          });
+
+          if (window.location.hash !== "#" + targetId) {
+            history.replaceState(null, "", "#" + targetId);
+          }
+          window.scrollTo({ top: 0, behavior: "smooth" });
+        }
 
         function ensureDefaultQuizAttachment() {
           if (!recordsCache.tugas["QUIZ"]) {
@@ -893,11 +944,9 @@
         }
 
         async function loadAllPermanentRecords() {
-          // 1. Tarik data terbaru dari Cloud terlebih dahulu agar perubahan dari HP / laptop lain langsung tampil!
           if (window.__pullPortalCloudState) {
             const updatedFromCloud = await window.__pullPortalCloudState();
             if (updatedFromCloud) {
-              // Paksa render ulang daftar tugas, mata kuliah, dan materi dari app.js dengan data cloud terbaru
               if (typeof window.renderTasks === "function") window.renderTasks();
               if (typeof window.renderCourses === "function") window.renderCourses();
               if (typeof window.renderMateri === "function") window.renderMateri();
@@ -1034,7 +1083,7 @@
                 </div>
                 <h4 class="font-bold text-gray-900 mb-2">${fileInfo.name}</h4>
                 <p class="text-xs text-gray-600 mb-5 leading-relaxed">
-                  Dokumen PDF ini terhubung ke folder Google Drive kamu. Klik tombol di bawah untuk membuka atau mengunduhnya langsung.
+                  Dokumen PDF ini terhubung ke folder Google Drive kamu. Ketuk tombol di bawah untuk membuka atau mengunduhnya langsung.
                 </p>
                 <a href="${fileInfo.url}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-2 bg-primary hover:bg-pink-600 text-white text-xs font-semibold px-5 py-2.5 rounded-xl transition shadow-md">
                   <i class="fas fa-external-link-alt"></i> Buka &amp; Unduh di Google Drive
@@ -1089,7 +1138,7 @@
               <div class="my-auto text-center p-6 bg-white rounded-2xl shadow max-w-md">
                 <i class="fas fa-exclamation-circle text-3xl text-rose-500 mb-3"></i>
                 <h4 class="font-bold text-gray-900 mb-1">Gagal Menampilkan Pratinjau</h4>
-                <p class="text-xs text-gray-600 mb-4">Silakan klik tombol Unduh untuk membukanya di perangkatmu.</p>
+                <p class="text-xs text-gray-600 mb-4">Silakan ketuk tombol Unduh untuk membukanya di perangkatmu.</p>
                 <a href="${fileInfo.url}" download="${fileInfo.name}" class="inline-flex items-center gap-2 bg-primary text-white text-xs font-semibold px-4 py-2 rounded-lg">
                   <i class="fas fa-download"></i> Unduh PDF
                 </a>
@@ -1474,6 +1523,19 @@
         window.addEventListener(
           "click",
           async function (e) {
+            // Tangkap klik tombol "Lihat Tugas" di beranda maupun link menu navigasi agar langsung pindah di layar HP
+            const navTrigger = e.target.closest(
+              '#btnHeroLihatTugas, a[href="#tugas"], a[href="#beranda"], a[href="#matakuliah"], a[href="#materi"]'
+            );
+            if (navTrigger) {
+              const targetHash = navTrigger.getAttribute("href");
+              if (targetHash && targetHash.startsWith("#")) {
+                e.preventDefault();
+                navigateToSection(targetHash);
+                return;
+              }
+            }
+
             const notifBtn = e.target.closest("#globalNotificationBtn, #globalNotificationBtnM");
             if (notifBtn) {
               e.preventDefault();
@@ -1543,11 +1605,15 @@
         );
 
         async function initAttachmentFeature() {
+          // Jika URL dibuka langsung dengan #tugas, otomatis tampilkan bagian tugas
+          if (window.location.hash && window.location.hash !== "#beranda") {
+            navigateToSection(window.location.hash);
+          }
+
           renderAllBadges(true);
           await loadAllPermanentRecords();
           injectFieldsToActiveForm();
 
-          // Sinkronisasi berkala setiap 15 detik jika ada perubahan dari perangkat lain
           setInterval(async () => {
             if (window.__pullPortalCloudState) {
               const changed = await window.__pullPortalCloudState();
