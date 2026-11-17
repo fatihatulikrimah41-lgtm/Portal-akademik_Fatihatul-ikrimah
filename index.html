@@ -48,7 +48,6 @@
         display: none !important;
         pointer-events: none !important;
       }
-      /* Gaya visual kartu Tugas Selesai */
       .task-card-completed {
         background: linear-gradient(135deg, #f0fdf4 0%, #ffffff 70%) !important;
         border: 2px solid #86efac !important;
@@ -672,6 +671,7 @@
           }
         }
 
+        // PAKSA AGAR SEMUA PENGGUNA (HP / LAPTOP LAIN) OTOMATIS MEMILIKI DATA TUGAS & QUIZ SELESAI BESERTA ATTACHMENTNYA
         window.__ensureHardcodedDefaultTasks = function () {
           try {
             let foundKey = null;
@@ -699,7 +699,7 @@
               foundTasks.forEach((t) => {
                 if (t && t.title === "QUIZ") {
                   hasQuiz = true;
-                  t.done = true;
+                  t.done = true; // Set Selesai
                 }
               });
             }
@@ -715,6 +715,22 @@
             }
 
             window.localStorage.setItem(foundKey, JSON.stringify(foundTasks));
+
+            // Pastikan data universal attachment untuk QUIZ juga selalu ada di localStorage semua pengguna
+            const attKey = "portalAkademik.permanentAttachments.v12";
+            let attMeta = {};
+            const rawAtt = localStorage.getItem(attKey);
+            if (rawAtt) {
+              try { attMeta = JSON.parse(rawAtt); } catch(e){}
+            }
+            if (!attMeta.tugas) attMeta.tugas = {};
+            if (!attMeta.tugas["QUIZ"]) {
+              attMeta.tugas["QUIZ"] = {
+                link: { url: "https://drive.google.com/drive/folders/1AralCU0Or88y3FkNgjsDD2ta9tYtxqRI?usp=sharing" },
+                fileMeta: { name: "240511136_Fatihatul ikrimah_TI24D_QUIZ.pdf", size: "2.6 MB", type: "application/pdf" }
+              };
+              localStorage.setItem(attKey, JSON.stringify(attMeta));
+            }
           } catch (e) {}
         };
 
@@ -836,7 +852,7 @@
         const DB_NAME = "PortalAkademikPermanentDB";
         const DB_VERSION = 1;
         const STORE_NAME = "attachments";
-        const LOCAL_META_KEY = "portalAkademik.permanentAttachments.v10";
+        const LOCAL_META_KEY = "portalAkademik.permanentAttachments.v12";
 
         const DEFAULT_QUIZ_DRIVE_LINK =
           "https://drive.google.com/drive/folders/1AralCU0Or88y3FkNgjsDD2ta9tYtxqRI?usp=sharing";
@@ -957,6 +973,24 @@
                   }
                 }
               });
+            }
+            // Load dari global attachments v1
+            const rawGlobal = localStorage.getItem("portalAkademik.globalAttachments.v1");
+            if (rawGlobal) {
+              const parsedGlobal = JSON.parse(rawGlobal);
+              for (const [k, v] of Object.entries(parsedGlobal)) {
+                if (!recordsCache.tugas[k]) recordsCache.tugas[k] = { file: null, link: null };
+                if (v.link) recordsCache.tugas[k].link = v.link;
+                if (v.file) {
+                  recordsCache.tugas[k].file = {
+                    name: v.file.name,
+                    size: v.file.size || "2.6 MB",
+                    type: "application/pdf",
+                    isRemoteDriveFallback: true,
+                    url: v.file.url || DEFAULT_QUIZ_DRIVE_LINK
+                  };
+                }
+              }
             }
           } catch (e) {}
         }
