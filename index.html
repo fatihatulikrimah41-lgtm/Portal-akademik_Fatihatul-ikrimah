@@ -48,6 +48,18 @@
         display: none !important;
         pointer-events: none !important;
       }
+      /* Gaya visual kartu Tugas Selesai */
+      .task-card-completed {
+        background: linear-gradient(135deg, #f0fdf4 0%, #ffffff 70%) !important;
+        border: 2px solid #86efac !important;
+        box-shadow: 0 10px 25px -5px rgba(16, 185, 129, 0.14) !important;
+      }
+      .task-title-completed {
+        text-decoration: line-through;
+        text-decoration-color: #10b981;
+        text-decoration-thickness: 2px;
+        color: #4b5563 !important;
+      }
     </style>
   </head>
   <body
@@ -646,10 +658,9 @@
       </div>
     </div>
 
-    <!-- SINKRONISASI CLOUD OTOMATIS & SEED DEFAULT LINTAS HP & LAPTOP -->
+    <!-- SINKRONISASI CLOUD OTOMATIS & HARDCODED SEED DEFAULT DI SEMUA PERANGKAT -->
     <script>
       (function () {
-        // Endpoint KVDB / JSONBlob tetap untuk sinkronisasi real-time antar HP & laptop
         const CLOUD_CHANNEL_KEY = "portalAkademik.cloudBlobId.v3";
         const DEFAULT_CLOUD_URL = "https://jsonblob.com/api/jsonBlob/1349827651029483520";
 
@@ -661,32 +672,50 @@
           }
         }
 
-        // Pastikan status default QUIZ di localStorage langsung Selesai (agar di HP & laptop baru tampil persis sama seperti di gambar)
-        window.__ensureSeededDefaultTasks = function () {
+        // Paksa agar di perangkat baru (HP/Laptop lain), task "QUIZ" otomatis dibuat berstatus Selesai & ada di list
+        window.__ensureHardcodedDefaultTasks = function () {
           try {
-            let foundTaskKey = null;
+            let foundKey = null;
+            let foundTasks = [];
             for (let i = 0; i < window.localStorage.length; i++) {
               const k = window.localStorage.key(i);
               if (k && k.startsWith("portalAkademik") && k.toLowerCase().includes("task")) {
-                foundTaskKey = k;
+                foundKey = k;
                 const raw = window.localStorage.getItem(k);
                 if (raw) {
-                  const arr = JSON.parse(raw);
-                  if (Array.isArray(arr)) {
-                    let changed = false;
-                    arr.forEach((item) => {
-                      if (item && item.title === "QUIZ" && !item.done && !item._userMarkedPending) {
-                        item.done = true;
-                        changed = true;
-                      }
-                    });
-                    if (changed) {
-                      window.localStorage.setItem(k, JSON.stringify(arr));
-                    }
-                  }
+                  try {
+                    foundTasks = JSON.parse(raw);
+                  } catch (err) {}
                 }
+                break;
               }
             }
+
+            if (!foundKey) {
+              foundKey = "portalAkademik.tasks.Fatihatul Ikrimah";
+            }
+
+            let hasQuiz = false;
+            if (Array.isArray(foundTasks)) {
+              foundTasks.forEach((t) => {
+                if (t && t.title === "QUIZ") {
+                  hasQuiz = true;
+                  t.done = true; // Set Selesai
+                }
+              });
+            }
+
+            if (!hasQuiz) {
+              foundTasks.push({
+                title: "QUIZ",
+                course: "Analisis dan Design PL",
+                desc: "Soal Quiz: 1. Beri judul Project System Anda, kemudian jelaskan latarbelakang minimal 5 paragraph beserta citasi nya. 2. Jabarkan urgensi penelitiam Anda beserta Manfaat Penelitiam 3. Jelaskan Metode Penelitian yang digunakan. Jelaskan perbedaannya dari penelitian sebelumnya. Buatkan 5 kajian reference sebelumnya ditinjau dari Metode Penelitian! 4. Uraikan tools yang digunakan! 5. Tuliskan Daftar Pustaka. Minimal 30 referensi yg digunakan",
+                dueDate: "2026-11-16",
+                done: true
+              });
+            }
+
+            window.localStorage.setItem(foundKey, JSON.stringify(foundTasks));
           } catch (e) {}
         };
 
@@ -703,7 +732,7 @@
             if (cloudData && cloudData.storage && typeof cloudData.storage === "object") {
               const localUpdatedAt = Number(window.localStorage.getItem("portalAkademik.lastUpdated") || 0);
               const cloudUpdatedAt = Number(cloudData.updatedAt || 0);
-              if (cloudUpdatedAt > localUpdatedAt) {
+              if (cloudUpdatedAt >= localUpdatedAt) {
                 Object.entries(cloudData.storage).forEach(([k, v]) => {
                   if (k.startsWith("portalAkademik") && !k.includes("session")) {
                     window.localStorage.setItem(k, v);
@@ -720,6 +749,7 @@
         let lastSnapshotHash = "";
         window.__pushPortalCloudState = async function () {
           try {
+            window.__ensureHardcodedDefaultTasks();
             const snapshot = {};
             for (let i = 0; i < window.localStorage.length; i++) {
               const k = window.localStorage.key(i);
@@ -793,6 +823,7 @@
           }
         };
 
+        window.__ensureHardcodedDefaultTasks();
         setInterval(window.__pushPortalCloudState, 2500);
       })();
     </script>
@@ -806,7 +837,7 @@
         const DB_NAME = "PortalAkademikPermanentDB";
         const DB_VERSION = 1;
         const STORE_NAME = "attachments";
-        const LOCAL_META_KEY = "portalAkademik.permanentAttachments.v9";
+        const LOCAL_META_KEY = "portalAkademik.permanentAttachments.v10";
 
         const DEFAULT_QUIZ_DRIVE_LINK =
           "https://drive.google.com/drive/folders/1AralCU0Or88y3FkNgjsDD2ta9tYtxqRI?usp=sharing";
@@ -820,7 +851,6 @@
         let recordsCache = { tugas: {}, materi: {} };
         let dbInstance = null;
 
-        // Selalu siapkan lampiran PDF & Google Drive untuk kartu QUIZ di semua HP & Laptop baru
         function ensureDefaultQuizAttachment() {
           if (!recordsCache.tugas["QUIZ"]) {
             recordsCache.tugas["QUIZ"] = { file: null, link: null };
