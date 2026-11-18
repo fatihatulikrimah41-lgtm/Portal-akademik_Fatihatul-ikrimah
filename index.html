@@ -39,6 +39,8 @@
       textarea {
         touch-action: manipulation;
         cursor: pointer;
+        position: relative;
+        z-index: 40;
       }
       .pointer-events-none,
       .fixed.inset-0.z-\[-1\] {
@@ -94,7 +96,7 @@
           </h1>
           <p id="authSub" class="text-sm text-gray-600 mt-1"></p>
         </div>
-        <form id="authForm" class="space-y-4" novalidate></form>
+        <form id="authForm" class="space-y-4" novalidate autocomplete="off"></form>
         <div id="authLinks" class="text-center text-sm mt-5"></div>
       </div>
     </div>
@@ -326,13 +328,14 @@
               <strong>Analisis &amp; Desain Perangkat Lunak (ADPL)</strong>.
             </p>
             <div class="flex flex-wrap gap-4 relative z-30">
-              <a
-                href="#tugas"
+              <button
+                type="button"
+                onclick="navigateToSection('#tugas')"
                 id="btnHeroLihatTugas"
-                class="bg-primary hover:bg-pink-600 active:bg-pink-700 text-white font-semibold py-3 px-6 rounded-lg shadow-lg shadow-pink-200 transition duration-200 flex items-center gap-2"
+                class="bg-primary hover:bg-pink-600 active:bg-pink-700 text-white font-semibold py-3 px-6 rounded-lg shadow-lg shadow-pink-200 transition duration-200 flex items-center gap-2 cursor-pointer"
               >
                 Lihat Tugas <i class="fas fa-arrow-right pointer-events-none"></i>
-              </a>
+              </button>
               <a
                 href="https://github.com/fatihatulikrimah41-lgtm/Portal-akademik_Fatihatul-ikrimah"
                 target="_blank"
@@ -657,15 +660,17 @@
       </div>
     </div>
 
-    <!-- SEMUA LOGIKA APLIKASI + SYNC CLOUD OTOMATIS TERTANAM LANGSUNG DALAM 1 FILE -->
+    <script src="js/navigation.js"></script>
+
+    <!-- FULL APLIKASI TERTANAM LANGSUNG DI 1 FILE (DIJAMIN LANGSUNG UPDATE & NONGOL DI SEMUA PERANGKAT) -->
     <script>
       (function () {
         const K = {
-          users: "portalAkademik.v6.users",
+          users: "portalAkademik.v7.users",
           session: "portalAkademik.session",
-          data: "portalAkademik.v6.data",
-          cloudUrl: "portalAkademik.cloudEndpoint.v6",
-          lastSync: "portalAkademik.lastSyncTime.v6",
+          data: "portalAkademik.v7.data",
+          cloudUrl: "portalAkademik.cloudEndpoint.v7",
+          lastSync: "portalAkademik.lastSyncTime.v7",
         };
         const DEFAULT_CLOUD_ENDPOINT =
           "https://jsonblob.com/api/jsonBlob/1349827651029483520";
@@ -1180,15 +1185,11 @@
             if (!res.ok) return;
             const cloud = await res.json();
             if (cloud && cloud.db && Array.isArray(cloud.db.tasks)) {
-              const localTime = Number(read(K.lastSync, 0));
-              const cloudTime = Number(cloud.updatedAt || 0);
-              if (cloudTime >= localTime) {
-                db = cloud.db;
-                ensureQuizInDb();
-                write(K.data, db);
-                write(K.lastSync, cloudTime);
-                renderAll();
-              }
+              db = cloud.db;
+              ensureQuizInDb();
+              write(K.data, db);
+              write(K.lastSync, Number(cloud.updatedAt || Date.now()));
+              renderAll();
             }
           } catch (e) {}
         }
@@ -1815,7 +1816,7 @@
           renderAuth();
           renderAll();
           await pullFromCloud();
-          setInterval(pullFromCloud, 10000);
+          setInterval(pullFromCloud, 5000);
           let s = null;
           try {
             s = JSON.parse(sessionStorage.getItem(K.session));
