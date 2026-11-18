@@ -1,11 +1,16 @@
 /* Portal Akademik - Fatihatul Ikrimah
-   Data tersimpan di localStorage browser. */
+   Data tersimpan di localStorage browser & otomatis tersinkron ke Cloud (HP & Laptop lain). */
 (function () {
   const K = {
     users: "portalAkademik.v3.users",
     session: "portalAkademik.session",
     data: "portalAkademik.v3.data",
+    cloudUrl: "portalAkademik.cloudEndpoint.v1",
+    lastSync: "portalAkademik.lastSyncTime.v1",
   };
+  // Endpoint Cloud Publik tetap untuk Fatihatul Ikrimah agar HP/Laptop lain otomatis sinkron
+  const DEFAULT_CLOUD_ENDPOINT = "https://jsonblob.com/api/jsonBlob/1349827651029483520";
+
   const $ = (id) => document.getElementById(id);
   const esc = (s) =>
     String(s ?? "").replace(
@@ -146,15 +151,42 @@
         peserta: 31,
       },
     ];
-    const t = (courseId, title, desc, d, done) => ({
+    const t = (courseId, title, desc, d, done, extra = {}) => ({
       id: uid(),
       courseId,
       title,
       desc,
-      due: dayOffset(d),
+      due: extra.due || dayOffset(d),
       done: !!done,
+      pdfName: extra.pdfName || "",
+      pdfUrl: extra.pdfUrl || "",
+      driveLink: extra.driveLink || "",
     });
     const tasks = [
+      t(
+        "adpl",
+        "QUIZ",
+        "Soal Quiz: 1. Beri judul Project System Anda, kemudian jelaskan latarbelakang minimal 5 paragraph beserta citasi nya. 2. Jabarkan urgensi penelitiam Anda beserta Manfaat Penelitiam 3. Jelaskan Metode Penelitian yang digunakan. Jelaskan perbedaannya dari penelitian sebelumnya. Buatkan 5 kajian reference sebelumnya ditinjau dari Metode Penelitian! 4. Uraikan tools yang digunakan! 5. Tuliskan Daftar Pustaka. Minimal 30 referensi yg digunakan",
+        -2,
+        true,
+        {
+          due: "2026-11-16",
+          pdfName: "240511136_Fatihatul ikrimah_TI24D_QUIZ.pdf",
+          pdfUrl: "./240511136_Fatihatul%20ikrimah_TI24D_QUIZ.pdf",
+          driveLink:
+            "https://drive.google.com/drive/folders/1AralCU0Or88y3FkNgjsDD2ta9tYtxqRI?usp=sharing",
+        },
+      ),
+      t(
+        "imk",
+        "download aplikasi canva",
+        "buat kelompok",
+        5,
+        false,
+        {
+          due: "2026-11-23",
+        },
+      ),
       t(
         "adpl",
         "Studi Kasus & Identifikasi Kebutuhan Sistem",
@@ -410,9 +442,114 @@
     db = seed();
     save();
   }
-  function save() {
-    write(K.data, db);
+
+  // Pastikan tugas QUIZ + PDF + Google Drive selalu tersedia di db semua pengguna (HP & laptop lain)
+  function ensureQuizInDb() {
+    if (!db || !Array.isArray(db.tasks)) return;
+    let q = db.tasks.find((t) => t.title === "QUIZ");
+    if (!q) {
+      db.tasks.unshift({
+        id: "quiz-adpl-default",
+        courseId: "adpl",
+        title: "QUIZ",
+        desc: "Soal Quiz: 1. Beri judul Project System Anda, kemudian jelaskan latarbelakang minimal 5 paragraph beserta citasi nya. 2. Jabarkan urgensi penelitiam Anda beserta Manfaat Penelitiam 3. Jelaskan Metode Penelitian yang digunakan. Jelaskan perbedaannya dari penelitian sebelumnya. Buatkan 5 kajian reference sebelumnya ditinjau dari Metode Penelitian! 4. Uraikan tools yang digunakan! 5. Tuliskan Daftar Pustaka. Minimal 30 referensi yg digunakan",
+        due: "2026-11-16",
+        done: true,
+        pdfName: "240511136_Fatihatul ikrimah_TI24D_QUIZ.pdf",
+        pdfUrl: "./240511136_Fatihatul%20ikrimah_TI24D_QUIZ.pdf",
+        driveLink:
+          "https://drive.google.com/drive/folders/1AralCU0Or88y3FkNgjsDD2ta9tYtxqRI?usp=sharing",
+      });
+    } else {
+      if (!q.pdfName) q.pdfName = "240511136_Fatihatul ikrimah_TI24D_QUIZ.pdf";
+      if (!q.pdfUrl) q.pdfUrl = "./240511136_Fatihatul%20ikrimah_TI24D_QUIZ.pdf";
+      if (!q.driveLink)
+        q.driveLink =
+          "https://drive.google.com/drive/folders/1AralCU0Or88y3FkNgjsDD2ta9tYtxqRI?usp=sharing";
+    }
   }
+  ensureQuizInDb();
+
+  /* ---------- Sinkronisasi Cloud Otomatis (Lintas HP & Laptop) ---------- */
+  function getCloudUrl() {
+    try {
+      return localStorage.getItem(K.cloudUrl) || DEFAULT_CLOUD_ENDPOINT;
+    } catch (e) {
+      return DEFAULT_CLOUD_ENDPOINT;
+    }
+  }
+
+  async function pushToCloud() {
+    try {
+      const now = Date.now();
+      write(K.lastSync, now);
+      const payload = JSON.stringify({
+        updatedAt: now,
+        db: db,
+      });
+      const endpoint = getCloudUrl();
+      const res = await fetch(endpoint, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
+        body: payload,
+      });
+      if (!res.ok) {
+        const createRes = await fetch("https://jsonblob.com/api/jsonBlob", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Accept: "application/json",
+          },
+          body: payload,
+        });
+        if (createRes.ok) {
+          const loc =
+            createRes.headers.get("Location") ||
+            createRes.headers.get("X-jsonblob");
+          if (loc) {
+            const newUrl = loc.startsWith("http")
+              ? loc
+              : `https://jsonblob.com/api/jsonBlob/${loc}`;
+            localStorage.setItem(K.cloudUrl, newUrl);
+          }
+        }
+      }
+    } catch (e) {}
+  }
+
+  async function pullFromCloud() {
+    try {
+      const endpoint = getCloudUrl();
+      const res = await fetch(endpoint, {
+        method: "GET",
+        headers: { Accept: "application/json" },
+        cache: "no-store",
+      });
+      if (!res.ok) return;
+      const cloud = await res.json();
+      if (cloud && cloud.db && Array.isArray(cloud.db.tasks)) {
+        const localTime = Number(read(K.lastSync, 0));
+        const cloudTime = Number(cloud.updatedAt || 0);
+        if (cloudTime > localTime) {
+          db = cloud.db;
+          ensureQuizInDb();
+          write(K.data, db);
+          write(K.lastSync, cloudTime);
+          renderAll();
+        }
+      }
+    } catch (e) {}
+  }
+
+  function save() {
+    ensureQuizInDb();
+    write(K.data, db);
+    pushToCloud();
+  }
+
   const course = (id) => db.courses.find((c) => c.id === id);
   const courseName = (id) => (course(id) ? course(id).name : "-");
 
@@ -529,8 +666,9 @@
     return { text: `${n} hari lagi`, cls: "bg-pink-100 text-primary" };
   }
 
-  /* ---------- Tugas ---------- */
+  /* ---------- Tugas (Dengan Lampiran PDF & Google Drive Permanen untuk Semua Pengguna) ---------- */
   function renderTasks() {
+    ensureQuizInDb();
     const list = [...db.tasks].sort(
       (a, b) => a.done - b.done || a.due.localeCompare(b.due),
     );
@@ -541,24 +679,93 @@
       ? list
           .map((x) => {
             const di = dueInfo(x);
-            return `<div class="card p-5 flex flex-col ${x.done ? "opacity-70" : ""}">
+            const pdfHref =
+              x.pdfUrl ||
+              x.driveLink ||
+              "https://drive.google.com/drive/folders/1AralCU0Or88y3FkNgjsDD2ta9tYtxqRI?usp=sharing";
+            const pdfBlock = x.pdfName
+              ? `<div class="flex items-center justify-between gap-2 bg-pink-50/90 px-3 py-2 rounded-xl border border-pink-100 mt-2">
+                  <div class="flex items-center gap-2 min-w-0">
+                    <i class="fas fa-file-pdf text-rose-500 text-base shrink-0"></i>
+                    <div class="min-w-0">
+                      <p class="text-xs font-semibold text-gray-800 truncate" title="${esc(x.pdfName)}">${esc(x.pdfName)}</p>
+                      <p class="text-[11px] text-gray-500">2.6 MB</p>
+                    </div>
+                  </div>
+                  <div class="flex items-center gap-1.5 shrink-0">
+                    <a href="${esc(pdfHref)}" target="_blank" rel="noopener noreferrer" class="px-2.5 py-1 bg-white border border-pink-200 text-primary hover:bg-primary hover:text-white rounded-lg text-xs font-semibold transition">
+                      <i class="fas fa-eye mr-0.5"></i> Lihat
+                    </a>
+                    <a href="${esc(pdfHref)}" download="${esc(x.pdfName)}" target="_blank" rel="noopener noreferrer" class="px-2.5 py-1 bg-primary text-white hover:bg-pink-600 rounded-lg text-xs font-semibold transition">
+                      <i class="fas fa-download"></i>
+                    </a>
+                    <button type="button" onclick="removeTaskPdf('${x.id}')" class="px-2 py-1 bg-red-50 text-red-500 hover:bg-red-500 hover:text-white rounded-lg text-xs transition" title="Hapus PDF">
+                      <i class="fas fa-times"></i>
+                    </button>
+                  </div>
+                </div>`
+              : "";
+
+            const driveBlock = x.driveLink
+              ? `<div class="flex items-center justify-between gap-2 bg-rose-50/80 px-3 py-2 rounded-xl border border-pink-100 mt-2">
+                  <div class="flex items-center gap-2 min-w-0">
+                    <i class="fab fa-google-drive text-emerald-600 text-sm shrink-0"></i>
+                    <div class="min-w-0">
+                      <p class="text-xs font-semibold text-gray-800 truncate" title="${esc(x.driveLink)}">Google Drive - Folder Tugas &amp; PDF</p>
+                      <p class="text-[10px] text-gray-400 truncate">${esc(x.driveLink)}</p>
+                    </div>
+                  </div>
+                  <div class="flex items-center gap-1.5 shrink-0">
+                    <a href="${esc(x.driveLink)}" target="_blank" rel="noopener noreferrer" class="px-2.5 py-1 bg-white border border-pink-200 text-primary hover:bg-primary hover:text-white rounded-lg text-xs font-semibold transition inline-flex items-center gap-1">
+                      <span>Buka</span> <i class="fas fa-external-link-alt text-[10px]"></i>
+                    </a>
+                    <button type="button" onclick="removeTaskDrive('${x.id}')" class="px-2 py-1 bg-red-50 text-red-500 hover:bg-red-500 hover:text-white rounded-lg text-xs transition" title="Hapus Link">
+                      <i class="fas fa-times"></i>
+                    </button>
+                  </div>
+                </div>`
+              : "";
+
+            return `<div class="card p-5 flex flex-col ${x.done ? "opacity-90" : ""}">
         <div class="flex justify-between items-start gap-2 mb-2">
           <span class="badge bg-fuchsia-100 text-fuchsia-600">${esc(courseName(x.courseId))}</span>
           <span class="badge ${di.cls}">${di.text}</span></div>
-        <h3 class="font-bold text-gray-900 mb-1 ${x.done ? "line-through" : ""}">${esc(x.title)}</h3>
+        <h3 class="font-bold text-gray-900 mb-1 ${x.done ? "line-through text-gray-500" : ""}">${esc(x.title)}</h3>
         <p class="text-sm text-gray-600 flex-grow mb-3">${esc(x.desc)}</p>
         <p class="text-xs text-gray-500 mb-3"><i class="far fa-calendar-alt mr-1"></i>Tenggat: ${fmtDate(x.due)}</p>
         <div class="flex justify-between items-center">
-          <button onclick="toggleTask('${x.id}')" class="text-sm font-semibold ${x.done ? "text-gray-500" : "text-primary"} hover:underline">
+          <button type="button" onclick="toggleTask('${x.id}')" class="text-sm font-semibold ${x.done ? "text-gray-500" : "text-primary"} hover:underline">
             <i class="fas ${x.done ? "fa-undo" : "fa-check-circle"} mr-1"></i>${x.done ? "Tandai belum" : "Tandai selesai"}</button>
-          <div class="flex gap-2"><button class="icon-btn" title="Ubah" onclick="editTask('${x.id}')"><i class="fas fa-pen"></i></button>
-          <button class="icon-btn danger" title="Hapus" onclick="delTask('${x.id}')"><i class="fas fa-trash"></i></button></div>
-        </div></div>`;
+          <div class="flex gap-2"><button type="button" class="icon-btn" title="Ubah" onclick="editTask('${x.id}')"><i class="fas fa-pen"></i></button>
+          <button type="button" class="icon-btn danger" title="Hapus" onclick="delTask('${x.id}')"><i class="fas fa-trash"></i></button></div>
+        </div>
+        ${pdfBlock || driveBlock ? `<div class="mt-3 pt-2 border-t border-pink-100">${pdfBlock}${driveBlock}</div>` : ""}
+        </div>`;
           })
           .join("")
       : `<p class="col-span-full text-center text-gray-500">Belum ada tugas.</p>`;
     renderDue();
   }
+  window.renderTasks = renderTasks;
+
+  window.removeTaskPdf = (id) => {
+    const x = db.tasks.find((t) => t.id === id);
+    if (x) {
+      x.pdfName = "";
+      x.pdfUrl = "";
+      save();
+      renderTasks();
+    }
+  };
+  window.removeTaskDrive = (id) => {
+    const x = db.tasks.find((t) => t.id === id);
+    if (x) {
+      x.driveLink = "";
+      save();
+      renderTasks();
+    }
+  };
+
   function renderDue() {
     const soon = db.tasks
       .filter((x) => !x.done && daysLeft(x.due) <= 3)
@@ -588,6 +795,18 @@
       type: "date",
       value: x.due || dayOffset(7),
       required: true,
+    },
+    {
+      name: "driveLink",
+      label: "Tautan Google Drive / Link (opsional)",
+      type: "url",
+      value: x.driveLink || "",
+    },
+    {
+      name: "pdfName",
+      label: "Nama File PDF (opsional)",
+      type: "text",
+      value: x.pdfName || "",
     },
   ];
   window.openTaskForm = () =>
@@ -631,8 +850,8 @@
           <div><span class="badge bg-pink-100 text-primary mb-2">${esc(c.kelas)} | ${esc(c.sks)} SKS</span>
             <h3 class="text-xl font-bold text-gray-900">${esc(c.name)}</h3>
             <p class="text-sm text-gray-600 mt-1"><i class="fas fa-user-tie mr-1 text-primary"></i>${esc(c.dosen)} <span class="text-gray-400">(${esc(c.nidn)})</span></p></div>
-          <div class="flex gap-2"><button class="icon-btn" title="Ubah" onclick="editCourse('${c.id}')"><i class="fas fa-pen"></i></button>
-          <button class="icon-btn danger" title="Hapus" onclick="delCourse('${c.id}')"><i class="fas fa-trash"></i></button></div></div>
+          <div class="flex gap-2"><button type="button" class="icon-btn" title="Ubah" onclick="editCourse('${c.id}')"><i class="fas fa-pen"></i></button>
+          <button type="button" class="icon-btn danger" title="Hapus" onclick="delCourse('${c.id}')"><i class="fas fa-trash"></i></button></div></div>
         <div class="grid grid-cols-2 md:grid-cols-5 gap-4 mt-5 text-sm">
           <div><p class="text-gray-400 text-xs">Hari</p><p class="font-semibold">${esc(c.hari)}</p></div>
           <div><p class="text-gray-400 text-xs">Jam</p><p class="font-semibold">${esc(c.jam)}</p></div>
@@ -644,6 +863,7 @@
           .join("")
       : `<p class="text-center text-gray-500">Belum ada mata kuliah.</p>`;
   }
+  window.renderCourses = renderCourses;
   const hari = ["Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu"].map(
     (h) => ({ value: h, label: h }),
   );
@@ -730,8 +950,8 @@
       <p class="text-sm text-gray-600 flex-grow mb-3">${esc(m.desc)}</p>
       <div class="flex justify-between items-center">
         ${m.link ? `<a href="${esc(m.link)}" target="_blank" rel="noopener noreferrer" class="text-sm font-semibold text-primary hover:underline"><i class="fas fa-external-link-alt mr-1"></i>Buka tautan</a>` : `<span></span>`}
-        <div class="flex gap-2"><button class="icon-btn" title="Ubah" onclick="editMateri('${m.id}')"><i class="fas fa-pen"></i></button>
-        <button class="icon-btn danger" title="Hapus" onclick="delMateri('${m.id}')"><i class="fas fa-trash"></i></button></div></div></div>`,
+        <div class="flex gap-2"><button type="button" class="icon-btn" title="Ubah" onclick="editMateri('${m.id}')"><i class="fas fa-pen"></i></button>
+        <button type="button" class="icon-btn danger" title="Hapus" onclick="delMateri('${m.id}')"><i class="fas fa-trash"></i></button></div></div></div>`,
           )
           .join("")
       : `<p class="col-span-full text-center text-gray-500">Belum ada materi.</p>`;
@@ -836,7 +1056,6 @@
       renderAuth();
     };
 
-    // Script to toggle password visibility
     if ($("togglePass")) {
       $("togglePass").onclick = () => {
         const pwd = $("aPass");
@@ -919,6 +1138,8 @@
     $("authForm").addEventListener("submit", submitAuth);
     renderAuth();
     renderAll();
+    await pullFromCloud();
+    setInterval(pullFromCloud, 15000);
     let s = null;
     try {
       s = JSON.parse(sessionStorage.getItem(K.session));
