@@ -1,32 +1,50 @@
-(function () {
-  const ids = ["beranda", "tugas", "matakuliah", "materi"];
-  const desktopOn = ["text-primary", "font-bold", "border-primary"];
-  const desktopOff = ["text-gray-600", "font-medium", "border-transparent"];
-  const mobileOn = ["bg-pink-50", "text-primary", "font-bold", "border-primary"];
-  const mobileOff = ["text-gray-600", "font-medium", "border-transparent"];
+/* Portal Akademik - Navigation */
+function navigateToSection(sectionHash) {
+  const targetId = (sectionHash || "#beranda").replace("#", "");
+  const sections = document.querySelectorAll(".page-section");
+  const targetEl = document.getElementById(targetId);
+  if (!targetEl) return;
 
-  window.showSection = function (id) {
-    if (!ids.includes(id)) id = "beranda";
-    document.querySelectorAll(".page-section").forEach((s) => {
-      const on = s.id === id;
-      s.classList.toggle("hidden", !on);
-      if (on) { s.classList.remove("page-transition"); void s.offsetWidth; s.classList.add("page-transition"); }
-    });
-    document.querySelectorAll(".nav-link").forEach((a) => {
-      const mobile = !!a.closest("#mobile-menu");
-      const active = a.getAttribute("href") === "#" + id;
-      const on = mobile ? mobileOn : desktopOn, off = mobile ? mobileOff : desktopOff;
-      a.classList.remove(...on, ...off);
-      a.classList.add(...(active ? on : off));
-    });
-    document.getElementById("mobile-menu").classList.add("hidden");
-    window.scrollTo({ top: 0 });
-  };
-
-  window.addEventListener("hashchange", () => showSection(location.hash.slice(1)));
-  document.addEventListener("DOMContentLoaded", () => {
-    document.getElementById("mobile-menu-btn").addEventListener("click", () =>
-      document.getElementById("mobile-menu").classList.toggle("hidden"));
-    showSection(location.hash.slice(1));
+  sections.forEach((sec) => {
+    if (sec.id === targetId) {
+      sec.classList.remove("hidden");
+    } else {
+      sec.classList.add("hidden");
+    }
   });
-})();
+
+  const mobileMenu = document.getElementById("mobile-menu");
+  if (mobileMenu) mobileMenu.classList.add("hidden");
+
+  document.querySelectorAll(".nav-link").forEach((link) => {
+    const href = link.getAttribute("href");
+    if (href === "#" + targetId) {
+      link.classList.add("text-primary", "font-bold");
+      link.classList.remove("text-gray-600");
+    } else {
+      link.classList.remove("text-primary", "font-bold");
+      link.classList.add("text-gray-600");
+    }
+  });
+
+  if (window.location.hash !== "#" + targetId) {
+    history.replaceState(null, "", "#" + targetId);
+  }
+  window.scrollTo({ top: 0, behavior: "smooth" });
+}
+
+document.addEventListener("DOMContentLoaded", function () {
+  const hash = window.location.hash || "#beranda";
+  navigateToSection(hash);
+
+  document.addEventListener("click", function (e) {
+    const link = e.target.closest('a[href^="#"]');
+    if (link) {
+      const href = link.getAttribute("href");
+      if (href && href.length > 1 && document.getElementById(href.replace("#", ""))) {
+        e.preventDefault();
+        navigateToSection(href);
+      }
+    }
+  });
+});
