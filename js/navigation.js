@@ -48,3 +48,21 @@ document.addEventListener("DOMContentLoaded", function () {
     }
   });
 });
+```[cite: 16, 17]
+
+Klik **Commit changes**.
+
+---
+
+### 2. Pastikan Tombol "Lihat Tugas" di `index.html` Memanggil Fungsi dengan Benar
+Buka file **`index.html`** utama $\rightarrow$ klik ikon pensil (Edit) $\rightarrow$ pastikan bagian tombol "Lihat Tugas" pada *Hero Section* menggunakan kode onclick langsung seperti ini:
+
+```html
+<button
+  type="button"
+  onclick="navigateToSection('#tugas')"
+  id="btnHeroLihatTugas"
+  class="bg-primary hover:bg-pink-600 active:bg-pink-700 text-white font-semibold py-3 px-6 rounded-lg shadow-lg shadow-pink-200 transition duration-200 flex items-center gap-2 cursor-pointer"
+>
+  Lihat Tugas <i class="fas fa-arrow-right pointer-events-none"></i>
+</button>
