@@ -10,296 +10,145 @@
     />
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: { primary: '#ec4899', secondary: '#db2777' }
+          }
+        }
+      }
+    </script>
     <!-- Google Fonts: Inter -->
-    <link
-      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
-      rel="stylesheet"
-    />
-    <!-- Font Awesome for Icons -->
-    <link
-      rel="stylesheet"
-      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
-    />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
     <!-- PDF.js -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 
-    <script src="js/tailwind-config.js"></script>
+    <style>
+      button, a, input, select, textarea {
+        touch-action: manipulation;
+        cursor: pointer;
+        position: relative;
+        z-index: 50;
+      }
+      .pointer-events-none { pointer-events: none !important; }
+      html.authed #authScreen { display: none !important; pointer-events: none !important; }
+      .field {
+        width: 100%;
+        padding: 0.65rem 0.9rem;
+        border: 1px solid #fbcfe8;
+        border-radius: 0.75rem;
+        background-color: #fff;
+        outline: none;
+        font-size: 0.9rem;
+      }
+      .field:focus { border-color: #ec4899; box-shadow: 0 0 0 3px rgba(236, 72, 153, 0.15); }
+      .label { display: block; font-size: 0.85rem; font-weight: 500; color: #374151; margin-bottom: 0.25rem; }
+      .card {
+        background: rgba(255, 255, 255, 0.95);
+        border: 1px solid rgba(255, 255, 255, 0.8);
+        border-radius: 1.25rem;
+        box-shadow: 0 10px 25px -5px rgba(244, 114, 182, 0.15);
+      }
+      .badge { display: inline-flex; align-items: center; padding: 0.25rem 0.75rem; border-radius: 9999px; font-size: 0.75rem; font-weight: 600; }
+      .icon-btn { width: 2.25rem; height: 2.25rem; border-radius: 0.75rem; background: #fdf2f8; color: #ec4899; display: flex; align-items: center; justify-content: center; }
+      .icon-btn:hover { background: #ec4899; color: #fff; }
+      .icon-btn.danger { background: #fee2e2; color: #ef4444; }
+      .icon-btn.danger:hover { background: #ef4444; color: #fff; }
+    </style>
     <script>
       try {
         if (sessionStorage.getItem("portalAkademik.session"))
           document.documentElement.classList.add("authed");
       } catch (e) {}
     </script>
-    <link rel="stylesheet" href="css/style.css" />
-    <style>
-      button,
-      a,
-      input,
-      select,
-      textarea {
-        touch-action: manipulation;
-        cursor: pointer;
-        position: relative;
-        z-index: 50;
-      }
-      .pointer-events-none,
-      .fixed.inset-0.z-\[-1\] {
-        pointer-events: none !important;
-      }
-      html.authed #authScreen {
-        display: none !important;
-        pointer-events: none !important;
-      }
-      .task-card-completed {
-        background: linear-gradient(135deg, #f0fdf4 0%, #ffffff 70%) !important;
-        border: 2px solid #86efac !important;
-        box-shadow: 0 10px 25px -5px rgba(16, 185, 129, 0.14) !important;
-      }
-      .task-title-completed {
-        text-decoration: line-through;
-        text-decoration-color: #10b981;
-        text-decoration-thickness: 2px;
-        color: #4b5563 !important;
-      }
-    </style>
   </head>
-  <body
-    class="bg-pink-100 text-gray-800 font-sans antialiased flex flex-col min-h-screen relative overflow-x-hidden"
-  >
-    <!-- Layar Login / Daftar -->
-    <div
-      id="authScreen"
-      class="fixed inset-0 z-[200] bg-pink-100 overflow-y-auto flex items-center justify-center p-4"
-    >
-      <div class="absolute inset-0 overflow-hidden pointer-events-none">
-        <div
-          class="absolute top-[-10%] left-[-10%] w-96 h-96 bg-pink-500/60 rounded-full mix-blend-multiply filter blur-3xl opacity-80 animate-blob pointer-events-none"
-        ></div>
-        <div
-          class="absolute top-[30%] right-[-5%] w-72 h-72 bg-rose-500/60 rounded-full mix-blend-multiply filter blur-3xl opacity-80 animate-blob animation-delay-2000 pointer-events-none"
-        ></div>
-        <div
-          class="absolute -bottom-32 left-[20%] w-80 h-80 bg-fuchsia-500/60 rounded-full mix-blend-multiply filter blur-3xl opacity-80 animate-blob animation-delay-4000 pointer-events-none"
-        ></div>
-      </div>
-      <div
-        class="relative z-10 w-full max-w-md bg-white/90 backdrop-blur-md rounded-3xl shadow-2xl shadow-pink-200 border border-pink-100 p-8"
-      >
-        <div class="text-center mb-6">
-          <div
-            class="w-14 h-14 mx-auto bg-primary text-white rounded-2xl flex items-center justify-center font-bold text-2xl shadow-lg shadow-pink-200 mb-3"
-          >
+  <body class="bg-pink-100 text-gray-800 font-sans antialiased flex flex-col min-h-screen relative overflow-x-hidden">
+    
+    <!-- Layar Login / Daftar (Diperbaiki agar pas di HP dan tidak terpotong) -->
+    <div id="authScreen" class="fixed inset-0 z-[200] bg-pink-100 flex items-center justify-center p-4 overflow-y-auto">
+      <div class="relative z-10 w-full max-w-sm bg-white rounded-3xl shadow-2xl border border-pink-100 p-6 my-auto">
+        <div class="text-center mb-4">
+          <div class="w-12 h-12 mx-auto bg-primary text-white rounded-2xl flex items-center justify-center font-bold text-xl shadow-md mb-2">
             TI
           </div>
-          <h1 id="authTitle" class="text-2xl font-extrabold text-secondary">
-            Masuk
-          </h1>
-          <p id="authSub" class="text-sm text-gray-600 mt-1"></p>
+          <h1 id="authTitle" class="text-xl font-extrabold text-secondary">Masuk</h1>
+          <p id="authSub" class="text-xs text-gray-600 mt-0.5">Portal Akademik Fatihatul Ikrimah</p>
         </div>
-        <form id="authForm" class="space-y-4" novalidate></form>
-        <div id="authLinks" class="text-center text-sm mt-5"></div>
+        <form id="authForm" class="space-y-3" novalidate>
+          <div>
+            <label class="label">Username</label>
+            <input id="aUser" class="field" autocomplete="username" required value="fatihatul">
+          </div>
+          <div>
+            <label class="label">Kata sandi</label>
+            <div class="relative">
+              <input id="aPass" type="password" class="field pr-10" autocomplete="current-password" required value="123456">
+              <button type="button" id="togglePass" class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-primary">
+                <i class="fas fa-eye" id="eyeIcon"></i>
+              </button>
+            </div>
+          </div>
+          <p id="aErr" class="text-xs text-red-500 hidden"></p>
+          <button type="submit" class="w-full bg-primary hover:bg-pink-600 text-white font-semibold py-2.5 rounded-xl shadow-md transition">Masuk</button>
+          <p class="text-[11px] text-gray-400 text-center">Contoh: <b>fatihatul</b> / <b>123456</b></p>
+        </form>
+        <div id="authLinks" class="text-center text-xs mt-4">
+          Belum punya akun? <a href="#" id="swAuth" class="text-primary font-semibold">Daftar</a>
+        </div>
       </div>
-    </div>
-
-    <!-- Stemmed Flower Symbols -->
-    <svg style="display: none" aria-hidden="true">
-      <symbol id="flower-tall" viewBox="0 0 100 250">
-        <path
-          d="M50 250 Q30 150 50 50"
-          stroke="#4ade80"
-          stroke-width="6"
-          fill="none"
-          stroke-linecap="round"
-        />
-        <path d="M47 180 Q80 150 95 120 Q60 120 45 160" fill="#4ade80" />
-        <path d="M52 130 Q20 100 5 70 Q40 70 55 110" fill="#4ade80" />
-        <path
-          d="M50 60 C10 60 0 -10 50 20 C100 -10 90 60 50 60 Z"
-          fill="currentColor"
-        />
-        <path
-          d="M50 20 Q30 0 50 10 Q70 0 50 20 Z"
-          fill="rgba(255,255,255,0.4)"
-        />
-      </symbol>
-      <symbol id="flower-short" viewBox="0 0 100 200">
-        <path
-          d="M50 200 Q70 120 50 40"
-          stroke="#4ade80"
-          stroke-width="6"
-          fill="none"
-          stroke-linecap="round"
-        />
-        <path d="M53 140 Q20 120 5 90 Q40 90 55 120" fill="#4ade80" />
-        <path
-          d="M50 50 C10 50 0 -20 50 10 C100 -20 90 50 50 50 Z"
-          fill="currentColor"
-        />
-        <path
-          d="M50 10 Q30 -10 50 0 Q70 -10 50 10 Z"
-          fill="rgba(255,255,255,0.4)"
-        />
-      </symbol>
-    </svg>
-
-    <!-- Animated Background Elements -->
-    <div
-      class="fixed inset-0 w-full h-full z-[-1] pointer-events-none overflow-hidden"
-    >
-      <div
-        class="absolute top-[-10%] left-[-10%] w-96 h-96 bg-pink-500/60 rounded-full mix-blend-multiply filter blur-3xl opacity-80 animate-blob pointer-events-none"
-      ></div>
-      <div
-        class="absolute top-[20%] right-[-5%] w-72 h-72 bg-rose-500/60 rounded-full mix-blend-multiply filter blur-3xl opacity-80 animate-blob animation-delay-2000 pointer-events-none"
-      ></div>
-      <div
-        class="absolute -bottom-32 left-[20%] w-80 h-80 bg-fuchsia-500/60 rounded-full mix-blend-multiply filter blur-3xl opacity-80 animate-blob animation-delay-4000 pointer-events-none"
-      ></div>
     </div>
 
     <!-- Navigation Bar -->
-    <nav
-      class="bg-pink-50/90 backdrop-blur-md shadow-sm sticky top-0 z-50 border-b border-pink-200"
-    >
+    <nav class="bg-pink-50/90 backdrop-blur-md shadow-sm sticky top-0 z-50 border-b border-pink-200">
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex justify-between h-16 items-center">
           <div class="flex-shrink-0 flex items-center gap-2">
-            <div
-              class="w-10 h-10 bg-primary text-white rounded-xl flex items-center justify-center font-bold text-xl shadow-lg shadow-pink-200"
-            >
+            <div class="w-10 h-10 bg-primary text-white rounded-xl flex items-center justify-center font-bold text-xl shadow-lg shadow-pink-200">
               TI
             </div>
-            <span class="font-bold text-xl text-secondary hidden sm:block"
-              >Portal Akademik</span
-            >
+            <span class="font-bold text-xl text-secondary hidden sm:block">Portal Akademik</span>
           </div>
-          <!-- Desktop Menu -->
           <div class="hidden md:flex space-x-8">
-            <a
-              href="#beranda"
-              onclick="navigateToSection('#beranda')"
-              class="nav-link text-primary font-bold px-3 py-2 rounded-md text-sm transition border-b-2 border-primary"
-              >Beranda</a
-            >
-            <a
-              href="#tugas"
-              onclick="navigateToSection('#tugas')"
-              class="nav-link text-gray-600 hover:text-primary font-medium px-3 py-2 rounded-md text-sm transition border-b-2 border-transparent hover:border-pink-300"
-              >Daftar Tugas</a
-            >
-            <a
-              href="#matakuliah"
-              onclick="navigateToSection('#matakuliah')"
-              class="nav-link text-gray-600 hover:text-primary font-medium px-3 py-2 rounded-md text-sm transition border-b-2 border-transparent hover:border-pink-300"
-              >Mata Kuliah</a
-            >
-            <a
-              href="#materi"
-              onclick="navigateToSection('#materi')"
-              class="nav-link text-gray-600 hover:text-primary font-medium px-3 py-2 rounded-md text-sm transition border-b-2 border-transparent hover:border-pink-300"
-              >Materi</a
-            >
+            <a href="#beranda" onclick="navigateToSection('#beranda')" class="nav-link text-primary font-bold px-3 py-2 rounded-md text-sm transition border-b-2 border-primary">Beranda</a>
+            <a href="#tugas" onclick="navigateToSection('#tugas')" class="nav-link text-gray-600 hover:text-primary font-medium px-3 py-2 rounded-md text-sm transition border-b-2 border-transparent hover:border-pink-300">Daftar Tugas</a>
+            <a href="#matakuliah" onclick="navigateToSection('#matakuliah')" class="nav-link text-gray-600 hover:text-primary font-medium px-3 py-2 rounded-md text-sm transition border-b-2 border-transparent hover:border-pink-300">Mata Kuliah</a>
+            <a href="#materi" onclick="navigateToSection('#materi')" class="nav-link text-gray-600 hover:text-primary font-medium px-3 py-2 rounded-md text-sm transition border-b-2 border-transparent hover:border-pink-300">Materi</a>
           </div>
-          <!-- Akun, Cloud Sync Status, Lonceng, & Keluar -->
           <div class="hidden md:flex items-center gap-2.5">
-            <span
-              id="cloudSyncBadge"
-              class="inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-full px-3 py-1.5 shadow-sm"
-              title="Sinkronisasi Cloud Aktif Otomatis ke Semua HP & Laptop"
-            >
+            <span class="inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-full px-3 py-1.5 shadow-sm">
               <i class="fas fa-cloud text-emerald-600"></i>
               <span>Tersinkron</span>
             </span>
-            <button
-              type="button"
-              id="globalNotificationBtn"
-              class="w-9 h-9 rounded-full bg-white/70 border border-pink-200 text-gray-600 hover:text-primary hover:bg-pink-50 flex items-center justify-center transition relative shadow-sm"
-              title="Pemberitahuan"
-            >
+            <button type="button" id="globalNotificationBtn" class="w-9 h-9 rounded-full bg-white/70 border border-pink-200 text-gray-600 hover:text-primary hover:bg-pink-50 flex items-center justify-center transition relative shadow-sm" title="Pemberitahuan">
               <i class="fas fa-bell text-sm pointer-events-none"></i>
             </button>
-            <span
-              class="hidden lg:inline-flex items-center gap-2 text-sm text-gray-700 bg-white/70 border border-pink-200 rounded-full px-3 py-1.5"
-            >
+            <span class="hidden lg:inline-flex items-center gap-2 text-sm text-gray-700 bg-white/70 border border-pink-200 rounded-full px-3 py-1.5">
               <i class="far fa-user-circle text-primary"></i>
               <span id="navUser"></span>
             </span>
-            <button
-              type="button"
-              onclick="logout()"
-              title="Keluar"
-              class="inline-flex items-center gap-2 text-sm font-semibold text-primary bg-white border border-pink-300 hover:bg-primary hover:text-white rounded-full px-4 py-1.5 shadow-sm transition"
-            >
+            <button type="button" onclick="logout()" class="inline-flex items-center gap-2 text-sm font-semibold text-primary bg-white border border-pink-300 hover:bg-primary hover:text-white rounded-full px-4 py-1.5 shadow-sm transition">
               <i class="fas fa-sign-out-alt"></i>
               <span>Keluar</span>
             </button>
           </div>
-          <!-- Mobile Menu Button -->
           <div class="md:hidden flex items-center gap-2">
-            <span
-              id="cloudSyncBadgeM"
-              class="w-9 h-9 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-600 flex items-center justify-center shadow-sm"
-              title="Cloud Sync Aktif"
-            >
-              <i class="fas fa-cloud text-sm"></i>
-            </span>
-            <button
-              type="button"
-              id="globalNotificationBtnM"
-              class="w-9 h-9 rounded-full bg-white/70 border border-pink-200 text-gray-600 hover:text-primary flex items-center justify-center transition relative shadow-sm"
-            >
-              <i class="fas fa-bell text-sm pointer-events-none"></i>
-            </button>
-            <button
-              type="button"
-              id="mobile-menu-btn"
-              onclick="document.getElementById('mobile-menu').classList.toggle('hidden')"
-              class="text-gray-600 hover:text-primary focus:outline-none p-2"
-            >
+            <button type="button" id="mobile-menu-btn" onclick="document.getElementById('mobile-menu').classList.toggle('hidden')" class="text-gray-600 hover:text-primary focus:outline-none p-2">
               <i class="fas fa-bars text-2xl pointer-events-none"></i>
             </button>
           </div>
         </div>
       </div>
-      <!-- Mobile Menu Panel -->
-      <div
-        id="mobile-menu"
-        class="hidden md:hidden bg-white/95 backdrop-blur-md border-t border-pink-100 absolute w-full z-[60] shadow-lg"
-      >
+      <div id="mobile-menu" class="hidden md:hidden bg-white/95 backdrop-blur-md border-t border-pink-100 absolute w-full z-[60] shadow-lg">
         <div class="px-4 pt-2 pb-4 space-y-2 sm:px-3">
-          <a
-            href="#beranda"
-            onclick="navigateToSection('#beranda')"
-            class="nav-link block bg-pink-50 text-primary px-3 py-2 rounded-md text-base font-bold border-l-4 border-primary"
-            >Beranda</a
-          >
-          <a
-            href="#tugas"
-            onclick="navigateToSection('#tugas')"
-            class="nav-link block text-gray-600 hover:bg-pink-50 hover:text-primary px-3 py-2 rounded-md text-base font-medium border-l-4 border-transparent"
-            >Daftar Tugas</a
-          >
-          <a
-            href="#matakuliah"
-            onclick="navigateToSection('#matakuliah')"
-            class="nav-link block text-gray-600 hover:bg-pink-50 hover:text-primary px-3 py-2 rounded-md text-base font-medium border-l-4 border-transparent"
-            >Mata Kuliah</a
-          >
-          <a
-            href="#materi"
-            onclick="navigateToSection('#materi')"
-            class="nav-link block text-gray-600 hover:bg-pink-50 hover:text-primary px-3 py-2 rounded-md text-base font-medium border-l-4 border-transparent"
-            >Materi</a
-          >
-          <button
-            type="button"
-            onclick="logout()"
-            class="w-full text-left block text-gray-600 hover:bg-pink-50 hover:text-primary px-3 py-2 rounded-md text-base font-medium border-l-4 border-transparent"
-          >
-            <i class="fas fa-sign-out-alt mr-1"></i> Keluar (<span
-              id="navUserM"
-            ></span
-            >)
+          <a href="#beranda" onclick="navigateToSection('#beranda')" class="nav-link block bg-pink-50 text-primary px-3 py-2 rounded-md text-base font-bold border-l-4 border-primary">Beranda</a>
+          <a href="#tugas" onclick="navigateToSection('#tugas')" class="nav-link block text-gray-600 hover:bg-pink-50 hover:text-primary px-3 py-2 rounded-md text-base font-medium border-l-4 border-transparent">Daftar Tugas</a>
+          <a href="#matakuliah" onclick="navigateToSection('#matakuliah')" class="nav-link block text-gray-600 hover:bg-pink-50 hover:text-primary px-3 py-2 rounded-md text-base font-medium border-l-4 border-transparent">Mata Kuliah</a>
+          <a href="#materi" onclick="navigateToSection('#materi')" class="nav-link block text-gray-600 hover:bg-pink-50 hover:text-primary px-3 py-2 rounded-md text-base font-medium border-l-4 border-transparent">Materi</a>
+          <button type="button" onclick="logout()" class="w-full text-left block text-gray-600 hover:bg-pink-50 hover:text-primary px-3 py-2 rounded-md text-base font-medium border-l-4 border-transparent">
+            <i class="fas fa-sign-out-alt mr-1"></i> Keluar (<span id="navUserM"></span>)
           </button>
         </div>
       </div>
@@ -308,116 +157,59 @@
     <!-- Main Content -->
     <main class="flex-grow flex flex-col relative z-10">
       <!-- Hero Section -->
-      <section
-        id="beranda"
-        class="page-section w-full pt-16 pb-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto relative page-transition"
-      >
-        <div
-          class="lg:flex lg:items-center lg:justify-between gap-12 relative z-10"
-        >
+      <section id="beranda" class="page-section w-full pt-16 pb-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto relative page-transition">
+        <div class="lg:flex lg:items-center lg:justify-between gap-12 relative z-10">
           <div class="lg:w-1/2">
-            <span
-              class="inline-block py-1 px-3 rounded-full bg-pink-100 text-primary text-sm font-semibold mb-4"
-              >Mahasiswa TI Angkatan 2024</span
-            >
-            <h1
-              class="text-4xl sm:text-5xl font-extrabold text-gray-900 tracking-tight mb-4"
-            >
-              Halo, Saya
-              <span
-                class="text-transparent bg-clip-text bg-gradient-to-r from-primary to-rose-400"
-                >Fatihatul Ikrimah</span
-              >
+            <span class="inline-block py-1 px-3 rounded-full bg-pink-100 text-primary text-sm font-semibold mb-4">Mahasiswa TI Angkatan 2024</span>
+            <h1 class="text-4xl sm:text-5xl font-extrabold text-gray-900 tracking-tight mb-4">
+              Halo, Saya <span class="text-transparent bg-clip-text bg-gradient-to-r from-primary to-rose-400">Fatihatul Ikrimah</span>
             </h1>
             <p class="text-lg text-gray-600 mb-8 leading-relaxed">
-              Selamat datang di portal akademik pribadi saya. Website ini
-              dirancang khusus untuk mendokumentasikan perjalanan belajar,
-              mengumpulkan tugas harian, dan merangkum materi perkuliahan,
-              khususnya pada mata kuliah
-              <strong>Analisis &amp; Desain Perangkat Lunak (ADPL)</strong>.
+              Selamat datang di portal akademik pribadi saya. Website ini dirancang khusus untuk mendokumentasikan perjalanan belajar, mengumpulkan tugas harian, dan merangkum materi perkuliahan, khususnya pada mata kuliah <strong>Analisis &amp; Desain Perangkat Lunak (ADPL)</strong>.
             </p>
             <div class="flex flex-wrap gap-4 relative z-30">
-              <button
-                type="button"
-                onclick="navigateToSection('#tugas')"
-                id="btnHeroLihatTugas"
-                class="bg-primary hover:bg-pink-600 active:bg-pink-700 text-white font-semibold py-3 px-6 rounded-lg shadow-lg shadow-pink-200 transition duration-200 flex items-center gap-2 cursor-pointer"
-              >
+              <button type="button" onclick="navigateToSection('#tugas')" id="btnHeroLihatTugas" class="bg-primary hover:bg-pink-600 active:bg-pink-700 text-white font-semibold py-3 px-6 rounded-lg shadow-lg shadow-pink-200 transition duration-200 flex items-center gap-2 cursor-pointer">
                 Lihat Tugas <i class="fas fa-arrow-right pointer-events-none"></i>
               </button>
-              <a
-                href="https://github.com/fatihatulikrimah41-lgtm/Portal-akademik_Fatihatul-ikrimah"
-                target="_blank"
-                rel="noopener noreferrer"
-                class="bg-white border-2 border-gray-200 text-gray-700 hover:border-gray-300 hover:bg-gray-50 font-semibold py-3 px-6 rounded-lg transition duration-200 flex items-center gap-2"
-              >
+              <a href="https://github.com/fatihatulikrimah41-lgtm/Portal-akademik_Fatihatul-ikrimah" target="_blank" rel="noopener noreferrer" class="bg-white border-2 border-gray-200 text-gray-700 hover:border-gray-300 hover:bg-gray-50 font-semibold py-3 px-6 rounded-lg transition duration-200 flex items-center gap-2">
                 <i class="fab fa-github text-xl pointer-events-none"></i> GitHub
               </a>
             </div>
           </div>
           <div class="lg:w-1/2 mt-12 lg:mt-0 flex justify-center">
             <div class="relative w-72 h-72 sm:w-96 sm:h-96">
-              <div
-                class="absolute inset-0 bg-gradient-to-br from-pink-300 to-rose-300 rounded-full blur-2xl opacity-60 animate-pulse pointer-events-none"
-              ></div>
-              <img
-                src="assets/personal_photo.jpg"
-                alt="Profile"
-                class="relative rounded-3xl shadow-2xl shadow-pink-300 object-cover w-full h-full border-4 border-white transform rotate-2 hover:rotate-0 transition duration-500"
-              />
+              <div class="absolute inset-0 bg-gradient-to-br from-pink-300 to-rose-300 rounded-full blur-2xl opacity-60 animate-pulse pointer-events-none"></div>
+              <img src="assets/personal_photo.jpg" alt="Profile" class="relative rounded-3xl shadow-2xl shadow-pink-300 object-cover w-full h-full border-4 border-white transform rotate-2 hover:rotate-0 transition duration-500" />
             </div>
           </div>
         </div>
       </section>
 
-      <!-- Tasks / Assignments Section -->
-      <section
-        id="tugas"
-        class="page-section hidden w-full py-16 bg-white/40 backdrop-blur-md border-t border-white/50 relative z-10 page-transition min-h-[70vh]"
-      >
+      <!-- Tasks Section -->
+      <section id="tugas" class="page-section hidden w-full py-16 bg-white/40 backdrop-blur-md border-t border-white/50 relative z-10 page-transition min-h-[70vh]">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
           <div class="text-center mb-8">
-            <h2 class="text-3xl font-bold text-gray-900">
-              Daftar Tugas &amp; Laporan
-            </h2>
+            <h2 class="text-3xl font-bold text-gray-900">Daftar Tugas &amp; Laporan</h2>
           </div>
           <div id="dueBanner" class="space-y-3 mb-6"></div>
-          <div
-            class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-8"
-          >
+          <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-8">
             <p id="taskSummary" class="text-sm text-gray-600"></p>
-            <button
-              type="button"
-              onclick="openTaskForm()"
-              class="bg-primary hover:bg-pink-600 text-white font-semibold py-2.5 px-5 rounded-lg shadow-lg shadow-pink-200 transition flex items-center justify-center gap-2"
-            >
+            <button type="button" onclick="openTaskForm()" class="bg-primary hover:bg-pink-600 text-white font-semibold py-2.5 px-5 rounded-lg shadow-lg shadow-pink-200 transition flex items-center justify-center gap-2">
               <i class="fas fa-plus pointer-events-none"></i> Tambah Tugas
             </button>
           </div>
-          <div
-            id="taskList"
-            class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"
-          ></div>
+          <div id="taskList" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"></div>
         </div>
       </section>
 
-      <!-- Courses Information Section -->
-      <section
-        id="matakuliah"
-        class="page-section hidden w-full py-16 relative z-10 page-transition min-h-[70vh]"
-      >
+      <!-- Courses Section -->
+      <section id="matakuliah" class="page-section hidden w-full py-16 relative z-10 page-transition min-h-[70vh]">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 mb-10">
           <div class="text-center mb-8">
-            <h2 class="text-3xl font-bold text-gray-900">
-              Informasi Mata Kuliah
-            </h2>
+            <h2 class="text-3xl font-bold text-gray-900">Informasi Mata Kuliah</h2>
           </div>
           <div class="flex justify-end mb-8">
-            <button
-              type="button"
-              onclick="openCourseForm()"
-              class="bg-primary hover:bg-pink-600 text-white font-semibold py-2.5 px-5 rounded-lg shadow-lg shadow-pink-200 transition flex items-center justify-center gap-2"
-            >
+            <button type="button" onclick="openCourseForm()" class="bg-primary hover:bg-pink-600 text-white font-semibold py-2.5 px-5 rounded-lg shadow-lg shadow-pink-200 transition flex items-center justify-center gap-2">
               <i class="fas fa-plus pointer-events-none"></i> Tambah Mata Kuliah
             </button>
           </div>
@@ -426,250 +218,70 @@
       </section>
 
       <!-- Materi Section -->
-      <section
-        id="materi"
-        class="page-section hidden w-full py-16 bg-white/40 backdrop-blur-md border-t border-white/50 relative z-10 page-transition min-h-[70vh]"
-      >
+      <section id="materi" class="page-section hidden w-full py-16 bg-white/40 backdrop-blur-md border-t border-white/50 relative z-10 page-transition min-h-[70vh]">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
           <div class="text-center mb-8">
             <h2 class="text-3xl font-bold text-gray-900">Materi Perkuliahan</h2>
           </div>
-          <div
-            class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-8"
-          >
+          <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-8">
             <div class="flex items-center gap-3">
-              <select
-                id="materiFilter"
-                onchange="renderMateri()"
-                class="field sm:w-64"
-                aria-label="Filter mata kuliah"
-              ></select>
-              <p
-                id="materiSummary"
-                class="text-sm text-gray-600 whitespace-nowrap"
-              ></p>
+              <select id="materiFilter" onchange="renderMateri()" class="field sm:w-64" aria-label="Filter mata kuliah"></select>
+              <p id="materiSummary" class="text-sm text-gray-600 whitespace-nowrap"></p>
             </div>
-            <button
-              type="button"
-              onclick="openMateriForm()"
-              class="bg-primary hover:bg-pink-600 text-white font-semibold py-2.5 px-5 rounded-lg shadow-lg shadow-pink-200 transition flex items-center justify-center gap-2"
-            >
+            <button type="button" onclick="openMateriForm()" class="bg-primary hover:bg-pink-600 text-white font-semibold py-2.5 px-5 rounded-lg shadow-lg shadow-pink-200 transition flex items-center justify-center gap-2">
               <i class="fas fa-plus pointer-events-none"></i> Tambah Materi
             </button>
           </div>
-          <div
-            id="materiList"
-            class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"
-          ></div>
+          <div id="materiList" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"></div>
         </div>
       </section>
-
-      <!-- Global Decorations -->
-      <div
-        class="w-full flex justify-center items-end mt-auto pt-16 pb-4 relative z-0 pointer-events-none"
-      >
-        <div
-          class="absolute bottom-0 left-0 md:left-8 z-0 opacity-80 animate-sway pointer-events-none"
-        >
-          <svg class="w-20 h-56 md:w-28 md:h-72 text-pink-400 drop-shadow-md">
-            <use href="#flower-tall"></use>
-          </svg>
-        </div>
-
-        <div class="flex justify-center items-end gap-6 relative z-10 mb-2 pointer-events-none">
-          <i
-            class="fas fa-heart text-2xl text-pink-300 animate-float-love delay-1"
-          ></i>
-          <i
-            class="fas fa-heart text-4xl text-pink-400 animate-float-love delay-2"
-          ></i>
-          <i
-            class="fas fa-heart text-3xl text-pink-500 animate-float-love delay-3"
-          ></i>
-          <i
-            class="fas fa-heart text-4xl text-pink-400 animate-float-love delay-4"
-          ></i>
-          <i
-            class="fas fa-heart text-2xl text-pink-300 animate-float-love delay-5"
-          ></i>
-        </div>
-
-        <div
-          class="absolute bottom-0 right-0 md:right-8 z-0 opacity-80 animate-sway-delayed pointer-events-none"
-        >
-          <svg class="w-16 h-44 md:w-24 md:h-56 text-rose-400 drop-shadow-md">
-            <use href="#flower-short"></use>
-          </svg>
-        </div>
-      </div>
     </main>
 
     <!-- Footer -->
-    <footer
-      class="bg-pink-50/60 backdrop-blur-md border-t border-pink-200 py-8 relative z-10"
-    >
-      <div
-        class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row justify-between items-center gap-4"
-      >
-        <div class="text-gray-500 text-sm">
-          &copy; 2026
-          <span class="font-semibold text-gray-700">Fatihatul Ikrimah</span>.
-          Portal Akademik.
-        </div>
-        <div class="flex space-x-6">
-          <a
-            href="https://github.com/fatihatulikrimah41-lgtm/Portal-akademik_Fatihatul-ikrimah"
-            target="_blank"
-            rel="noopener noreferrer"
-            class="text-gray-400 hover:text-primary transition"
-            ><i class="fab fa-github text-xl"></i
-          ></a>
-          <a href="#" class="text-gray-400 hover:text-primary transition"
-            ><i class="fab fa-linkedin text-xl"></i
-          ></a>
-          <a href="#" class="text-gray-400 hover:text-primary transition"
-            ><i class="fas fa-envelope text-xl"></i
-          ></a>
-        </div>
+    <footer class="bg-pink-50/60 backdrop-blur-md border-t border-pink-200 py-8 relative z-10">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row justify-between items-center gap-4">
+        <div class="text-gray-500 text-sm">&copy; 2026 <span class="font-semibold text-gray-700">Fatihatul Ikrimah</span>. Portal Akademik.</div>
       </div>
     </footer>
 
-    <!-- Custom Modal for Alerts -->
-    <div
-      id="customModal"
-      class="fixed inset-0 bg-black/50 z-[100] hidden items-center justify-center opacity-0 transition-opacity duration-300 backdrop-blur-sm"
-    >
-      <div
-        class="bg-white rounded-2xl shadow-2xl p-6 md:p-8 max-w-md w-full mx-4 transform scale-95 transition-transform duration-300"
-        id="modalContent"
-      >
+    <!-- Modals -->
+    <div id="customModal" class="fixed inset-0 bg-black/50 z-[100] hidden items-center justify-center opacity-0 transition-opacity duration-300 backdrop-blur-sm">
+      <div class="bg-white rounded-2xl shadow-2xl p-6 md:p-8 max-w-md w-full mx-4" id="modalContent">
         <div class="flex justify-between items-start mb-4">
           <h3 id="modalTitle" class="text-xl font-bold text-gray-900">Judul</h3>
-          <button
-            type="button"
-            onclick="closeModal()"
-            class="text-gray-400 hover:text-red-500 transition"
-          >
-            <i class="fas fa-times text-xl"></i>
-          </button>
+          <button type="button" onclick="closeModal()" class="text-gray-400 hover:text-red-500"><i class="fas fa-times text-xl"></i></button>
         </div>
-        <p id="modalBody" class="text-gray-600 mb-6 leading-relaxed">
-          Isi pesan...
-        </p>
-        <div class="flex justify-end">
-          <button
-            type="button"
-            onclick="closeModal()"
-            class="bg-primary hover:bg-pink-600 text-white font-medium py-2 px-6 rounded-lg transition shadow-md"
-          >
-            Tutup
-          </button>
-        </div>
+        <p id="modalBody" class="text-gray-600 mb-6 leading-relaxed"></p>
+        <div class="flex justify-end"><button type="button" onclick="closeModal()" class="bg-primary text-white font-medium py-2 px-6 rounded-lg">Tutup</button></div>
       </div>
     </div>
 
-    <!-- Toast Notifikasi Tenggat -->
-    <div
-      id="dueToast"
-      class="fixed top-20 right-4 z-[90] max-w-sm w-[calc(100%-2rem)] hidden opacity-0 translate-y-[-8px] transition duration-300"
-    ></div>
-
-    <!-- Form Modal (Tambah / Edit) -->
-    <div
-      id="formModal"
-      class="fixed inset-0 bg-black/50 z-[110] hidden items-center justify-center opacity-0 transition-opacity duration-300 backdrop-blur-sm p-4"
-    >
-      <div
-        id="formBox"
-        class="bg-white rounded-2xl shadow-2xl p-6 md:p-8 max-w-lg w-full transform scale-95 transition-transform duration-300 max-h-[90vh] overflow-y-auto"
-      ></div>
+    <div id="formModal" class="fixed inset-0 bg-black/50 z-[110] hidden items-center justify-center p-4">
+      <div id="formBox" class="bg-white rounded-2xl shadow-2xl p-6 md:p-8 max-w-lg w-full max-h-[90vh] overflow-y-auto"></div>
     </div>
 
-    <!-- Confirm Modal (Hapus) -->
-    <div
-      id="confirmModal"
-      class="fixed inset-0 bg-black/50 z-[120] hidden items-center justify-center opacity-0 transition-opacity duration-300 backdrop-blur-sm p-4"
-    >
-      <div
-        class="bg-white rounded-2xl shadow-2xl p-6 md:p-8 max-w-md w-full transform scale-95 transition-transform duration-300"
-      >
-        <div class="flex items-center gap-3 mb-3">
-          <div
-            class="w-10 h-10 bg-red-100 text-red-500 rounded-lg flex items-center justify-center"
-          >
-            <i class="fas fa-trash"></i>
-          </div>
-          <h3 id="confirmTitle" class="text-xl font-bold text-gray-900">
-            Hapus?
-          </h3>
-        </div>
-        <p id="confirmBody" class="text-gray-600 mb-6 leading-relaxed"></p>
+    <div id="confirmModal" class="fixed inset-0 bg-black/50 z-[120] hidden items-center justify-center p-4">
+      <div class="bg-white rounded-2xl shadow-2xl p-6 md:p-8 max-w-md w-full">
+        <h3 id="confirmTitle" class="text-xl font-bold text-gray-900 mb-3">Hapus?</h3>
+        <p id="confirmBody" class="text-gray-600 mb-6"></p>
         <div class="flex justify-end gap-3">
-          <button
-            type="button"
-            onclick="closeOv(confirmModal)"
-            class="bg-white border border-gray-200 text-gray-700 font-medium py-2 px-5 rounded-lg hover:bg-gray-50 transition"
-          >
-            Batal
-          </button>
-          <button
-            type="button"
-            id="confirmOk"
-            class="bg-red-500 hover:bg-red-600 text-white font-medium py-2 px-5 rounded-lg transition shadow-md"
-          >
-            Hapus
-          </button>
+          <button type="button" onclick="closeOv(confirmModal)" class="bg-white border text-gray-700 py-2 px-5 rounded-lg">Batal</button>
+          <button type="button" id="confirmOk" class="bg-red-500 text-white py-2 px-5 rounded-lg">Hapus</button>
         </div>
       </div>
     </div>
 
-    <!-- Modal Pratinjau File -->
-    <div
-      id="filePreviewModal"
-      class="fixed inset-0 bg-black/65 z-[180] hidden items-center justify-center p-3 sm:p-5 backdrop-blur-sm"
-    >
-      <div
-        class="bg-white rounded-2xl shadow-2xl w-full max-w-4xl h-[88vh] flex flex-col overflow-hidden border border-pink-200"
-      >
-        <div
-          class="px-5 py-3.5 bg-pink-50 border-b border-pink-200 flex items-center justify-between gap-3 shrink-0"
-        >
-          <div class="flex items-center gap-2 min-w-0">
-            <i class="fas fa-file-pdf text-primary text-lg"></i>
-            <h3
-              id="previewFileName"
-              class="font-bold text-gray-900 text-sm sm:text-base truncate"
-            >
-              Pratinjau Dokumen
-            </h3>
-          </div>
-          <div class="flex items-center gap-2 shrink-0">
-            <a
-              id="previewDownloadBtn"
-              href="javascript:void(0)"
-              download
-              class="bg-primary hover:bg-pink-600 text-white text-xs sm:text-sm font-semibold px-3.5 py-1.5 rounded-lg transition flex items-center gap-1.5"
-            >
-              <i class="fas fa-download"></i> Unduh
-            </a>
-            <button
-              type="button"
-              id="closePreviewBtn"
-              class="w-8 h-8 rounded-lg bg-white border border-pink-200 text-gray-500 hover:text-red-500 hover:bg-red-50 flex items-center justify-center transition"
-              title="Tutup Pratinjau"
-            >
-              <i class="fas fa-times"></i>
-            </button>
-          </div>
+    <div id="filePreviewModal" class="fixed inset-0 bg-black/65 z-[180] hidden items-center justify-center p-3 sm:p-5">
+      <div class="bg-white rounded-2xl shadow-2xl w-full max-w-4xl h-[88vh] flex flex-col overflow-hidden">
+        <div class="px-5 py-3.5 bg-pink-50 border-b flex items-center justify-between">
+          <h3 id="previewFileName" class="font-bold text-gray-900 truncate">Pratinjau</h3>
+          <button type="button" onclick="closeFilePreviewModal()" class="w-8 h-8 rounded-lg bg-white border text-gray-500 hover:text-red-500"><i class="fas fa-times"></i></button>
         </div>
-        <div
-          id="previewContainer"
-          class="flex-1 bg-gray-200 relative overflow-y-auto p-4 flex flex-col items-center gap-4"
-        ></div>
+        <div id="previewContainer" class="flex-1 bg-gray-200 p-4 overflow-y-auto flex flex-col items-center gap-4"></div>
       </div>
     </div>
 
-    <!-- NAVIGASI MANUAL LANGSUNG (DIJAMIN RESPONSIF DI HP & LAPTOP) -->
+    <!-- Script Navigasi & Aplikasi Lengkap -->
     <script>
       function navigateToSection(sectionHash) {
         const targetId = (sectionHash || "#beranda").replace("#", "");
@@ -678,11 +290,8 @@
         if (!targetEl) return;
 
         sections.forEach((sec) => {
-          if (sec.id === targetId) {
-            sec.classList.remove("hidden");
-          } else {
-            sec.classList.add("hidden");
-          }
+          if (sec.id === targetId) sec.classList.remove("hidden");
+          else sec.classList.add("hidden");
         });
 
         const mobileMenu = document.getElementById("mobile-menu");
@@ -704,165 +313,471 @@
         }
         window.scrollTo({ top: 0, behavior: "smooth" });
       }
-    </script>
 
-    <!-- SELURUH LOGIKA APLIKASI + SYNC CLOUD + QUIZ PDF & DRIVE TERTANAM DALAM 1 FILE -->
-    <script>
       (function () {
         const K = {
-          users: "portalAkademik.v9.users",
+          users: "portalAkademik.v11.users",
           session: "portalAkademik.session",
-          data: "portalAkademik.v9.data",
-          cloudUrl: "portalAkademik.cloudEndpoint.v9",
-          lastSync: "portalAkademik.lastSyncTime.v9",
+          data: "portalAkademik.v11.data",
+          cloudUrl: "portalAkademik.cloudEndpoint.v11",
+          lastSync: "portalAkademik.lastSyncTime.v11",
         };
-        const DEFAULT_CLOUD_ENDPOINT =
-          "https://jsonblob.com/api/jsonBlob/1349827651029483520";
+        const DEFAULT_CLOUD_ENDPOINT = "https://jsonblob.com/api/jsonBlob/1349827651029483520";
 
         const $ = (id) => document.getElementById(id);
-        const esc = (s) =>
-          String(s ?? "").replace(
-            /[&<>"']/g,
-            (c) =>
-              ({
-                "&": "&amp;",
-                "<": "&lt;",
-                ">": "&gt;",
-                '"': "&quot;",
-                "'": "&#39;",
-              })[c],
-          );
+        const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
         const uid = () => Math.random().toString(36).slice(2, 9);
-        const read = (k, d) => {
-          try {
-            return JSON.parse(localStorage.getItem(k)) ?? d;
-          } catch (e) {
-            return d;
-          }
-        };
-        const write = (k, v) => {
-          try {
-            localStorage.setItem(k, JSON.stringify(v));
-          } catch (e) {}
-        };
+        const read = (k, d) => { try { return JSON.parse(localStorage.getItem(k)) ?? d; } catch (e) { return d; } };
+        const write = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} };
 
         const dayOffset = (n) => {
           const d = new Date();
           d.setDate(d.getDate() + n);
           d.setHours(0, 0, 0, 0);
-          return (
-            d.getFullYear() +
-            "-" +
-            String(d.getMonth() + 1).padStart(2, "0") +
-            "-" +
-            String(d.getDate()).padStart(2, "0")
-          );
+          return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
         };
 
         function seed() {
           const courses = [
-            {
-              id: "imk",
-              name: "Interaksi Manusia & Komputer",
-              kelas: "TI25D",
-              dosen: "Muhamad Imam",
-              nidn: "0412068907",
-              sks: 3,
-              hari: "Senin",
-              jam: "11:30 - 13:00",
-              ruang: "D 403",
-              peserta: 30,
-            },
-            {
-              id: "adpl",
-              name: "Analisis dan Design PL",
-              kelas: "TI24D",
-              dosen: "Dian Novianti",
-              nidn: "0421117105",
-              sks: 3,
-              hari: "Senin",
-              jam: "13:00 - 15:30",
-              ruang: "D 406",
-              peserta: 29,
-            },
-            {
-              id: "pbp",
-              name: "Pemrograman Berbasis Platform",
-              kelas: "TI24D",
-              dosen: "Sugiyanto",
-              nidn: "0404067905",
-              sks: 3,
-              hari: "Senin",
-              jam: "10:00 - 12:30",
-              ruang: "D 406",
-              peserta: 29,
-            },
-            {
-              id: "tti",
-              name: "Tata Tulis Ilmiah (Metodologi Penelitian)",
-              kelas: "TI24D",
-              dosen: "Harry Gunawan",
-              nidn: "0408118304",
-              sks: 2,
-              hari: "Selasa",
-              jam: "09:10 - 11:40",
-              ruang: "D 406",
-              peserta: 30,
-            },
-            {
-              id: "mpti",
-              name: "Manajemen Proyek Teknologi Informasi",
-              kelas: "TI24D",
-              dosen: "Gunadi Dwi Hantoro",
-              nidn: "715775065113011",
-              sks: 3,
-              hari: "Senin",
-              jam: "07:30 - 10:00",
-              ruang: "D 406",
-              peserta: 29,
-            },
-            {
-              id: "aik4",
-              name: "AIK 4 (Islam dan Ilmu Pengetahuan)",
-              kelas: "TI24D",
-              dosen: "Masdum Mustaqwa",
-              nidn: "0242761662131163",
-              sks: 2,
-              hari: "Kamis",
-              jam: "10:00 - 11:40",
-              ruang: "D 405",
-              peserta: 26,
-            },
-            {
-              id: "aicp",
-              name: "AI Computing Platform",
-              kelas: "24K2B",
-              dosen: "Freddy Wicaksono",
-              nidn: "0402057307",
-              sks: 3,
-              hari: "Rabu",
-              jam: "18:00 - 22:00",
-              ruang: "C 303",
-              peserta: 31,
-            },
-            {
-              id: "arvr",
-              name: "Teknologi AR/VR",
-              kelas: "24K2B",
-              dosen: "Muhamad Imam",
-              nidn: "0412068907",
-              sks: 3,
-              hari: "Selasa",
-              jam: "13:00 - 15:30",
-              ruang: "D 406",
-              peserta: 31,
-            },
+            { id: "imk", name: "Interaksi Manusia & Komputer", kelas: "TI25D", dosen: "Muhamad Imam", nidn: "0412068907", sks: 3, hari: "Senin", jam: "11:30 - 13:00", ruang: "D 403", peserta: 30 },
+            { id: "adpl", name: "Analisis dan Design PL", kelas: "TI24D", dosen: "Dian Novianti", nidn: "0421117105", sks: 3, hari: "Senin", jam: "13:00 - 15:30", ruang: "D 406", peserta: 29 },
+            { id: "pbp", name: "Pemrograman Berbasis Platform", kelas: "TI24D", dosen: "Sugiyanto", nidn: "0404067905", sks: 3, hari: "Senin", jam: "10:00 - 12:30", ruang: "D 406", peserta: 29 },
+            { id: "tti", name: "Tata Tulis Ilmiah (Metodologi Penelitian)", kelas: "TI24D", dosen: "Harry Gunawan", nidn: "0408118304", sks: 2, hari: "Selasa", jam: "09:10 - 11:40", ruang: "D 406", peserta: 30 },
+            { id: "mpti", name: "Manajemen Proyek Teknologi Informasi", kelas: "TI24D", dosen: "Gunadi Dwi Hantoro", nidn: "715775065113011", sks: 3, hari: "Senin", jam: "07:30 - 10:00", ruang: "D 406", peserta: 29 },
+            { id: "aik4", name: "AIK 4 (Islam dan Ilmu Pengetahuan)", kelas: "TI24D", dosen: "Masdum Mustaqwa", nidn: "0242761662131163", sks: 2, hari: "Kamis", jam: "10:00 - 11:40", ruang: "D 405", peserta: 26 },
+            { id: "aicp", name: "AI Computing Platform", kelas: "24K2B", dosen: "Freddy Wicaksono", nidn: "0402057307", sks: 3, hari: "Rabu", jam: "18:00 - 22:00", ruang: "C 303", peserta: 31 },
+            { id: "arvr", name: "Teknologi AR/VR", kelas: "24K2B", dosen: "Muhamad Imam", nidn: "0412068907", sks: 3, hari: "Selasa", jam: "13:00 - 15:30", ruang: "D 406", peserta: 31 }
           ];
           const t = (courseId, title, desc, d, done, extra = {}) => ({
-            id: uid(),
-            courseId,
-            title,
-            desc,
-            due: extra.due || dayOffset(d),
-            done: !!done,
-            pdfName
+            id: uid(), courseId, title, desc, due: extra.due || dayOffset(d), done: !!done,
+            pdfName: extra.pdfName || "", pdfUrl: extra.pdfUrl || "", driveLink: extra.driveLink || ""
+          });
+          const tasks = [
+            t("adpl", "QUIZ", "Soal Quiz: 1. Beri judul Project System Anda, kemudian jelaskan latarbelakang minimal 5 paragraph beserta citasi nya. 2. Jabarkan urgensi penelitiam Anda beserta Manfaat Penelitiam 3. Jelaskan Metode Penelitian yang digunakan. Jelaskan perbedaannya dari penelitian sebelumnya. Buatkan 5 kajian reference sebelumnya ditinjau dari Metode Penelitian! 4. Uraikan tools yang digunakan! 5. Tuliskan Daftar Pustaka. Minimal 30 referensi yg digunakan", -2, true, {
+              due: "2026-11-16",
+              pdfName: "240511136_Fatihatul ikrimah_TI24D_QUIZ.pdf",
+              pdfUrl: "./240511136_Fatihatul%20ikrimah_TI24D_QUIZ.pdf",
+              driveLink: "https://drive.google.com/drive/folders/1AralCU0Or88y3FkNgjsDD2ta9tYtxqRI?usp=sharing"
+            }),
+            t("imk", "download aplikasi canva", "buat kelompok", 5, false, { due: "2026-11-23" }),
+            t("adpl", "Studi Kasus & Identifikasi Kebutuhan Sistem", "Pilih satu studi kasus lalu identifikasi stakeholder, masalah, dan kebutuhan awal.", -1, true),
+            t("adpl", "Diagram Use Case Sistem Perpustakaan", "Buat use case diagram lengkap dengan aktor, use case, dan relasi.", 2)
+          ];
+          const m = (courseId, pertemuan, title, desc) => ({ id: uid(), courseId, pertemuan, title, desc, link: "" });
+          const materi = [
+            m("adpl", 1, "Pengantar Analisis dan Desain Perangkat Lunak", "SDLC, peran analis sistem."),
+            m("adpl", 2, "Pemodelan dengan UML", "Use case, activity, class, dan sequence diagram.")
+          ];
+          return { courses, tasks, materi };
+        }
+
+        let db = read(K.data, null);
+        if (!db || !Array.isArray(db.courses) || !Array.isArray(db.tasks) || !db.courses.length) {
+          db = seed();
+          save();
+        }
+
+        function ensureQuizInDb() {
+          if (!db || !Array.isArray(db.tasks)) return;
+          let q = db.tasks.find((t) => t.title === "QUIZ");
+          if (!q) {
+            db.tasks.unshift({
+              id: "quiz-adpl-default", courseId: "adpl", title: "QUIZ",
+              desc: "Soal Quiz: 1. Latar belakang 5 paragraf beserta citasi. 2. Urgensi & manfaat. 3. Metode penelitian. 4. Tools. 5. Daftar pustaka 30 referensi.",
+              due: "2026-11-16", done: true,
+              pdfName: "240511136_Fatihatul ikrimah_TI24D_QUIZ.pdf",
+              pdfUrl: "./240511136_Fatihatul%20ikrimah_TI24D_QUIZ.pdf",
+              driveLink: "https://drive.google.com/drive/folders/1AralCU0Or88y3FkNgjsDD2ta9tYtxqRI?usp=sharing"
+            });
+          } else {
+            q.done = true;
+            if (!q.pdfName) q.pdfName = "240511136_Fatihatul ikrimah_TI24D_QUIZ.pdf";
+            if (!q.pdfUrl) q.pdfUrl = "./240511136_Fatihatul%20ikrimah_TI24D_QUIZ.pdf";
+            if (!q.driveLink) q.driveLink = "https://drive.google.com/drive/folders/1AralCU0Or88y3FkNgjsDD2ta9tYtxqRI?usp=sharing";
+          }
+        }
+        ensureQuizInDb();
+
+        function getCloudUrl() {
+          try { return localStorage.getItem(K.cloudUrl) || DEFAULT_CLOUD_ENDPOINT; } catch (e) { return DEFAULT_CLOUD_ENDPOINT; }
+        }
+
+        async function pushToCloud() {
+          try {
+            const now = Date.now();
+            write(K.lastSync, now);
+            const payload = JSON.stringify({ updatedAt: now, db: db });
+            const endpoint = getCloudUrl();
+            let res = await fetch(endpoint, {
+              method: "PUT",
+              headers: { "Content-Type": "application/json", Accept: "application/json" },
+              body: payload
+            });
+            if (!res.ok) {
+              const createRes = await fetch("https://jsonblob.com/api/jsonBlob", {
+                method: "POST",
+                headers: { "Content-Type": "application/json", Accept: "application/json" },
+                body: payload
+              });
+              if (createRes.ok) {
+                const loc = createRes.headers.get("Location") || createRes.headers.get("X-jsonblob");
+                if (loc) {
+                  const newUrl = loc.startsWith("http") ? loc : `https://jsonblob.com/api/jsonBlob/${loc}`;
+                  localStorage.setItem(K.cloudUrl, newUrl);
+                }
+              }
+            }
+          } catch (e) {}
+        }
+
+        async function pullFromCloud() {
+          try {
+            const endpoint = getCloudUrl();
+            const res = await fetch(endpoint, { method: "GET", headers: { Accept: "application/json" }, cache: "no-store" });
+            if (!res.ok) return;
+            const cloud = await res.json();
+            if (cloud && cloud.db && Array.isArray(cloud.db.tasks)) {
+              db = cloud.db;
+              ensureQuizInDb();
+              write(K.data, db);
+              write(K.lastSync, Number(cloud.updatedAt || Date.now()));
+              renderAll();
+            }
+          } catch (e) {}
+        }
+
+        function save() {
+          ensureQuizInDb();
+          write(K.data, db);
+          pushToCloud();
+        }
+
+        const course = (id) => db.courses.find((c) => c.id === id);
+        const courseName = (id) => (course(id) ? course(id).name : "-");
+
+        window.closeOv = function (el) {
+          el.classList.remove("flex");
+          el.classList.add("hidden");
+        };
+        function openOv(el) {
+          el.classList.remove("hidden");
+          el.classList.add("flex");
+        }
+        function showModal(title, body) {
+          $("modalTitle").textContent = title;
+          $("modalBody").textContent = body;
+          openOv($("customModal"));
+        }
+        window.closeModal = () => window.closeOv($("customModal"));
+        window.closeFilePreviewModal = () => window.closeOv($("filePreviewModal"));
+        
+        function confirmDel(title, body, fn) {
+          $("confirmTitle").textContent = title;
+          $("confirmBody").textContent = body;
+          $("confirmOk").onclick = () => { window.closeOv($("confirmModal")); fn(); };
+          openOv($("confirmModal"));
+        }
+
+        function openForm(title, fields, onSubmit) {
+          const html = fields.map((f) => {
+            const v = f.value ?? "";
+            let input;
+            if (f.type === "textarea") input = `<textarea name="${f.name}" rows="3" class="field" ${f.required ? "required" : ""}>${esc(v)}</textarea>`;
+            else if (f.type === "select") input = `<select name="${f.name}" class="field">${f.options.map((o) => `<option value="${esc(o.value)}" ${String(o.value) === String(v) ? "selected" : ""}>${esc(o.label)}</option>`).join("")}</select>`;
+            else input = `<input name="${f.name}" type="${f.type || "text"}" value="${esc(v)}" class="field" ${f.required ? "required" : ""}>`;
+            return `<div><label class="label">${esc(f.label)}</label>${input}</div>`;
+          }).join("");
+          $("formBox").innerHTML = `<h3 class="text-xl font-bold text-gray-900 mb-4">${esc(title)}</h3>
+            <form id="genForm" class="space-y-3" novalidate>${html}
+            <p id="formErr" class="text-sm text-red-500 hidden"></p>
+            <div class="flex justify-end gap-3 pt-2">
+              <button type="button" onclick="closeOv(formModal)" class="bg-white border text-gray-700 py-2 px-5 rounded-lg">Batal</button>
+              <button type="submit" class="bg-primary text-white py-2 px-5 rounded-lg">Simpan</button>
+            </div></form>`;
+          $("genForm").onsubmit = (e) => {
+            e.preventDefault();
+            const data = Object.fromEntries(new FormData(e.target).entries());
+            onSubmit(data);
+            window.closeOv($("formModal"));
+          };
+          openOv($("formModal"));
+        }
+        const courseOptions = () => db.courses.map((c) => ({ value: c.id, label: c.name + " " + c.kelas }));
+
+        function dueInfo(task) {
+          if (task.done) return { text: "Selesai", cls: "bg-green-100 text-green-600" };
+          const n = daysLeft(task.due);
+          if (n < 0) return { text: `Terlambat ${-n} hari`, cls: "bg-red-100 text-red-600" };
+          if (n === 0) return { text: "Hari ini!", cls: "bg-red-100 text-red-600" };
+          if (n <= 3) return { text: `${n} hari lagi`, cls: "bg-amber-100 text-amber-600" };
+          return { text: `${n} hari lagi`, cls: "bg-pink-100 text-primary" };
+        }
+
+        function renderTasks() {
+          ensureQuizInDb();
+          const list = [...db.tasks].sort((a, b) => a.done - b.done || a.due.localeCompare(b.due));
+          const done = db.tasks.filter((x) => x.done).length;
+          $("taskSummary").textContent = `${db.tasks.length} tugas | ${done} selesai | ${db.tasks.length - done} belum selesai`;
+          $("taskList").innerHTML = list.length
+            ? list.map((x) => {
+                const di = dueInfo(x);
+                const pdfHref = x.pdfUrl || x.driveLink || "https://drive.google.com/drive/folders/1AralCU0Or88y3FkNgjsDD2ta9tYtxqRI?usp=sharing";
+                const pdfBlock = x.pdfName ? `<div class="flex items-center justify-between gap-2 bg-pink-50/90 px-3 py-2 rounded-xl border border-pink-100 mt-2">
+                  <div class="flex items-center gap-2 min-w-0">
+                    <i class="fas fa-file-pdf text-rose-500 text-base shrink-0"></i>
+                    <div class="min-w-0"><p class="text-xs font-semibold text-gray-800 truncate">${esc(x.pdfName)}</p><p class="text-[11px] text-gray-500">2.6 MB</p></div>
+                  </div>
+                  <div class="flex items-center gap-1.5 shrink-0">
+                    <a href="${esc(pdfHref)}" target="_blank" rel="noopener noreferrer" class="px-2.5 py-1 bg-white border border-pink-200 text-primary rounded-lg text-xs font-semibold"><i class="fas fa-eye mr-0.5"></i> Lihat</a>
+                    <a href="${esc(pdfHref)}" download="${esc(x.pdfName)}" target="_blank" rel="noopener noreferrer" class="px-2.5 py-1 bg-primary text-white rounded-lg text-xs font-semibold"><i class="fas fa-download"></i></a>
+                  </div></div>` : "";
+
+                const driveBlock = x.driveLink ? `<div class="flex items-center justify-between gap-2 bg-rose-50/80 px-3 py-2 rounded-xl border border-pink-100 mt-2">
+                  <div class="flex items-center gap-2 min-w-0">
+                    <i class="fab fa-google-drive text-emerald-600 text-sm shrink-0"></i>
+                    <div class="min-w-0"><p class="text-xs font-semibold text-gray-800 truncate">Google Drive - Folder Tugas &amp; PDF</p></div>
+                  </div>
+                  <div class="flex items-center gap-1.5 shrink-0">
+                    <a href="${esc(x.driveLink)}" target="_blank" rel="noopener noreferrer" class="px-2.5 py-1 bg-white border text-primary rounded-lg text-xs font-semibold">Buka <i class="fas fa-external-link-alt text-[10px]"></i></a>
+                  </div></div>` : "";
+
+                return `<div class="card p-5 flex flex-col ${x.done ? "opacity-90" : ""}">
+              <div class="flex justify-between items-start gap-2 mb-2">
+                <span class="badge bg-fuchsia-100 text-fuchsia-600">${esc(courseName(x.courseId))}</span>
+                <span class="badge ${di.cls}">${di.text}</span></div>
+              <h3 class="font-bold text-gray-900 mb-1 ${x.done ? "line-through text-gray-500" : ""}">${esc(x.title)}</h3>
+              <p class="text-sm text-gray-600 flex-grow mb-3">${esc(x.desc)}</p>
+              <p class="text-xs text-gray-500 mb-3"><i class="far fa-calendar-alt mr-1"></i>Tenggat: ${x.due}</p>
+              <div class="flex justify-between items-center">
+                <button type="button" onclick="toggleTask('${x.id}')" class="text-sm font-semibold ${x.done ? "text-gray-500" : "text-primary"} hover:underline">
+                  <i class="fas ${x.done ? "fa-undo" : "fa-check-circle"} mr-1"></i>${x.done ? "Tandai belum" : "Tandai selesai"}</button>
+                <div class="flex gap-2"><button type="button" class="icon-btn" title="Ubah" onclick="editTask('${x.id}')"><i class="fas fa-pen"></i></button>
+                <button type="button" class="icon-btn danger" title="Hapus" onclick="delTask('${x.id}')"><i class="fas fa-trash"></i></button></div>
+              </div>
+              ${pdfBlock || driveBlock ? `<div class="mt-3 pt-2 border-t border-pink-100">${pdfBlock}${driveBlock}</div>` : ""}
+              </div>`;
+              }).join("")
+            : `<p class="col-span-full text-center text-gray-500">Belum ada tugas.</p>`;
+          renderDue();
+        }
+        window.renderTasks = renderTasks;
+
+        window.toggleTask = (id) => { const x = db.tasks.find((t) => t.id === id); if(x) { x.done = !x.done; save(); renderTasks(); } };
+        window.delTask = (id) => { const x = db.tasks.find((t) => t.id === id); confirmDel("Hapus tugas?", `Tugas "${x.title}" akan dihapus.`, () => { db.tasks = db.tasks.filter((t) => t.id !== id); save(); renderTasks(); }); };
+        window.openTaskForm = () => openForm("Tambah Tugas", [
+          { name: "title", label: "Judul tugas", required: true },
+          { name: "courseId", label: "Mata kuliah", type: "select", options: courseOptions() },
+          { name: "desc", label: "Deskripsi", type: "textarea" },
+          { name: "due", label: "Tenggat (YYYY-MM-DD)", value: dayOffset(7), required: true },
+          { name: "driveLink", label: "Link Google Drive", type: "url" }
+        ], (d) => { db.tasks.push({ id: uid(), done: false, ...d }); save(); renderTasks(); });
+
+        window.editTask = (id) => {
+          const x = db.tasks.find(t => t.id === id);
+          openForm("Ubah Tugas", [
+            { name: "title", label: "Judul tugas", value: x.title, required: true },
+            { name: "courseId", label: "Mata kuliah", type: "select", options: courseOptions(), value: x.courseId },
+            { name: "desc", label: "Deskripsi", type: "textarea", value: x.desc },
+            { name: "due", label: "Tenggat", value: x.due, required: true },
+            { name: "driveLink", label: "Link Google Drive", value: x.driveLink || "" }
+          ], (d) => { Object.assign(x, d); save(); renderTasks(); });
+        };
+
+        function renderCourses() {
+          $("courseList").innerHTML = db.courses.length ? db.courses.map((c) => {
+            const nt = db.tasks.filter((t) => t.courseId === c.id).length;
+            const nm = db.materi.filter((m) => m.courseId === c.id).length;
+            return `<div class="card p-6">
+              <div class="flex justify-between items-start gap-4">
+                <div><span class="badge bg-pink-100 text-primary mb-2">${esc(c.kelas)} | ${esc(c.sks)} SKS</span>
+                  <h3 class="text-xl font-bold text-gray-900">${esc(c.name)}</h3>
+                  <p class="text-sm text-gray-600 mt-1"><i class="fas fa-user-tie mr-1 text-primary"></i>${esc(c.dosen)}</p></div>
+                <div class="flex gap-2"><button type="button" class="icon-btn" onclick="editCourse('${c.id}')"><i class="fas fa-pen"></i></button>
+                <button type="button" class="icon-btn danger" onclick="delCourse('${c.id}')"><i class="fas fa-trash"></i></button></div></div>
+              <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mt-5 text-sm">
+                <div><p class="text-gray-400 text-xs">Hari / Jam</p><p class="font-semibold">${esc(c.hari)}, ${esc(c.jam)}</p></div>
+                <div><p class="text-gray-400 text-xs">Ruang</p><p class="font-semibold">${esc(c.ruang)}</p></div>
+                <div><p class="text-gray-400 text-xs">Peserta</p><p class="font-semibold">${esc(c.peserta)} mhs</p></div>
+                <div><p class="text-gray-400 text-xs">Tugas / Materi</p><p class="font-semibold">${nt} / ${nm}</p></div>
+              </div></div>`;
+          }).join("") : `<p class="text-center text-gray-500">Belum ada mata kuliah.</p>`;
+        }
+        window.renderCourses = renderCourses;
+        window.openCourseForm = () => openForm("Tambah Mata Kuliah", [
+          { name: "name", label: "Nama MK", required: true },
+          { name: "kelas", label: "Kelas", required: true },
+          { name: "dosen", label: "Dosen", required: true },
+          { name: "hari", label: "Hari", value: "Senin" },
+          { name: "jam", label: "Jam", value: "07:30 - 10:00" },
+          { name: "ruang", label: "Ruang", value: "D 406" }
+        ], (d) => { db.courses.push({ id: uid(), ...d }); save(); renderAll(); });
+
+        window.editCourse = (id) => {
+          const c = db.courses.find(x => x.id === id);
+          openForm("Ubah Mata Kuliah", [
+            { name: "name", label: "Nama MK", value: c.name, required: true },
+            { name: "kelas", label: "Kelas", value: c.kelas, required: true },
+            { name: "dosen", label: "Dosen", value: c.dosen, required: true },
+            { name: "hari", label: "Hari", value: c.hari },
+            { name: "jam", label: "Jam", value: c.jam },
+            { name: "ruang", label: "Ruang", value: c.ruang }
+          ], (d) => { Object.assign(c, d); save(); renderAll(); });
+        };
+
+        window.delCourse = (id) => {
+          confirmDel("Hapus Mata Kuliah?", "Mata kuliah beserta tugas terkait akan dihapus.", () => {
+            db.courses = db.courses.filter(x => x.id !== id);
+            db.tasks = db.tasks.filter(x => x.courseId !== id);
+            save(); renderAll();
+          });
+        };
+
+        function renderMateri() {
+          const sel = $("materiFilter"), cur = sel.value || "all";
+          sel.innerHTML = `<option value="all">Semua mata kuliah</option>` + db.courses.map(c => `<option value="${c.id}">${esc(c.name)} ${esc(c.kelas)}</option>`).join("");
+          sel.value = db.courses.some(c => c.id === cur) ? cur : "all";
+          const list = db.materi.filter(m => sel.value === "all" || m.courseId === sel.value);
+          $("materiSummary").textContent = `${list.length} materi`;
+          $("materiList").innerHTML = list.length ? list.map(m => `<div class="card p-5 flex flex-col">
+            <div class="flex justify-between items-start gap-2 mb-2"><span class="badge bg-fuchsia-100 text-fuchsia-600">${esc(courseName(m.courseId))}</span>
+              <span class="badge bg-pink-100 text-primary">Pertemuan ${esc(m.pertemuan)}</span></div>
+            <h3 class="font-bold text-gray-900 mb-1">${esc(m.title)}</h3>
+            <p class="text-sm text-gray-600 flex-grow mb-3">${esc(m.desc)}</p>
+            <div class="flex justify-end gap-2">
+              <button type="button" class="icon-btn" onclick="editMateri('${m.id}')"><i class="fas fa-pen"></i></button>
+              <button type="button" class="icon-btn danger" onclick="delMateri('${m.id}')"><i class="fas fa-trash"></i></button>
+            </div></div>`).join("") : `<p class="col-span-full text-center text-gray-500">Belum ada materi.</p>`;
+        }
+        window.renderMateri = renderMateri;
+
+        window.openMateriForm = () => openForm("Tambah Materi", [
+          { name: "title", label: "Judul materi", required: true },
+          { name: "courseId", label: "Mata kuliah", type: "select", options: courseOptions() },
+          { name: "pertemuan", label: "Pertemuan ke-", type: "number", value: 1 },
+          { name: "desc", label: "Ringkasan", type: "textarea" },
+          { name: "link", label: "Tautan (opsional)" }
+        ], (d) => { db.materi.push({ id: uid(), ...d }); save(); renderMateri(); });
+
+        window.editMateri = (id) => {
+          const m = db.materi.find(x => x.id === id);
+          openForm("Ubah Materi", [
+            { name: "title", label: "Judul materi", value: m.title, required: true },
+            { name: "courseId", label: "Mata kuliah", type: "select", options: courseOptions(), value: m.courseId },
+            { name: "pertemuan", label: "Pertemuan ke-", type: "number", value: m.pertemuan },
+            { name: "desc", label: "Ringkasan", type: "textarea", value: m.desc },
+            { name: "link", label: "Tautan", value: m.link || "" }
+          ], (d) => { Object.assign(m, d); save(); renderMateri(); });
+        };
+
+        window.delMateri = (id) => {
+          confirmDel("Hapus Materi?", "Materi ini akan dihapus.", () => {
+            db.materi = db.materi.filter(x => x.id !== id);
+            save(); renderMateri();
+          });
+        };
+
+        function renderDue() {
+          const soon = db.tasks.filter((x) => !x.done && daysLeft(x.due) <= 3);
+          $("dueBanner").innerHTML = soon.map((x) => {
+            const n = daysLeft(x.due), late = n < 0;
+            return `<div class="flex items-center gap-3 rounded-xl border px-4 py-3 text-sm ${late ? "bg-red-50 border-red-200 text-red-700" : "bg-amber-50 border-amber-200 text-amber-700"}">
+            <i class="fas fa-bell"></i><span><strong>${esc(x.title)}</strong> (${esc(courseName(x.courseId))}) - ${late ? `terlambat ${-n} hari` : n === 0 ? "tenggat hari ini" : `${n} hari lagi`}</span></div>`;
+          }).join("");
+        }
+        const daysLeft = (iso) => Math.round((new Date(iso + "T00:00:00") - new Date().setHours(0,0,0,0)) / 86400000);
+
+        function renderAll() { renderTasks(); renderCourses(); renderMateri(); }
+
+        async function hash(s) {
+          try {
+            const b = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(s));
+            return Array.from(new Uint8Array(b)).map(x => x.toString(16).padStart(2, "0")).join("");
+          } catch(e) { return s; }
+        }
+
+        let mode = "login";
+        function renderAuth(msg) {
+          const reg = mode === "register";
+          $("authTitle").textContent = reg ? "Daftar" : "Masuk";
+          $("authSub").textContent = reg ? "Buat akun untuk menyimpan tugasmu." : "Masuk ke Portal Akademik.";
+          $("authForm").innerHTML = `${reg ? `<div><label class="label">Nama lengkap</label><input id="aName" class="field" autocomplete="name"></div>` : ""}
+            <div><label class="label">Username</label><input id="aUser" class="field" autocomplete="username" value="fatihatul"></div>
+            <div>
+              <label class="label">Kata sandi</label>
+              <div class="relative">
+                <input id="aPass" type="password" class="field pr-10" autocomplete="current-password" value="123456">
+                <button type="button" id="togglePass" class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-primary"><i class="fas fa-eye" id="eyeIcon"></i></button>
+              </div>
+            </div>
+            <p id="aErr" class="text-xs text-red-500 ${msg ? "" : "hidden"}">${esc(msg || "")}</p>
+            <button type="submit" class="w-full bg-primary hover:bg-pink-600 text-white font-semibold py-2.5 rounded-xl shadow-md transition">Masuk</button>
+            ${reg ? "" : `<p class="text-[11px] text-gray-400 text-center">Contoh: <b>fatihatul</b> / <b>123456</b></p>`}`;
+          $("authLinks").innerHTML = reg ? `Sudah punya akun? <a href="#" id="swAuth" class="text-primary font-semibold">Masuk</a>` : `Belum punya akun? <a href="#" id="swAuth" class="text-primary font-semibold">Daftar</a>`;
+          $("swAuth").onclick = (e) => { e.preventDefault(); mode = reg ? "login" : "register"; renderAuth(); };
+          $("togglePass").onclick = () => {
+            const pwd = $("aPass"), icon = $("eyeIcon");
+            if (pwd.type === "password") { pwd.type = "text"; icon.classList.replace("fa-eye", "fa-eye-slash"); }
+            else { pwd.type = "password"; icon.classList.replace("fa-eye-slash", "fa-eye"); }
+          };
+        }
+
+        async function submitAuth(e) {
+          e.preventDefault();
+          const users = read(K.users, []);
+          const username = $("aUser").value.trim().toLowerCase(), pass = $("aPass").value;
+          if (!username || !pass) return renderAuth("Username dan kata sandi wajib diisi.");
+          const h = await hash(pass);
+          if (mode === "register") {
+            const name = $("aName").value.trim();
+            if (!name) return renderAuth("Nama lengkap wajib diisi.");
+            if (users.some(u => u.username === username)) return renderAuth("Username sudah dipakai.");
+            users.push({ username, name, pass: h });
+            write(K.users, users);
+            startSession({ username, name });
+          } else {
+            const u = users.find(x => x.username === username && x.pass === h);
+            if (!u) return renderAuth("Username atau kata sandi salah.");
+            startSession(u);
+          }
+        }
+
+        function startSession(u) {
+          try { sessionStorage.setItem(K.session, JSON.stringify({ username: u.username, name: u.name })); } catch (e) {}
+          document.documentElement.classList.add("authed");
+          showUser(u);
+          renderAll();
+        }
+
+        function showUser(u) {
+          $("navUser").textContent = u.name;
+          $("navUserM").textContent = u.name;
+        }
+
+        window.logout = function () {
+          try { sessionStorage.removeItem(K.session); } catch (e) {}
+          document.documentElement.classList.remove("authed");
+          mode = "login";
+          renderAuth();
+          location.hash = "#beranda";
+        };
+
+        document.addEventListener("DOMContentLoaded", async () => {
+          if (!read(K.users, []).length) write(K.users, [{ username: "fatihatul", name: "Fatihatul Ikrimah", pass: await hash("123456") }]);
+          $("authForm").addEventListener("submit", submitAuth);
+          renderAuth();
+          renderAll();
+          await pullFromCloud();
+          setInterval(pullFromCloud, 5000);
+          let s = null;
+          try { s = JSON.parse(sessionStorage.getItem(K.session)); } catch (e) {}
+          if (s && s.name) {
+            document.documentElement.classList.add("authed");
+            showUser(s);
+          } else {
+            document.documentElement.classList.remove("authed");
+          }
+        });
+      })();
+    </script>
+  </body>
+</html>
