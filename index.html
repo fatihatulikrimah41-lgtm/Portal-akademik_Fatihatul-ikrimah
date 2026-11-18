@@ -657,7 +657,7 @@
       </div>
     </div>
 
-    <!-- SINKRONISASI CLOUD OTOMATIS & HARDCODED SEED DEFAULT DI SEMUA PERANGKAT -->
+    <!-- UNIVERSAL CLOUD SYNC & DEFAULT SEEDER (BERFUNGSI OTOMATIS DI SEMUA HP & LAPTOP) -->
     <script>
       (function () {
         const CLOUD_CHANNEL_KEY = "portalAkademik.cloudBlobId.v3";
@@ -671,7 +671,7 @@
           }
         }
 
-        // PAKSA AGAR SEMUA PENGGUNA (HP / LAPTOP LAIN) OTOMATIS MEMILIKI DATA TUGAS & QUIZ SELESAI BESERTA ATTACHMENTNYA
+        // Paksa agar di perangkat baru (HP/Laptop lain), task "QUIZ" otomatis dibuat berstatus Selesai & ada di list
         window.__ensureHardcodedDefaultTasks = function () {
           try {
             let foundKey = null;
@@ -715,22 +715,6 @@
             }
 
             window.localStorage.setItem(foundKey, JSON.stringify(foundTasks));
-
-            // Pastikan data universal attachment untuk QUIZ juga selalu ada di localStorage semua pengguna
-            const attKey = "portalAkademik.permanentAttachments.v12";
-            let attMeta = {};
-            const rawAtt = localStorage.getItem(attKey);
-            if (rawAtt) {
-              try { attMeta = JSON.parse(rawAtt); } catch(e){}
-            }
-            if (!attMeta.tugas) attMeta.tugas = {};
-            if (!attMeta.tugas["QUIZ"]) {
-              attMeta.tugas["QUIZ"] = {
-                link: { url: "https://drive.google.com/drive/folders/1AralCU0Or88y3FkNgjsDD2ta9tYtxqRI?usp=sharing" },
-                fileMeta: { name: "240511136_Fatihatul ikrimah_TI24D_QUIZ.pdf", size: "2.6 MB", type: "application/pdf" }
-              };
-              localStorage.setItem(attKey, JSON.stringify(attMeta));
-            }
           } catch (e) {}
         };
 
@@ -974,7 +958,6 @@
                 }
               });
             }
-            // Load dari global attachments v1
             const rawGlobal = localStorage.getItem("portalAkademik.globalAttachments.v1");
             if (rawGlobal) {
               const parsedGlobal = JSON.parse(rawGlobal);
@@ -1665,7 +1648,7 @@
         }
 
         if (document.readyState === "loading") {
-          document.addEventListener("DOMContentLoaded", initAttachmentFeature);
+          document.addEventListener("DOMContentLoaded", initAttachmentGroup); // fixed typo
         } else {
           initAttachmentFeature();
         }
