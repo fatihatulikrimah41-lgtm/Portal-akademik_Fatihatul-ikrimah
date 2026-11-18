@@ -1,15 +1,14 @@
-/* Portal Akademik - Fatihatul Ikrimah
-   Data tersimpan di localStorage browser & otomatis tersinkron ke Cloud (HP & Laptop lain). */
+/* Portal Akademik - Fatihatul Ikrimah (v4 - Auto Cache Reset & Cross-Device Sync) */
 (function () {
   const K = {
-    users: "portalAkademik.v3.users",
+    users: "portalAkademik.v4.users",
     session: "portalAkademik.session",
-    data: "portalAkademik.v3.data",
-    cloudUrl: "portalAkademik.cloudEndpoint.v1",
-    lastSync: "portalAkademik.lastSyncTime.v1",
+    data: "portalAkademik.v4.data",
+    cloudUrl: "portalAkademik.cloudEndpoint.v4",
+    lastSync: "portalAkademik.lastSyncTime.v4",
   };
-  // Endpoint Cloud Publik tetap untuk Fatihatul Ikrimah agar HP/Laptop lain otomatis sinkron
-  const DEFAULT_CLOUD_ENDPOINT = "https://jsonblob.com/api/jsonBlob/1349827651029483520";
+  const DEFAULT_CLOUD_ENDPOINT =
+    "https://jsonblob.com/api/jsonBlob/1349827651029483520";
 
   const $ = (id) => document.getElementById(id);
   const esc = (s) =>
@@ -38,7 +37,6 @@
     } catch (e) {}
   };
 
-  /* ---------- Data contoh ---------- */
   const dayOffset = (n) => {
     const d = new Date();
     d.setDate(d.getDate() + n);
@@ -177,16 +175,9 @@
             "https://drive.google.com/drive/folders/1AralCU0Or88y3FkNgjsDD2ta9tYtxqRI?usp=sharing",
         },
       ),
-      t(
-        "imk",
-        "download aplikasi canva",
-        "buat kelompok",
-        5,
-        false,
-        {
-          due: "2026-11-23",
-        },
-      ),
+      t("imk", "download aplikasi canva", "buat kelompok", 5, false, {
+        due: "2026-11-23",
+      }),
       t(
         "adpl",
         "Studi Kasus & Identifikasi Kebutuhan Sistem",
@@ -443,7 +434,6 @@
     save();
   }
 
-  // Pastikan tugas QUIZ + PDF + Google Drive selalu tersedia di db semua pengguna (HP & laptop lain)
   function ensureQuizInDb() {
     if (!db || !Array.isArray(db.tasks)) return;
     let q = db.tasks.find((t) => t.title === "QUIZ");
@@ -470,7 +460,6 @@
   }
   ensureQuizInDb();
 
-  /* ---------- Sinkronisasi Cloud Otomatis (Lintas HP & Laptop) ---------- */
   function getCloudUrl() {
     try {
       return localStorage.getItem(K.cloudUrl) || DEFAULT_CLOUD_ENDPOINT;
@@ -483,10 +472,7 @@
     try {
       const now = Date.now();
       write(K.lastSync, now);
-      const payload = JSON.stringify({
-        updatedAt: now,
-        db: db,
-      });
+      const payload = JSON.stringify({ updatedAt: now, db: db });
       const endpoint = getCloudUrl();
       const res = await fetch(endpoint, {
         method: "PUT",
@@ -553,7 +539,6 @@
   const course = (id) => db.courses.find((c) => c.id === id);
   const courseName = (id) => (course(id) ? course(id).name : "-");
 
-  /* ---------- Modal ---------- */
   function openOv(el) {
     el.classList.remove("hidden");
     el.classList.add("flex");
@@ -596,7 +581,6 @@
     openOv($("confirmModal"));
   }
 
-  /* ---------- Form generik ---------- */
   function openForm(title, fields, onSubmit) {
     const html = fields
       .map((f) => {
@@ -639,7 +623,6 @@
   const courseOptions = () =>
     db.courses.map((c) => ({ value: c.id, label: c.name + " " + c.kelas }));
 
-  /* ---------- Tanggal ---------- */
   const today0 = () => {
     const d = new Date();
     d.setHours(0, 0, 0, 0);
@@ -666,7 +649,6 @@
     return { text: `${n} hari lagi`, cls: "bg-pink-100 text-primary" };
   }
 
-  /* ---------- Tugas (Dengan Lampiran PDF & Google Drive Permanen untuk Semua Pengguna) ---------- */
   function renderTasks() {
     ensureQuizInDb();
     const list = [...db.tasks].sort(
@@ -838,7 +820,6 @@
     });
   };
 
-  /* ---------- Mata kuliah ---------- */
   function renderCourses() {
     $("courseList").innerHTML = db.courses.length
       ? db.courses
@@ -919,7 +900,6 @@
     );
   };
 
-  /* ---------- Materi ---------- */
   function renderMateri() {
     const sel = $("materiFilter"),
       cur = sel.value || "all";
@@ -1008,7 +988,6 @@
     renderMateri();
   }
 
-  /* ---------- Login / Daftar ---------- */
   async function hash(s) {
     try {
       const b = await crypto.subtle.digest(
