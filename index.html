@@ -188,7 +188,6 @@
             <span
               id="cloudSyncBadge"
               class="inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-full px-3 py-1.5 shadow-sm"
-              title="Sinkronisasi Cloud Aktif Otomatis ke Semua HP & Laptop"
             >
               <i class="fas fa-cloud text-emerald-600"></i>
               <span>Tersinkron</span>
@@ -222,7 +221,6 @@
             <span
               id="cloudSyncBadgeM"
               class="w-9 h-9 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-600 flex items-center justify-center shadow-sm"
-              title="Cloud Sync Aktif"
             >
               <i class="fas fa-cloud text-sm"></i>
             </span>
@@ -600,81 +598,488 @@
       </div>
     </div>
 
-    <!-- Modal Pratinjau File (Render PDF Canvas / Gambar di dalam halaman) -->
-    <div
-      id="filePreviewModal"
-      class="fixed inset-0 bg-black/65 z-[180] hidden items-center justify-center p-3 sm:p-5 backdrop-blur-sm"
-    >
-      <div
-        class="bg-white rounded-2xl shadow-2xl w-full max-w-4xl h-[88vh] flex flex-col overflow-hidden border border-pink-200"
-      >
-        <div
-          class="px-5 py-3.5 bg-pink-50 border-b border-pink-200 flex items-center justify-between gap-3 shrink-0"
-        >
-          <div class="flex items-center gap-2 min-w-0">
-            <i class="fas fa-file-pdf text-primary text-lg"></i>
-            <h3
-              id="previewFileName"
-              class="font-bold text-gray-900 text-sm sm:text-base truncate"
-            >
-              Pratinjau Dokumen
-            </h3>
-          </div>
-          <div class="flex items-center gap-2 shrink-0">
-            <a
-              id="previewDownloadBtn"
-              href="javascript:void(0)"
-              download
-              class="bg-primary hover:bg-pink-600 text-white text-xs sm:text-sm font-semibold px-3.5 py-1.5 rounded-lg transition flex items-center gap-1.5"
-            >
-              <i class="fas fa-download"></i> Unduh
-            </a>
-            <button
-              type="button"
-              id="closePreviewBtn"
-              class="w-8 h-8 rounded-lg bg-white border border-pink-200 text-gray-500 hover:text-red-500 hover:bg-red-50 flex items-center justify-center transition"
-              title="Tutup Pratinjau"
-            >
-              <i class="fas fa-times"></i>
-            </button>
-          </div>
-        </div>
-        <div
-          id="previewContainer"
-          class="flex-1 bg-gray-200 relative overflow-y-auto p-4 flex flex-col items-center gap-4"
-        ></div>
-      </div>
-    </div>
-
     <script src="js/navigation.js"></script>
-    <script src="js/app.js"></script>
 
-    <!-- Event Listener Modal Pratinjau PDF & Tombol Lonceng -->
+    <!-- SELURUH LOGIKA APLIKASI + SYNC CLOUD + LAMPIRAN PDF & GOOGLE DRIVE TERTANAM LANGSUNG -->
     <script>
       (function () {
-        if (window.pdfjsLib) {
-          window.pdfjsLib.GlobalWorkerOptions.workerSrc =
-            "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+        const K = {
+          users: "portalAkademik.v5.users",
+          session: "portalAkademik.session",
+          data: "portalAkademik.v5.data",
+          cloudUrl: "portalAkademik.cloudEndpoint.v5",
+          lastSync: "portalAkademik.lastSyncTime.v5",
+        };
+        const DEFAULT_CLOUD_ENDPOINT =
+          "https://jsonblob.com/api/jsonBlob/1349827651029483520";
+
+        const $ = (id) => document.getElementById(id);
+        const esc = (s) =>
+          String(s ?? "").replace(
+            /[&<>"']/g,
+            (c) =>
+              ({
+                "&": "&amp;",
+                "<": "&lt;",
+                ">": "&gt;",
+                '"': "&quot;",
+                "'": "&#39;",
+              })[c],
+          );
+        const uid = () => Math.random().toString(36).slice(2, 9);
+        const read = (k, d) => {
+          try {
+            return JSON.parse(localStorage.getItem(k)) ?? d;
+          } catch (e) {
+            return d;
+          }
+        };
+        const write = (k, v) => {
+          try {
+            localStorage.setItem(k, JSON.stringify(v));
+          } catch (e) {}
+        };
+
+        const dayOffset = (n) => {
+          const d = new Date();
+          d.setDate(d.getDate() + n);
+          d.setHours(0, 0, 0, 0);
+          return (
+            d.getFullYear() +
+            "-" +
+            String(d.getMonth() + 1).padStart(2, "0") +
+            "-" +
+            String(d.getDate()).padStart(2, "0")
+          );
+        };
+
+        function seed() {
+          const courses = [
+            {
+              id: "imk",
+              name: "Interaksi Manusia & Komputer",
+              kelas: "TI25D",
+              dosen: "Muhamad Imam",
+              nidn: "0412068907",
+              sks: 3,
+              hari: "Senin",
+              jam: "11:30 - 13:00",
+              ruang: "D 403",
+              peserta: 30,
+            },
+            {
+              id: "adpl",
+              name: "Analisis dan Design PL",
+              kelas: "TI24D",
+              dosen: "Dian Novianti",
+              nidn: "0421117105",
+              sks: 3,
+              hari: "Senin",
+              jam: "13:00 - 15:30",
+              ruang: "D 406",
+              peserta: 29,
+            },
+            {
+              id: "pbp",
+              name: "Pemrograman Berbasis Platform",
+              kelas: "TI24D",
+              dosen: "Sugiyanto",
+              nidn: "0404067905",
+              sks: 3,
+              hari: "Senin",
+              jam: "10:00 - 12:30",
+              ruang: "D 406",
+              peserta: 29,
+            },
+            {
+              id: "tti",
+              name: "Tata Tulis Ilmiah (Metodologi Penelitian)",
+              kelas: "TI24D",
+              dosen: "Harry Gunawan",
+              nidn: "0408118304",
+              sks: 2,
+              hari: "Selasa",
+              jam: "09:10 - 11:40",
+              ruang: "D 406",
+              peserta: 30,
+            },
+            {
+              id: "mpti",
+              name: "Manajemen Proyek Teknologi Informasi",
+              kelas: "TI24D",
+              dosen: "Gunadi Dwi Hantoro",
+              nidn: "715775065113011",
+              sks: 3,
+              hari: "Senin",
+              jam: "07:30 - 10:00",
+              ruang: "D 406",
+              peserta: 29,
+            },
+            {
+              id: "aik4",
+              name: "AIK 4 (Islam dan Ilmu Pengetahuan)",
+              kelas: "TI24D",
+              dosen: "Masdum Mustaqwa",
+              nidn: "0242761662131163",
+              sks: 2,
+              hari: "Kamis",
+              jam: "10:00 - 11:40",
+              ruang: "D 405",
+              peserta: 26,
+            },
+            {
+              id: "aicp",
+              name: "AI Computing Platform",
+              kelas: "24K2B",
+              dosen: "Freddy Wicaksono",
+              nidn: "0402057307",
+              sks: 3,
+              hari: "Rabu",
+              jam: "18:00 - 22:00",
+              ruang: "C 303",
+              peserta: 31,
+            },
+            {
+              id: "arvr",
+              name: "Teknologi AR/VR",
+              kelas: "24K2B",
+              dosen: "Muhamad Imam",
+              nidn: "0412068907",
+              sks: 3,
+              hari: "Selasa",
+              jam: "13:00 - 15:30",
+              ruang: "D 406",
+              peserta: 31,
+            },
+          ];
+          const t = (courseId, title, desc, d, done, extra = {}) => ({
+            id: uid(),
+            courseId,
+            title,
+            desc,
+            due: extra.due || dayOffset(d),
+            done: !!done,
+            pdfName: extra.pdfName || "",
+            pdfUrl: extra.pdfUrl || "",
+            driveLink: extra.driveLink || "",
+          });
+          const tasks = [
+            t(
+              "adpl",
+              "QUIZ",
+              "Soal Quiz: 1. Beri judul Project System Anda, kemudian jelaskan latarbelakang minimal 5 paragraph beserta citasi nya. 2. Jabarkan urgensi penelitiam Anda beserta Manfaat Penelitiam 3. Jelaskan Metode Penelitian yang digunakan. Jelaskan perbedaannya dari penelitian sebelumnya. Buatkan 5 kajian reference sebelumnya ditinjau dari Metode Penelitian! 4. Uraikan tools yang digunakan! 5. Tuliskan Daftar Pustaka. Minimal 30 referensi yg digunakan",
+              -2,
+              true,
+              {
+                due: "2026-11-16",
+                pdfName: "240511136_Fatihatul ikrimah_TI24D_QUIZ.pdf",
+                pdfUrl: "./240511136_Fatihatul%20ikrimah_TI24D_QUIZ.pdf",
+                driveLink:
+                  "https://drive.google.com/drive/folders/1AralCU0Or88y3FkNgjsDD2ta9tYtxqRI?usp=sharing",
+              },
+            ),
+            t("imk", "download aplikasi canva", "buat kelompok", 5, false, {
+              due: "2026-11-23",
+            }),
+            t(
+              "adpl",
+              "Studi Kasus & Identifikasi Kebutuhan Sistem",
+              "Pilih satu studi kasus (misalnya sistem perpustakaan) lalu identifikasi stakeholder, masalah, dan kebutuhan awal dalam 2 halaman.",
+              -1,
+              true,
+            ),
+            t(
+              "adpl",
+              "Diagram Use Case Sistem Perpustakaan",
+              "Buat use case diagram lengkap dengan aktor, use case, dan relasi include/extend. Kumpulkan dalam format PDF.",
+              2,
+            ),
+            t(
+              "adpl",
+              "Use Case Specification",
+              "Tulis spesifikasi untuk minimal 5 use case: aktor, pra-kondisi, alur utama, alur alternatif, dan pasca-kondisi.",
+              5,
+            ),
+            t(
+              "adpl",
+              "Activity Diagram Proses Peminjaman Buku",
+              "Gambarkan alur peminjaman dan pengembalian buku memakai activity diagram dengan swimlane.",
+              8,
+            ),
+            t(
+              "adpl",
+              "Class Diagram",
+              "Rancang class diagram beserta atribut, method, dan relasi antarkelas berdasarkan hasil use case.",
+              11,
+            ),
+            t(
+              "adpl",
+              "Sequence Diagram",
+              "Buat sequence diagram untuk 3 skenario utama, misalnya login, peminjaman, dan pengembalian buku.",
+              14,
+            ),
+            t(
+              "adpl",
+              "Perancangan Antarmuka & Basis Data (ERD)",
+              "Rancang mockup minimal 5 layar dan ERD beserta kamus datanya.",
+              18,
+            ),
+            t(
+              "adpl",
+              "Dokumen SRS Lengkap & Presentasi Akhir",
+              "Gabungkan semua artefak menjadi dokumen SRS/SDD final dan siapkan presentasi 10 menit.",
+              24,
+            ),
+            t(
+              "imk",
+              "Evaluasi Heuristik Aplikasi Mobile",
+              "Evaluasi satu aplikasi mobile memakai 10 heuristik Nielsen. Sertakan tangkapan layar dan rekomendasi perbaikan.",
+              5,
+            ),
+            t(
+              "imk",
+              "Prototype Low-Fidelity di Figma",
+              "Rancang wireframe minimal 5 layar untuk aplikasi pilihan kelompok, lengkap dengan alur navigasi.",
+              12,
+            ),
+            t(
+              "pbp",
+              "Aplikasi Web Todo dengan Framework",
+              "Bangun aplikasi todo sederhana (tambah, ubah, hapus) memakai framework pilihan. Upload ke GitHub.",
+              4,
+            ),
+            t(
+              "pbp",
+              "Integrasi API Eksternal",
+              "Hubungkan aplikasi dengan satu API publik, tampilkan datanya, dan tangani error dengan baik.",
+              11,
+            ),
+            t(
+              "tti",
+              "Latar Belakang & Rumusan Masalah Proposal",
+              "Tulis latar belakang, rumusan masalah, dan tujuan penelitian maksimal 3 halaman.",
+              2,
+            ),
+            t(
+              "tti",
+              "Resume 3 Jurnal Ilmiah",
+              "Cari 3 jurnal terakreditasi Sinta yang relevan dengan topik, lalu ringkas metode dan hasilnya.",
+              9,
+            ),
+            t(
+              "mpti",
+              "Project Charter & WBS",
+              "Susun project charter dan Work Breakdown Structure untuk proyek sistem informasi kampus.",
+              7,
+            ),
+            t(
+              "mpti",
+              "Jadwal Proyek (Gantt Chart)",
+              "Buat Gantt chart lengkap dengan durasi, dependensi, dan milestone.",
+              14,
+            ),
+            t(
+              "aik4",
+              "Resume Integrasi Islam dan Sains",
+              "Buat resume 2 halaman tentang hubungan wahyu dan ilmu pengetahuan dari materi pertemuan 1-2.",
+              5,
+            ),
+            t(
+              "aik4",
+              "Makalah Etika Teknologi dalam Islam",
+              "Bahas etika penggunaan teknologi informasi menurut perspektif Islam, minimal 5 referensi.",
+              13,
+            ),
+            t(
+              "aicp",
+              "Setup Lingkungan GPU & Jupyter",
+              "Siapkan Python, Jupyter, dan library AI (PyTorch/TensorFlow). Kirim tangkapan layar hasil instalasi.",
+              3,
+              true,
+            ),
+            t(
+              "aicp",
+              "Training Model Klasifikasi Gambar",
+              "Latih model klasifikasi gambar sederhana pada dataset publik dan laporkan akurasinya.",
+              12,
+            ),
+            t(
+              "arvr",
+              "Aplikasi AR Sederhana dengan Unity",
+              "Buat aplikasi AR yang menampilkan objek 3D di atas bidang datar memakai AR Foundation.",
+              8,
+            ),
+            t(
+              "arvr",
+              "Laporan Perbandingan Perangkat VR",
+              "Bandingkan minimal 3 headset VR dari sisi spesifikasi, harga, dan kasus penggunaan.",
+              15,
+            ),
+          ];
+          const m = (courseId, pertemuan, title, desc) => ({
+            id: uid(),
+            courseId,
+            pertemuan,
+            title,
+            desc,
+            link: "",
+          });
+          const materi = [
+            m(
+              "adpl",
+              1,
+              "Pengantar Analisis dan Desain Perangkat Lunak",
+              "SDLC, peran analis sistem, dan perbedaan analisis dengan desain.",
+            ),
+            m(
+              "adpl",
+              2,
+              "Pemodelan dengan UML",
+              "Use case, activity, class, dan sequence diagram beserta notasinya.",
+            ),
+            m(
+              "imk",
+              1,
+              "Prinsip Dasar Interaksi Manusia & Komputer",
+              "Konsep usability, user experience, dan sejarah singkat IMK.",
+            ),
+            m(
+              "imk",
+              2,
+              "10 Heuristik Nielsen",
+              "Sepuluh prinsip evaluasi antarmuka beserta contoh pelanggarannya.",
+            ),
+            m(
+              "pbp",
+              1,
+              "Konsep Platform & Framework",
+              "Perbedaan platform web, mobile, dan desktop serta pemilihan framework.",
+            ),
+            m(
+              "pbp",
+              2,
+              "Arsitektur MVC",
+              "Pemisahan model, view, dan controller dalam aplikasi web.",
+            ),
+            m(
+              "tti",
+              1,
+              "Dasar Penulisan Ilmiah",
+              "Struktur karya tulis ilmiah, kaidah bahasa, dan etika kutipan.",
+            ),
+            m(
+              "tti",
+              2,
+              "Metode Penelitian Kuantitatif & Kualitatif",
+              "Perbedaan pendekatan, instrumen, dan teknik analisis data.",
+            ),
+            m(
+              "mpti",
+              1,
+              "Siklus Hidup Proyek TI",
+              "Fase inisiasi, perencanaan, eksekusi, pemantauan, dan penutupan proyek.",
+            ),
+            m(
+              "mpti",
+              2,
+              "Manajemen Ruang Lingkup & Waktu",
+              "Penyusunan WBS, estimasi durasi, dan penjadwalan proyek.",
+            ),
+            m(
+              "aik4",
+              1,
+              "Islam dan Ilmu Pengetahuan",
+              "Pandangan Islam tentang ilmu dan hubungan antara akal dan wahyu.",
+            ),
+            m(
+              "aik4",
+              2,
+              "Etika dan Tanggung Jawab Ilmuwan",
+              "Nilai amanah dan tanggung jawab dalam pengembangan teknologi.",
+            ),
+            m(
+              "aicp",
+              1,
+              "Pengenalan Platform Komputasi AI",
+              "Ekosistem GPU, cloud, dan framework untuk pengembangan AI.",
+            ),
+            m(
+              "aicp",
+              2,
+              "Pipeline Machine Learning",
+              "Dari pengumpulan data, pelatihan, evaluasi, hingga deployment model.",
+            ),
+            m(
+              "arvr",
+              1,
+              "Dasar Teknologi AR dan VR",
+              "Perbedaan AR, VR, dan MR serta komponen perangkat kerasnya.",
+            ),
+            m(
+              "arvr",
+              2,
+              "Pengembangan AR dengan Unity",
+              "Tracking, plane detection, dan penempatan objek 3D.",
+            ),
+          ];
+          return { courses, tasks, materi };
         }
 
-        document.addEventListener("click", function (e) {
-          const notifBtn = e.target.closest("#globalNotificationBtn, #globalNotificationBtnM");
-          if (notifBtn) {
-            alert("Pemberitahuan: Semua tugas dan lampiran tersinkron otomatis ke Cloud.");
-            return;
-          }
+        let db = read(K.data, null);
+        if (
+          !db ||
+          !Array.isArray(db.courses) ||
+          !Array.isArray(db.tasks) ||
+          !Array.isArray(db.materi) ||
+          !db.courses.length
+        ) {
+          db = seed();
+          save();
+        }
 
-          if (e.target.closest("#closePreviewBtn") || e.target.id === "filePreviewModal") {
-            const modal = document.getElementById("filePreviewModal");
-            const container = document.getElementById("previewContainer");
-            if (modal) {
-              modal.classList.add("hidden");
-              modal.classList.remove("flex");
-            }
-            if (container) container.innerHTML = "";
+        function ensureQuizInDb() {
+          if (!db || !Array.isArray(db.tasks)) return;
+          let q = db.tasks.find((t) => t.title === "QUIZ");
+          if (!q) {
+            db.tasks.unshift({
+              id: "quiz-adpl-default",
+              courseId: "adpl",
+              title: "QUIZ",
+              desc: "Soal Quiz: 1. Beri judul Project System Anda, kemudian jelaskan latarbelakang minimal 5 paragraph beserta citasi nya. 2. Jabarkan urgensi penelitiam Anda beserta Manfaat Penelitiam 3. Jelaskan Metode Penelitian yang digunakan. Jelaskan perbedaannya dari penelitian sebelumnya. Buatkan 5 kajian reference sebelumnya ditinjau dari Metode Penelitian! 4. Uraikan tools yang digunakan! 5. Tuliskan Daftar Pustaka. Minimal 30 referensi yg digunakan",
+              due: "2026-11-16",
+              done: true,
+              pdfName: "240511136_Fatihatul ikrimah_TI24D_QUIZ.pdf",
+              pdfUrl: "./240511136_Fatihatul%20ikrimah_TI24D_QUIZ.pdf",
+              driveLink:
+                "https://drive.google.com/drive/folders/1AralCU0Or88y3FkNgjsDD2ta9tYtxqRI?usp=sharing",
+            });
+          } else {
+            if (!q.pdfName)
+              q.pdfName = "240511136_Fatihatul ikrimah_TI24D_QUIZ.pdf";
+            if (!q.pdfUrl)
+              q.pdfUrl = "./240511136_Fatihatul%20ikrimah_TI24D_QUIZ.pdf";
+            if (!q.driveLink)
+              q.driveLink =
+                "https://drive.google.com/drive/folders/1AralCU0Or88y3FkNgjsDD2ta9tYtxqRI?usp=sharing";
           }
-        });
-      })();
-    </script>
-  </body>
-</html>
+        }
+        ensureQuizInDb();
+
+        function getCloudUrl() {
+          try {
+            return localStorage.getItem(K.cloudUrl) || DEFAULT_CLOUD_ENDPOINT;
+          } catch (e) {
+            return DEFAULT_CLOUD_ENDPOINT;
+          }
+        }
+
+        async function pushToCloud() {
+          try {
+            const now = Date.now();
+            write(K.lastSync, now);
+            const payload = JSON.stringify({ updatedAt: now, db: db });
+            const endpoint = getCloudUrl();
+            const res = await fetch(endpoint, {
+              method: "PUT",
+              headers: {
+                "Content-Type": "application/
