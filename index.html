@@ -316,13 +316,13 @@
 
       (function () {
         const K = {
-          users: "portalAkademik.v11.users",
+          users: "portalAkademik.v12.users",
           session: "portalAkademik.session",
-          data: "portalAkademik.v11.data",
-          cloudUrl: "portalAkademik.cloudEndpoint.v11",
-          lastSync: "portalAkademik.lastSyncTime.v11",
+          data: "portalAkademik.v12.data",
         };
-        const DEFAULT_CLOUD_ENDPOINT = "https://jsonblob.com/api/jsonBlob/1349827651029483520";
+        const DEFAULT_DRIVE_LINK =
+          "https://drive.google.com/drive/folders/1AralCU0Or88y3FkNgjsDD2ta9tYtxqRI?usp=sharing";
+        const DEFAULT_PDF_NAME = "240511136_Fatihatul ikrimah_TI24D_QUIZ.pdf";
 
         const $ = (id) => document.getElementById(id);
         const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
@@ -336,12 +336,13 @@
           d.setHours(0, 0, 0, 0);
           return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
         };
+        const daysLeft = (iso) => Math.round((new Date(iso + "T00:00:00") - new Date().setHours(0, 0, 0, 0)) / 86400000);
 
         function seed() {
           const courses = [
             { id: "imk", name: "Interaksi Manusia & Komputer", kelas: "TI25D", dosen: "Muhamad Imam", nidn: "0412068907", sks: 3, hari: "Senin", jam: "11:30 - 13:00", ruang: "D 403", peserta: 30 },
             { id: "adpl", name: "Analisis dan Design PL", kelas: "TI24D", dosen: "Dian Novianti", nidn: "0421117105", sks: 3, hari: "Senin", jam: "13:00 - 15:30", ruang: "D 406", peserta: 29 },
-            { id: "pbp", name: "Pemrograman Berbasis Platform", kelas: "TI24D", dosen: "Sugiyanto", nidn: "0404067905", sks: 3, hari: "Senin", jam: "10:00 - 12:30", ruang: "D 406", peserta: 29 },
+            { id: "pbp", name: "Pemrograman Berbasis Platform", kelas: "TI24D", dosen: "Dr. Sugiyanto, M.Kom.", nidn: "0404067905", sks: 3, hari: "Senin", jam: "10:00 - 12:30", ruang: "D 406", peserta: 29 },
             { id: "tti", name: "Tata Tulis Ilmiah (Metodologi Penelitian)", kelas: "TI24D", dosen: "Harry Gunawan", nidn: "0408118304", sks: 2, hari: "Selasa", jam: "09:10 - 11:40", ruang: "D 406", peserta: 30 },
             { id: "mpti", name: "Manajemen Proyek Teknologi Informasi", kelas: "TI24D", dosen: "Gunadi Dwi Hantoro", nidn: "715775065113011", sks: 3, hari: "Senin", jam: "07:30 - 10:00", ruang: "D 406", peserta: 29 },
             { id: "aik4", name: "AIK 4 (Islam dan Ilmu Pengetahuan)", kelas: "TI24D", dosen: "Masdum Mustaqwa", nidn: "0242761662131163", sks: 2, hari: "Kamis", jam: "10:00 - 11:40", ruang: "D 405", peserta: 26 },
@@ -349,19 +350,29 @@
             { id: "arvr", name: "Teknologi AR/VR", kelas: "24K2B", dosen: "Muhamad Imam", nidn: "0412068907", sks: 3, hari: "Selasa", jam: "13:00 - 15:30", ruang: "D 406", peserta: 31 }
           ];
           const t = (courseId, title, desc, d, done, extra = {}) => ({
-            id: uid(), courseId, title, desc, due: extra.due || dayOffset(d), done: !!done,
+            id: extra.id || uid(), courseId, title, desc, due: extra.due || dayOffset(d), done: !!done,
             pdfName: extra.pdfName || "", pdfUrl: extra.pdfUrl || "", driveLink: extra.driveLink || ""
           });
           const tasks = [
-            t("adpl", "QUIZ", "Soal Quiz: 1. Beri judul Project System Anda, kemudian jelaskan latarbelakang minimal 5 paragraph beserta citasi nya. 2. Jabarkan urgensi penelitiam Anda beserta Manfaat Penelitiam 3. Jelaskan Metode Penelitian yang digunakan. Jelaskan perbedaannya dari penelitian sebelumnya. Buatkan 5 kajian reference sebelumnya ditinjau dari Metode Penelitian! 4. Uraikan tools yang digunakan! 5. Tuliskan Daftar Pustaka. Minimal 30 referensi yg digunakan", -2, true, {
-              due: "2026-11-16",
-              pdfName: "240511136_Fatihatul ikrimah_TI24D_QUIZ.pdf",
-              pdfUrl: "./240511136_Fatihatul%20ikrimah_TI24D_QUIZ.pdf",
-              driveLink: "https://drive.google.com/drive/folders/1AralCU0Or88y3FkNgjsDD2ta9tYtxqRI?usp=sharing"
+            t("adpl", "Diagram Use Case Sistem Perpustakaan", "Buat use case diagram lengkap dengan aktor, use case, dan relasi.", 2, false, {
+              id: "task-usecase-adpl",
+              due: "2026-11-22"
             }),
-            t("imk", "download aplikasi canva", "buat kelompok", 5, false, { due: "2026-11-23" }),
-            t("adpl", "Studi Kasus & Identifikasi Kebutuhan Sistem", "Pilih satu studi kasus lalu identifikasi stakeholder, masalah, dan kebutuhan awal.", -1, true),
-            t("adpl", "Diagram Use Case Sistem Perpustakaan", "Buat use case diagram lengkap dengan aktor, use case, dan relasi.", 2)
+            t("imk", "download aplikasi canva", "buat kelompok", 3, false, {
+              id: "task-canva-imk",
+              due: "2026-11-23"
+            }),
+            t("adpl", "QUIZ", "Soal Quiz: 1. Beri judul Project System Anda, kemudian jelaskan latarbelakang minimal 5 paragraph beserta citasi nya. 2. Jabarkan urgensi penelitiam Anda beserta Manfaat Penelitiam 3. Jelaskan Metode Penelitian yang digunakan. Jelaskan perbedaannya dari penelitian sebelumnya. Buatkan 5 kajian reference sebelumnya ditinjau dari Metode Penelitian! 4. Uraikan tools yang digunakan! 5. Tuliskan Daftar Pustaka. Minimal 30 referensi yg digunakan", -4, true, {
+              id: "quiz-adpl-default",
+              due: "2026-11-16",
+              pdfName: DEFAULT_PDF_NAME,
+              pdfUrl: DEFAULT_DRIVE_LINK,
+              driveLink: DEFAULT_DRIVE_LINK
+            }),
+            t("adpl", "Studi Kasus & Identifikasi Kebutuhan Sistem", "Pilih satu studi kasus lalu identifikasi stakeholder, masalah, dan kebutuhan awal.", -1, true, {
+              id: "task-studikasus-adpl",
+              due: "2026-11-19"
+            })
           ];
           const m = (courseId, pertemuan, title, desc) => ({ id: uid(), courseId, pertemuan, title, desc, link: "" });
           const materi = [
@@ -371,86 +382,36 @@
           return { courses, tasks, materi };
         }
 
-        let db = read(K.data, null);
-        if (!db || !Array.isArray(db.courses) || !Array.isArray(db.tasks) || !db.courses.length) {
-          db = seed();
-          save();
-        }
-
         function ensureQuizInDb() {
           if (!db || !Array.isArray(db.tasks)) return;
           let q = db.tasks.find((t) => t.title === "QUIZ");
           if (!q) {
-            db.tasks.unshift({
+            db.tasks.push({
               id: "quiz-adpl-default", courseId: "adpl", title: "QUIZ",
-              desc: "Soal Quiz: 1. Latar belakang 5 paragraf beserta citasi. 2. Urgensi & manfaat. 3. Metode penelitian. 4. Tools. 5. Daftar pustaka 30 referensi.",
+              desc: "Soal Quiz: 1. Beri judul Project System Anda, kemudian jelaskan latarbelakang minimal 5 paragraph beserta citasi nya. 2. Jabarkan urgensi penelitiam Anda beserta Manfaat Penelitiam 3. Jelaskan Metode Penelitian yang digunakan. Jelaskan perbedaannya dari penelitian sebelumnya. Buatkan 5 kajian reference sebelumnya ditinjau dari Metode Penelitian! 4. Uraikan tools yang digunakan! 5. Tuliskan Daftar Pustaka. Minimal 30 referensi yg digunakan",
               due: "2026-11-16", done: true,
-              pdfName: "240511136_Fatihatul ikrimah_TI24D_QUIZ.pdf",
-              pdfUrl: "./240511136_Fatihatul%20ikrimah_TI24D_QUIZ.pdf",
-              driveLink: "https://drive.google.com/drive/folders/1AralCU0Or88y3FkNgjsDD2ta9tYtxqRI?usp=sharing"
+              pdfName: DEFAULT_PDF_NAME,
+              pdfUrl: DEFAULT_DRIVE_LINK,
+              driveLink: DEFAULT_DRIVE_LINK
             });
           } else {
-            q.done = true;
-            if (!q.pdfName) q.pdfName = "240511136_Fatihatul ikrimah_TI24D_QUIZ.pdf";
-            if (!q.pdfUrl) q.pdfUrl = "./240511136_Fatihatul%20ikrimah_TI24D_QUIZ.pdf";
-            if (!q.driveLink) q.driveLink = "https://drive.google.com/drive/folders/1AralCU0Or88y3FkNgjsDD2ta9tYtxqRI?usp=sharing";
+            if (!q.pdfName) q.pdfName = DEFAULT_PDF_NAME;
+            if (!q.pdfUrl || q.pdfUrl.startsWith("./")) q.pdfUrl = DEFAULT_DRIVE_LINK;
+            if (!q.driveLink) q.driveLink = DEFAULT_DRIVE_LINK;
           }
-        }
-        ensureQuizInDb();
-
-        function getCloudUrl() {
-          try { return localStorage.getItem(K.cloudUrl) || DEFAULT_CLOUD_ENDPOINT; } catch (e) { return DEFAULT_CLOUD_ENDPOINT; }
-        }
-
-        async function pushToCloud() {
-          try {
-            const now = Date.now();
-            write(K.lastSync, now);
-            const payload = JSON.stringify({ updatedAt: now, db: db });
-            const endpoint = getCloudUrl();
-            let res = await fetch(endpoint, {
-              method: "PUT",
-              headers: { "Content-Type": "application/json", Accept: "application/json" },
-              body: payload
-            });
-            if (!res.ok) {
-              const createRes = await fetch("https://jsonblob.com/api/jsonBlob", {
-                method: "POST",
-                headers: { "Content-Type": "application/json", Accept: "application/json" },
-                body: payload
-              });
-              if (createRes.ok) {
-                const loc = createRes.headers.get("Location") || createRes.headers.get("X-jsonblob");
-                if (loc) {
-                  const newUrl = loc.startsWith("http") ? loc : `https://jsonblob.com/api/jsonBlob/${loc}`;
-                  localStorage.setItem(K.cloudUrl, newUrl);
-                }
-              }
-            }
-          } catch (e) {}
-        }
-
-        async function pullFromCloud() {
-          try {
-            const endpoint = getCloudUrl();
-            const res = await fetch(endpoint, { method: "GET", headers: { Accept: "application/json" }, cache: "no-store" });
-            if (!res.ok) return;
-            const cloud = await res.json();
-            if (cloud && cloud.db && Array.isArray(cloud.db.tasks)) {
-              db = cloud.db;
-              ensureQuizInDb();
-              write(K.data, db);
-              write(K.lastSync, Number(cloud.updatedAt || Date.now()));
-              renderAll();
-            }
-          } catch (e) {}
         }
 
         function save() {
           ensureQuizInDb();
           write(K.data, db);
-          pushToCloud();
         }
+
+        let db = read(K.data, null);
+        if (!db || !Array.isArray(db.courses) || !Array.isArray(db.tasks) || !db.courses.length) {
+          db = seed();
+          save();
+        }
+        ensureQuizInDb();
 
         const course = (id) => db.courses.find((c) => c.id === id);
         const courseName = (id) => (course(id) ? course(id).name : "-");
@@ -521,24 +482,25 @@
           $("taskList").innerHTML = list.length
             ? list.map((x) => {
                 const di = dueInfo(x);
-                const pdfHref = x.pdfUrl || x.driveLink || "https://drive.google.com/drive/folders/1AralCU0Or88y3FkNgjsDD2ta9tYtxqRI?usp=sharing";
-                const pdfBlock = x.pdfName ? `<div class="flex items-center justify-between gap-2 bg-pink-50/90 px-3 py-2 rounded-xl border border-pink-100 mt-2">
+                const pdfHref = (x.pdfUrl && !x.pdfUrl.startsWith("./")) ? x.pdfUrl : (x.driveLink || DEFAULT_DRIVE_LINK);
+                const isExternalPdf = /^https?:\/\//i.test(pdfHref);
+                const pdfBlock = x.pdfName ? `<div class="flex flex-wrap sm:flex-nowrap items-center justify-between gap-2 bg-pink-50/90 px-3 py-2 rounded-xl border border-pink-100 mt-2">
                   <div class="flex items-center gap-2 min-w-0">
                     <i class="fas fa-file-pdf text-rose-500 text-base shrink-0"></i>
-                    <div class="min-w-0"><p class="text-xs font-semibold text-gray-800 truncate">${esc(x.pdfName)}</p><p class="text-[11px] text-gray-500">2.6 MB</p></div>
+                    <div class="min-w-0"><p class="text-xs font-semibold text-gray-800 truncate" title="${esc(x.pdfName)}">${esc(x.pdfName)}</p><p class="text-[11px] text-gray-500">2.6 MB</p></div>
                   </div>
                   <div class="flex items-center gap-1.5 shrink-0">
-                    <a href="${esc(pdfHref)}" target="_blank" rel="noopener noreferrer" class="px-2.5 py-1 bg-white border border-pink-200 text-primary rounded-lg text-xs font-semibold"><i class="fas fa-eye mr-0.5"></i> Lihat</a>
-                    <a href="${esc(pdfHref)}" download="${esc(x.pdfName)}" target="_blank" rel="noopener noreferrer" class="px-2.5 py-1 bg-primary text-white rounded-lg text-xs font-semibold"><i class="fas fa-download"></i></a>
+                    <a href="${esc(pdfHref)}" target="_blank" rel="noopener noreferrer" class="px-2.5 py-1 bg-white border border-pink-200 text-primary hover:bg-primary hover:text-white rounded-lg text-xs font-semibold transition"><i class="fas fa-eye mr-0.5"></i> Lihat</a>
+                    <a href="${esc(pdfHref)}" ${isExternalPdf ? "" : `download="${esc(x.pdfName)}"`} target="_blank" rel="noopener noreferrer" class="px-2.5 py-1 bg-primary text-white hover:bg-pink-600 rounded-lg text-xs font-semibold transition" title="Unduh / Buka PDF"><i class="fas fa-download"></i></a>
                   </div></div>` : "";
 
-                const driveBlock = x.driveLink ? `<div class="flex items-center justify-between gap-2 bg-rose-50/80 px-3 py-2 rounded-xl border border-pink-100 mt-2">
+                const driveBlock = x.driveLink ? `<div class="flex flex-wrap sm:flex-nowrap items-center justify-between gap-2 bg-rose-50/80 px-3 py-2 rounded-xl border border-pink-100 mt-2">
                   <div class="flex items-center gap-2 min-w-0">
                     <i class="fab fa-google-drive text-emerald-600 text-sm shrink-0"></i>
                     <div class="min-w-0"><p class="text-xs font-semibold text-gray-800 truncate">Google Drive - Folder Tugas &amp; PDF</p></div>
                   </div>
                   <div class="flex items-center gap-1.5 shrink-0">
-                    <a href="${esc(x.driveLink)}" target="_blank" rel="noopener noreferrer" class="px-2.5 py-1 bg-white border text-primary rounded-lg text-xs font-semibold">Buka <i class="fas fa-external-link-alt text-[10px]"></i></a>
+                    <a href="${esc(x.driveLink)}" target="_blank" rel="noopener noreferrer" class="px-2.5 py-1 bg-white border border-pink-200 text-primary hover:bg-primary hover:text-white rounded-lg text-xs font-semibold transition">Buka <i class="fas fa-external-link-alt text-[10px]"></i></a>
                   </div></div>` : "";
 
                 return `<div class="card p-5 flex flex-col ${x.done ? "opacity-90" : ""}">
@@ -684,7 +646,6 @@
             <i class="fas fa-bell"></i><span><strong>${esc(x.title)}</strong> (${esc(courseName(x.courseId))}) - ${late ? `terlambat ${-n} hari` : n === 0 ? "tenggat hari ini" : `${n} hari lagi`}</span></div>`;
           }).join("");
         }
-        const daysLeft = (iso) => Math.round((new Date(iso + "T00:00:00") - new Date().setHours(0,0,0,0)) / 86400000);
 
         function renderAll() { renderTasks(); renderCourses(); renderMateri(); }
 
@@ -766,8 +727,6 @@
           $("authForm").addEventListener("submit", submitAuth);
           renderAuth();
           renderAll();
-          await pullFromCloud();
-          setInterval(pullFromCloud, 5000);
           let s = null;
           try { s = JSON.parse(sessionStorage.getItem(K.session)); } catch (e) {}
           if (s && s.name) {
